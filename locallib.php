@@ -220,14 +220,14 @@ function certificate_email_student($course, $certificate, $certrecord, $context,
     global $USER;
 
     // Get teachers
-    if ($users = get_users_by_capability($context, 'moodle/course:update', 'u.*', 'u.id ASC',
+    if ($users = get_users_by_capability($context, 'mod/certificate:printteacher', 'u.*', 'u.id ASC',
         '', '', '', '', false, true)) {
         $users = sort_by_roleassignment_authority($users, $context);
         $teacher = array_shift($users);
     }
 
     // If we haven't found a teacher yet, look for a non-editing teacher in this course.
-    if (empty($teacher) && $users = get_users_by_capability($context, 'moodle/course:update', 'u.*', 'u.id ASC',
+    if (empty($teacher) && $users = get_users_by_capability($context, 'mod/certificate:printteacher', 'u.*', 'u.id ASC',
             '', '', '', '', false, true)) {
         $users = sort_by_roleassignment_authority($users, $context);
         $teacher = array_shift($users);
