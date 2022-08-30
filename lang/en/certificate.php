@@ -127,6 +127,7 @@ $string['issueoptions'] = 'Issue Options';
 $string['issued'] = 'Issued';
 $string['issueddate'] = 'Date Issued';
 $string['landscape'] = 'Landscape';
+$string['landscape_unsupported'] = 'Landscape orientation is not supported on this certificate';
 $string['lastviewed'] = 'You last received this certificate on:';
 $string['letter'] = 'Letter';
 $string['lockingoptions'] = 'Locking Options';
@@ -155,6 +156,7 @@ $string['orientation_help'] = 'Choose whether you want your certificate orientat
 $string['pluginadministration'] = 'Certificate administration';
 $string['pluginname'] = 'Certificate';
 $string['portrait'] = 'Portrait';
+$string['portrait_unsupported'] = 'Portrait orientation is not supported on this certificate';
 $string['printdate'] = 'Print Date';
 $string['printdate_help'] = 'This is the date that will be printed, if a print date is selected. If the course completion date is selected but the student has not completed the course, the date received will be printed. You can also choose to print the date based on when an activity was graded. If a certificate is issued before that activity is graded, the date received will be printed.';
 $string['printerfriendly'] = 'Printer-friendly page';
@@ -197,6 +199,9 @@ $string['typeA4_embedded'] = 'A4 Embedded';
 $string['typeA4_non_embedded'] = 'A4 Non-Embedded';
 $string['typeletter_embedded'] = 'Letter Embedded';
 $string['typeletter_non_embedded'] = 'Letter Non-Embedded';
+$string['typeportfolio_dd'] = 'Portfolio Darling Downs';
+$string['typeportfolio_gch'] = 'Portfolio Gold Coast Health';
+$string['typeportfolio_sch'] = 'Portfolio Sunshine Coast Health';
 $string['unsupportedfiletype'] = 'File must be a jpeg or png file';
 $string['uploadimage'] = 'Upload image';
 $string['uploadimagedesc'] = 'This button will take you to a new screen where you will be able to upload images.';
@@ -214,3 +219,91 @@ $string['privacy:metadata:mod_certificate:certificateid'] = 'Certificate info';
 $string['privacy:metadata:mod_certificate:code'] = 'Code info';
 $string['privacy:metadata:mod_certificate:timecreated'] = 'Time created info';
 $string['privacy:metadata:core_files'] = 'Files linked to issued certificates are stored using the core_files system';
+
+// type/Portfolio
+$string['portfolio_title'] = 'Portfolio';
+$string['portfolio_title_contfor'] = 'Portfolio (cont\'d) for {$a}';
+$string['portfolio_continued'] = '(cont\'d)';
+
+$string['portfolio_colour_primary'] = '#003c69';
+$string['portfolio_colour_secondary'] = '#808080';
+$string['portfolio_colour_base'] = '#000000';
+$string['portfolio_colour_minor'] = '#808080';
+
+$string['portfolio_site'] = 'Gold Coast Health';
+$string['portfolio_service'] = 'Learning On-Line';
+$string['portfolio_siteservice'] = 'Gold Coast Health Learning On-Line';
+
+$string['portfolio_postuser'] = 'has completed the following';
+$string['portfolio_preuser'] = 'This is to certify that';
+$string['portfolio_printedon'] = 'Printed on {$a}';
+$string['portfolio_siteservicelabel'] = 'Presented by';
+$string['portfolio_coursemandatory'] = 'Mandatory courses';
+$string['portfolio_coursemandatory_cont'] = 'Mandatory courses (cont\'d)';
+$string['portfolio_courseother'] = 'Other courses';
+$string['portfolio_courseother_cont'] = 'Other courses (cont\'d)';
+$string['portfolio_courseadditional'] = 'Additional learning modules';
+$string['portfolio_courseadditional_cont'] = 'Additional learning modules (cont\'d)';
+
+// type/portfolio_dd
+$string['portfolio_dd_title'] = 'PORTFOLIO';
+$string['portfolio_dd_title_contfor'] = 'Portfolio (cont\'d) for {$a}';
+$string['portfolio_dd_continued'] = '(cont\'d)';
+
+$string['portfolio_dd_colour_primary'] = '#ad3054';
+$string['portfolio_dd_colour_secondary'] = '#624b78';
+$string['portfolio_dd_colour_base'] = '#000000';
+$string['portfolio_dd_colour_minor'] = '#808080';
+
+$string['portfolio_dd_site'] = 'Darling Downs';
+$string['portfolio_dd_service'] = 'Learning On-Line';
+$string['portfolio_dd_siteservice'] = 'Darling Downs Learning On-Line';
+
+$string['portfolio_dd_postuser'] = 'has completed the following';
+$string['portfolio_dd_preuser'] = 'This is to certify that';
+$string['portfolio_dd_printedon'] = 'Printed on {$a}';
+$string['portfolio_dd_siteservicelabel'] = 'Presented by';
+$string['portfolio_dd_nonecomplete'] = 'There have been no {$a} courses completed';
+$string['portfolio_dd_magiccomplete'] = 'Credited';
+
+// type/portfolio_gch
+$string['portfolio_gch_title'] = 'Statement of Training';
+$string['portfolio_gch_title_contfor'] = 'Portfolio (continued) for {$a}';
+$string['portfolio_gch_continued'] = '(continued)';
+
+$string['portfolio_gch_colour_primary'] = '#01649D';
+$string['portfolio_gch_colour_secondary'] = '#BE6C7B';
+$string['portfolio_gch_colour_base'] = '#000000';
+$string['portfolio_gch_colour_minor'] = '#808080';
+
+$string['portfolio_gch_site'] = 'Gold Coast Health';
+$string['portfolio_gch_service'] = 'Learning On-Line';
+$string['portfolio_gch_siteservice'] = 'Gold Coast Health Learning On-Line';
+
+$string['portfolio_gch_postuser'] = 'has completed the following';
+$string['portfolio_gch_preuser'] = 'This is to certify that';
+$string['portfolio_gch_printedon'] = 'Printed on {$a}';
+$string['portfolio_gch_siteservicelabel'] = 'Presented by - {$a}';
+$string['portfolio_gch_nonecomplete'] = 'There have been no {$a} courses completed';
+$string['portfolio_gch_magiccomplete'] = 'Credited';
+
+// type/portfolio_sch
+$string['portfolio_sch_title'] = 'Portfolio';
+$string['portfolio_sch_title_contfor'] = 'Portfolio (cont\'d) for {$a}';
+$string['portfolio_sch_continued'] = '(cont\'d)';
+
+$string['portfolio_sch_colour_primary'] = '#405060';
+$string['portfolio_sch_colour_secondary'] = '#405060';
+$string['portfolio_sch_colour_base'] = '#000000';
+$string['portfolio_sch_colour_minor'] = '#808080';
+
+$string['portfolio_sch_site'] = 'Sunshine Coast Health';
+$string['portfolio_sch_service'] = 'Learning On-Line';
+$string['portfolio_sch_siteservice'] = 'Sunshine Coast Health Learning On-Line';
+
+$string['portfolio_sch_postuser'] = 'has completed the following';
+$string['portfolio_sch_preuser'] = 'This is to certify that';
+$string['portfolio_sch_printedon'] = 'Printed on {$a}';
+$string['portfolio_sch_siteservicelabel'] = 'Presented by - {$a}';
+$string['portfolio_sch_nonecomplete'] = 'There have been no {$a} courses completed';
+$string['portfolio_sch_magiccomplete'] = 'Credited';
