@@ -62,7 +62,7 @@ class portfolio_data {
 
         $course_sql = "
             SELECT  c.fullname,
-                    cc.timecompleted 
+                    max(cc.timecompleted) as timecompleted
             FROM {course} c
                 INNER JOIN {customfield_data} cd ON
                     cd.instanceid = c.id AND
