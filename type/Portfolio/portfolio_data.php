@@ -83,6 +83,7 @@ class portfolio_data {
                     cc.course = c.id AND
                     cc.userid = ? AND 
                     cc.timecompleted IS NOT NULL
+            GROUP BY c.id
             ORDER BY c.fullname
         ";
 
