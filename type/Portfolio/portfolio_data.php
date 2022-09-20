@@ -62,27 +62,28 @@ class portfolio_data {
 
         $course_sql = "
             SELECT  c.fullname,
-                    cc.timecompleted 
-            FROM {course} c
-                INNER JOIN {customfield_data} cd ON
-                    cd.instanceid = c.id AND
-                    cd.intvalue = 1 AND
-                    cd.fieldid = ? 
-                INNER JOIN (
-                    (
-                        SELECT *
-                        FROM {course_completions} ccc 
-                        WHERE ccc.userid = ?
-                    ) UNION
-                    (
-                        SELECT *
-                        FROM {local_recompletion_cc} rcc
-                        WHERE rcc.userid = ?
-                    )
-                ) cc ON
-                    cc.course = c.id AND
-                    cc.userid = ? AND 
-                    cc.timecompleted IS NOT NULL
+                    max(cc.timecompleted) as timecompleted
+            FROM    {course} c
+                    INNER JOIN {customfield_data} cd ON
+                        cd.instanceid = c.id AND
+                        cd.intvalue = 1 AND
+                        cd.fieldid = ? 
+                    INNER JOIN (
+                        (
+                            SELECT  *
+                            FROM    {course_completions} ccc 
+                            WHERE   ccc.userid = ?
+                        ) UNION
+                        (
+                            SELECT  *
+                            FROM    {local_recompletion_cc} rcc
+                            WHERE   rcc.userid = ?
+                        )
+                    ) cc ON
+                        cc.course = c.id AND
+                        cc.userid = ? AND 
+                        cc.timecompleted IS NOT NULL
+            GROUP BY c.id
             ORDER BY c.fullname
         ";
 
