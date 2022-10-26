@@ -36,9 +36,12 @@ if ($ciapid == "999999") {
 	outputdata();
 }
 
+$plan=$DB->get_record('ciap_plans', array('id' => $ciapid));
+$ciap=$DB->get_record('ciap', array('id' => $plan->ciapid));
+
 $pdf = new TCPDF($certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
 
-$pdf->SetTitle("2020 CIAP Summary");
+$pdf->SetTitle($plan->name.' - Summary');
 $pdf->setPrintHeader(false);
 $pdf->setPrintFooter(false);
 $pdf->SetAutoPageBreak(false, 0);
@@ -72,11 +75,10 @@ $page = 0;
 	$box4 = 184;
 	$box5 = 232;
 
-$plan=$DB->get_record(ciap_plans, array('id' => $ciapid));
 
 printhead1($plan);
 
-$actions=$DB->get_records(ciap_actions, array('planid' => $plan->id));
+$actions=$DB->get_records('ciap_actions', array('planid' => $plan->id));
 $actionno=0;
 $posno=0;
 FOREACH ($actions AS $action) {
@@ -102,7 +104,7 @@ FOREACH ($actions AS $action) {
 	certificate_print_text($pdf, $y, $x+40+($posno*20), 'l', 'Helvetica', '' ,14, $actionno);
 	
 	certificate_print_text($pdf, $y+5, $x+40+($posno*20), 'l', 'Helvetica', '' ,14, $actionhead, 160);
-	$values=$DB->get_record(customfield_data, array('fieldid' => 55, 'instanceid' => $action->id));
+	$values=$DB->get_record('customfield_data', array('fieldid' => 55, 'instanceid' => $action->id));
 	switch ($values->value) {
 			CASE "1":
 				$value="Integrity";
@@ -134,7 +136,7 @@ FOREACH ($actions AS $action) {
 		}
 	FOREACH ($updates AS $update) {
 		$pos++;
-		$perioddate=$DB->get_record(ciap_periods, array('id' => $update->periodid));
+		$perioddate=$DB->get_record('ciap_periods', array('id' => $update->periodid));
 		switch ($update->status) {
 			CASE "0":
 				$status="Not yet started";
@@ -198,8 +200,8 @@ FOREACH ($actions AS $action) {
 		certificate_print_text($pdf, $y+10, $x+37, 'l', 'Helvetica', 'i' ,12, $actionbody, 240);
 	}
 	
-	$response=$DB->get_record(customfield_data, array('fieldid' => 58, 'instanceid' => $action->id));
-	$values=$DB->get_record(customfield_data, array('fieldid' => 55, 'instanceid' => $action->id));
+	$response=$DB->get_record('customfield_data', array('fieldid' => 58, 'instanceid' => $action->id));
+	$values=$DB->get_record('customfield_data', array('fieldid' => 55, 'instanceid' => $action->id));
 	switch ($values->value) {
 			CASE "1":
 				$value="Integrity";
@@ -242,7 +244,7 @@ FOREACH ($actions AS $action) {
 	certificate_print_text($pdf, $y+212, $x+60, 'l', 'Helvetica', '' ,12, date('j F Y',$action->duedate));
 
 		$pos++;
-		$perioddate=$DB->get_record(ciap_periods, array('id' => $update->periodid));
+		$perioddate=$DB->get_record('ciap_periods', array('id' => $update->periodid));
 		switch ($update->status) {
 			CASE "0":
 				$ans="Not yet started";
@@ -295,7 +297,7 @@ FOREACH ($actions AS $action) {
 
 function printhead1($plan) {
 GLOBAL $pdf, $DB, $CFG, $x, $y, $page;
-
+$ciap=$DB->get_record('ciap', array('id' => $plan->ciapid));
 $pdf->AddPage();
 $page++;
 $pdf->Image("$CFG->dirroot/mod/certificate/type/GFG/CIAP P1.jpg", 0, 0, 297, 210);
@@ -303,18 +305,19 @@ $pdf->Image("$CFG->dirroot/mod/certificate/type/GFG/CIAP P1.jpg", 0, 0, 297, 210
 $pdf->SetTextColor(255, 255, 255);
 certificate_print_text($pdf, $y+95, $x, 'l', 'Helvetica', 'B' ,18, $plan->idnumber.' '.$plan->name);
 
-$posid=$DB->get_record(ciap_owners, array('planid' => $plan->id));
-$includes=$DB->get_record(customfield_data, array('fieldid' => '73', 'instanceid' => $plan->id));
+$posid=$DB->get_record('ciap_owners', array('planid' => $plan->id));
+$includes=$DB->get_record('customfield_data', array('fieldid' => '73', 'instanceid' => $plan->id));
 if (!$posid->value) {
 		$userid->userid=$posid->userid;
 } ELSE {
-	$userid=$DB->get_record(user_info_data, array('fieldid' => 8, 'data' => $posid->value));
+
+	$userid = $DB->get_record_sql('SELECT * FROM {user_info_data} WHERE ' . $DB->sql_compare_text('data') . ' = ' . $DB->sql_compare_text(':data'), ['data' => $posid->value], $strictness=IGNORE_MULTIPLE);
 }
-$division=$DB->get_record(user_info_data, array('fieldid' => 20, 'userid' => $userid->userid));
+$division=$DB->get_record('user_info_data', array('fieldid' => 20, 'userid' => $userid->userid));
 certificate_print_text($pdf, $y+95, $x+10, 'l', 'Helvetica', '' ,12,$division->data);
 certificate_print_text($pdf, $y+95, $x+17, 'l', 'Helvetica', '' ,12,$includes->value);
 
-certificate_print_text($pdf, $y+95, $x+25, 'l', 'Helvetica', 'B' ,18, '2020 Continuous Improvement Action Plan - Summary');
+certificate_print_text($pdf, $y+95, $x+25, 'l', 'Helvetica', 'B' ,18, $ciap->name.' - Summary');
 $pdf->SetTextColor(16, 75, 118);
 
 certificate_print_text($pdf, $y+5, $x+50, 'l', 'Helvetica', 'B' ,14, 'What is the action we have committed to?');
@@ -322,7 +325,7 @@ certificate_print_text($pdf, $y+180, $x+50, 'l', 'Helvetica', 'B' ,14, 'Value:')
 certificate_print_text($pdf, $y+230, $x+50, 'l', 'Helvetica', 'B' ,14, 'Action status:');
 
 $pdf->SetTextColor(0, 0, 0);
-certificate_print_text($pdf, $y, $x+175, 'C', 'Helvetica', 'B' ,11, '2020 Continuous Improvement Action Plan - Summary');
+certificate_print_text($pdf, $y, $x+175, 'C', 'Helvetica', 'B' ,11, $ciap->name.' - Summary');
 certificate_print_text($pdf, $y, $x+180, 'C', 'Helvetica', 'B' ,11, $plan->idnumber.' '.$plan->name.'  -  page '.$page);
 certificate_print_text($pdf, $y, $x+185, 'C', 'Helvetica', 'B' ,11, 'Printed on '.date('j F Y',time()));
 
@@ -331,12 +334,12 @@ certificate_print_text($pdf, $y, $x+185, 'C', 'Helvetica', 'B' ,11, 'Printed on 
 
 function printhead2($plan) {
 GLOBAL $pdf, $DB, $CFG, $x, $y, $page;
-
+$ciap=$DB->get_record('ciap', array('id' => $plan->ciapid));
 $pdf->AddPage();
 $page++;
 $pdf->Image("$CFG->dirroot/mod/certificate/type/GFG/CIAP P2.jpg", 0, 0, 297, 210);
 
-certificate_print_text($pdf, $y, $x+175, 'C', 'Helvetica', 'B' ,11, '2020 Continuous Improvement Action Plan - Summary');
+certificate_print_text($pdf, $y, $x+175, 'C', 'Helvetica', 'B' ,11, $ciap->name.' - Summary');
 certificate_print_text($pdf, $y, $x+180, 'C', 'Helvetica', 'B' ,11, $plan->idnumber.' '.$plan->name.'  -  page '.$page);
 certificate_print_text($pdf, $y, $x+185, 'C', 'Helvetica', 'B' ,11, 'Printed on '.date('j F Y',time()));
 
