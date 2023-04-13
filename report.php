@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core_user\fields;
+
 require_once('../../config.php');
 require_once('locallib.php');
 
@@ -124,7 +126,7 @@ if ($download == "ods") {
     $myxls->write_string(0, 1, get_string("firstname"));
     $nextposition = 2;
     foreach ($extrafields as $field) {
-        $myxls->write_string(0, $nextposition, get_user_field_name($field));
+        $myxls->write_string(0, $nextposition, fields::get_display_name($field));
         $nextposition++;
     }
     $myxls->write_string(0, $nextposition, get_string("group"));
@@ -180,7 +182,7 @@ if ($download == "xls") {
     $myxls->write_string(0, 1, get_string("firstname"));
     $nextposition = 2;
     foreach ($extrafields as $field) {
-        $myxls->write_string(0, $nextposition, get_user_field_name($field));
+        $myxls->write_string(0, $nextposition, fields::get_display_name($field));
         $nextposition++;
     }
     $myxls->write_string(0, $nextposition, get_string("group"));
@@ -231,7 +233,7 @@ if ($download == "txt") {
     // Print names of all the fields
     echo get_string("lastname"). "\t" .get_string("firstname") . "\t";
     foreach ($extrafields as $field) {
-        echo get_user_field_name($field) . "\t";
+        echo fields::get_display_name($field) . "\t";
     }
     echo get_string("group"). "\t";
     echo $strdate. "\t";
@@ -271,7 +273,7 @@ $table->tablealign = "center";
 $table->head = array($strto);
 $table->align = array('left');
 foreach ($extrafields as $field) {
-    $table->head[] = get_user_field_name($field);
+    $table->head[] = fields::get_display_name($field);
     $table->align[] = 'left';
 }
 $table->head = array_merge($table->head, array($strdate, $strgrade, $strcode));
