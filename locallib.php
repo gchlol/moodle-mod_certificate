@@ -734,7 +734,7 @@ function certificate_get_outcomes() {
  */
 function certificate_types() {
     $types = array();
-    $names = get_list_of_plugins('mod/certificate/type');
+    $names = certificate_get_names();
     $sm = get_string_manager();
     foreach ($names as $name) {
         if ($sm->string_exists('type'.$name, 'certificate')) {
@@ -744,6 +744,59 @@ function certificate_types() {
         }
     }
     asort($types);
+    return $types;
+}
+
+/**
+ * Get a list of available certificate type names based on plugin configuration.
+ *
+ * @return string[] List of certificate type names.
+ * @throws dml_exception
+ */
+function certificate_get_names(): array {
+    global $CFG;
+
+    $repo_name = get_config('certificate', 'reponame');
+    if (!empty($repo_name)) {
+        return certificate_get_directories("$CFG->dataroot/repository/$repo_name/CERTIFICATE/type");
+    }
+
+    return certificate_get_directories("$CFG->dirroot/mod/certificate/type");
+}
+
+/**
+ * Get a list of certificate type directories under a given parent directory.
+ *
+ * @param string $types_directory Parent directory.
+ * @return string[] List of directories.
+ */
+function certificate_get_directories(string $types_directory): array {
+    if (
+        !file_exists($types_directory) ||
+        !is_dir($types_directory)
+    ) {
+        return [];
+    }
+
+    $handle = opendir($types_directory);
+    if (!$handle) {
+        debugging("Directory permission error for certificate types ($types_directory). Directory exists but cannot be read.", DEBUG_DEVELOPER);
+
+        return [];
+    }
+
+    $types = [];
+    while (($directory = readdir($handle)) !== false) {
+        if (
+            str_starts_with($directory, '.') ||
+            !is_dir("$types_directory/$directory")
+        ) {
+            continue;
+        }
+
+        $types[] = $directory;
+    }
+
     return $types;
 }
 
