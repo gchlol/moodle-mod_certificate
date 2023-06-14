@@ -36,4 +36,11 @@ if ($ADMIN->fulltree) {
     $settings->add(new mod_certificate_admin_setting_font('certificate/fontserif',
         get_string('fontserif', 'mod_certificate'), get_string('fontserif_desc', 'mod_certificate'), 'freeserif'));
 
+    $settings->add(new admin_setting_configtext(
+        'certificate/reponame',
+        get_string('setting:reponame', 'mod_certificate'),
+        get_string('setting:reponame_desc', 'mod_certificate'),
+        '',
+        PARAM_TEXT
+    ));
 }

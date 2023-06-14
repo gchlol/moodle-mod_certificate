@@ -213,6 +213,10 @@ $string['viewed'] = 'You received this certificate on:';
 $string['viewtranscript'] = 'View Certificates';
 $string['watermark'] = 'Watermark';
 
+// Settings
+$string['setting:reponame'] = 'Certificate Type Repository Name';
+$string['setting:reponame_desc'] = 'Name of the repository to load certificate types from instead of the internal types directory.';
+
 $string['privacy:metadata:mod_certificate'] = 'Info about issued certificates';
 $string['privacy:metadata:mod_certificate:userid'] = 'User info';
 $string['privacy:metadata:mod_certificate:certificateid'] = 'Certificate info';
