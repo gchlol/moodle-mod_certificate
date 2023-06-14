@@ -92,7 +92,12 @@ $certrecord = certificate_get_issue($course, $USER, $certificate, $cm);
 make_cache_directory('tcpdf');
 
 // Load the specific certificate type.
-require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
+$require_path = "$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php";
+$repo_name = get_config('certificate', 'reponame');
+if (!empty($repo_name)) {
+    $require_path = "$CFG->dataroot/repository/$repo_name/CERTIFICATE/type/$certificate->certificatetype/certificate.php";
+}
+require($require_path);
 
 if (empty($action)) { // Not displaying PDF
     echo $OUTPUT->header();
