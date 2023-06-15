@@ -24,6 +24,7 @@
  */
 
 use core_user\fields;
+use mod_certificate\util\user_field_util;
 
 require_once('../../config.php');
 require_once('locallib.php');
@@ -107,7 +108,7 @@ if (!$users = certificate_get_issues($certificate->id, $DB->sql_fullname(), $gro
 }
 
 // Get extra fields to show the user.
-$extrafields = get_extra_user_fields($context);
+$extrafields = user_field_util::get_extra_fields($context);
 
 if ($download == "ods") {
     require_once("$CFG->libdir/odslib.class.php");

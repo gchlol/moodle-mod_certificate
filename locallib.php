@@ -24,6 +24,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_certificate\util\user_field_util;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/mod/certificate/lib.php');
@@ -448,7 +450,7 @@ function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 
     $allparams = $conditionsparams + array('certificateid' => $certificateid);
 
     // The picture fields also include the name fields for the user.
-    $picturefields = user_picture::fields('u', get_extra_user_fields($context));
+    $picturefields = user_field_util::user_pic_select('u', user_field_util::get_extra_fields($context));
     $users = $DB->get_records_sql("SELECT $picturefields, u.idnumber, ci.code, ci.timecreated
                                      FROM {user} u
                                INNER JOIN {certificate_issues} ci
