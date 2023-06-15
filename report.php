@@ -57,15 +57,15 @@ if ($action) {
 $PAGE->set_url($url);
 
 if (!$cm = get_coursemodule_from_id('certificate', $id)) {
-    print_error('Course Module ID was incorrect');
+    throw new moodle_exception('Course Module ID was incorrect');
 }
 
 if (!$course = $DB->get_record('course', array('id'=> $cm->course))) {
-    print_error('Course is misconfigured');
+    throw new moodle_exception('Course is misconfigured');
 }
 
 if (!$certificate = $DB->get_record('certificate', array('id'=> $cm->instance))) {
-    print_error('Certificate ID was incorrect');
+    throw new moodle_exception('Certificate ID was incorrect');
 }
 
 // Requires a course login
