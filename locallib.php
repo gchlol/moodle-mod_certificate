@@ -24,6 +24,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_certificate\util\user_field_util;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/mod/certificate/lib.php');
@@ -389,7 +391,7 @@ function certificate_get_issue($course, $user, $certificate, $cm) {
  * @param int $perpage total per page
  * @return stdClass the users
  */
-function certificate_get_issues($certificateid, $sort="ci.timecreated ASC", $groupmode, $cm, $page = 0, $perpage = 0) {
+function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 0, $perpage = 0) {
     global $DB, $USER;
 
     $context = context_module::instance($cm->id);
@@ -448,7 +450,7 @@ function certificate_get_issues($certificateid, $sort="ci.timecreated ASC", $gro
     $allparams = $conditionsparams + array('certificateid' => $certificateid);
 
     // The picture fields also include the name fields for the user.
-    $picturefields = user_picture::fields('u', get_extra_user_fields($context));
+    $picturefields = user_field_util::user_pic_select('u', user_field_util::get_extra_fields($context));
     $users = $DB->get_records_sql("SELECT $picturefields, u.idnumber, ci.code, ci.timecreated
                                      FROM {user} u
                                INNER JOIN {certificate_issues} ci
@@ -1100,7 +1102,7 @@ function certificate_get_code($certificate, $certrecord) {
  * @param string $text the text to print
  * @param int $width horizontal dimension of text block
  */
-function certificate_print_text($pdf, $x, $y, $align, $font='freeserif', $style, $size = 10, $text, $width = 0) {
+function certificate_print_text($pdf, $x, $y, $align, $font='freeserif', $style = '', $size = 10, $text = '', $width = 0) {
     $pdf->setFont($font, $style, $size);
     $pdf->SetXY($x, $y);
     $pdf->writeHTMLCell($width, 0, '', '', $text, 0, 0, 0, true, $align);

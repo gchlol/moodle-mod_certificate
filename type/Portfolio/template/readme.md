@@ -1,6 +1,6 @@
-#Portfolio Template
+# Portfolio Template
 
-##Data
+## Data
 * With use of the `portfolio_data` class in templates course data will be automatically retrieved based on checkbox custom fields.
 * Custom fields will be selected based on their name starting with the `port_` prefix.
 * A course designated to display on portfolios will then have the custom field checkbox for the category it falls into checked.
@@ -8,7 +8,7 @@
 * Any additional description after "required" word will be output under the section header.
 * While developing a portfolio dummy data can be populated for the sections be appending `&debug` to the PDF output url.
 
-##Using The Templates
+## Using The Templates
 1. Create a new directory within `mod/certificate/type/` following the `portfolio_<acronym>` identifier pattern. e.g. `portfolio_gch` for Gold Coast Health.
 2. Copy both `certificate.php` and `portfolio_output.php` from this directory to your newly created directory.
 3. Run a find and replace in both files to replace `portfolio_temp` with your identifier which should match the directory name. e.g. `portfolio_gch`.
@@ -16,7 +16,7 @@
    1. Type string to determine the name displayed in the templates list. e.g. `typeportfolio_gch`.
    2. Main language keys block. This can be copied from an existing portfolio type which can be found under a comment like such; `type/portfolio_gch`. Be sure to change the identifier in the language keys to match yours.
 
-##Implementation
+## Implementation
 1. Add a new Certificate module on a course and select the Certificate Type option under Design Options that matches your type language string.
 2. Configure the language keys block created in the above steps. This will include site specific names and colour values as well as general page texts.
 3. Open the certificate PDF by clicking the _Get your certificate_ button when viewing the Certificate course module. This will give you a view of the base layout with your language strings applied.
