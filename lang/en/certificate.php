@@ -202,6 +202,7 @@ $string['typeletter_non_embedded'] = 'Letter Non-Embedded';
 $string['typeportfolio_dd'] = 'Portfolio Darling Downs';
 $string['typeportfolio_gch'] = 'Portfolio Gold Coast Health';
 $string['typeportfolio_sch'] = 'Portfolio Sunshine Coast Health';
+$string['typeportfolio_wm'] = 'Portfolio West Moreton';
 $string['unsupportedfiletype'] = 'File must be a jpeg or png file';
 $string['uploadimage'] = 'Upload image';
 $string['uploadimagedesc'] = 'This button will take you to a new screen where you will be able to upload images.';
@@ -311,3 +312,24 @@ $string['portfolio_sch_printedon'] = 'Printed on {$a}';
 $string['portfolio_sch_siteservicelabel'] = 'Presented by - {$a}';
 $string['portfolio_sch_nonecomplete'] = 'There have been no {$a} courses completed';
 $string['portfolio_sch_magiccomplete'] = 'Credited';
+
+// type/portfolio_wm
+$string['portfolio_wm_title'] = 'Portfolio';
+$string['portfolio_wm_title_contfor'] = 'Portfolio (continued) for {$a}';
+$string['portfolio_wm_continued'] = '(continued)';
+
+$string['portfolio_wm_colour_primary'] = '#214D5A';
+$string['portfolio_wm_colour_secondary'] = '#B8D231';
+$string['portfolio_wm_colour_base'] = '#000000';
+$string['portfolio_wm_colour_minor'] = '#808080';
+
+$string['portfolio_wm_site'] = 'West Moreton Health';
+$string['portfolio_wm_service'] = 'Learning On-Line';
+$string['portfolio_wm_siteservice'] = 'West Moreton Health Learning On-Line';
+
+$string['portfolio_wm_postuser'] = 'has completed the following';
+$string['portfolio_wm_preuser'] = 'This is to certify that';
+$string['portfolio_wm_printedon'] = 'Printed on {$a}';
+$string['portfolio_wm_siteservicelabel'] = 'Presented by - {$a}';
+$string['portfolio_wm_nonecomplete'] = 'There have been no {$a} courses completed';
+$string['portfolio_wm_magiccomplete'] = 'Credited';
