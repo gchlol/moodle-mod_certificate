@@ -788,7 +788,7 @@ function certificate_get_directories(string $types_directory): array {
     $types = [];
     while (($directory = readdir($handle)) !== false) {
         if (
-            str_starts_with($directory, '.') ||
+            strpos($directory, '.') === 0 ||
             !is_dir("$types_directory/$directory")
         ) {
             continue;
