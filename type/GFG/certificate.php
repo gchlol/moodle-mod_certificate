@@ -38,6 +38,15 @@ if ($ciapid == '999999') {
 
 $plan = $DB->get_record('ciap_plans', [ 'id' => $ciapid ]);
 $ciap = $DB->get_record('ciap', [ 'id' => $plan->ciapid ]);
+$actions = $DB->get_records('ciap_actions', [ 'planid' => $plan->id ]);
+
+$plan->custom_fields = get_custom_field_values('plans', $ciap->id, $plan->id);
+foreach ($actions as &$action) {
+    $action->custom_fields = get_custom_field_values('actions', $ciap->id, $action->id);
+}
+
+$division_field = $DB->get_record('user_info_field', [ 'shortname' => 'level8' ]);
+$position_field = $DB->get_record('user_info_field', [ 'shortname' => 'posid' ]);
 
 $pdf = new TCPDF($certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
 $pdf->SetTitle("$plan->name - Summary");
@@ -72,19 +81,21 @@ $box2 = 88;
 $box3 = 136;
 $box4 = 184;
 $box5 = 232;
+$action_logo_size = 20;
+$action_logo_spacing = 5;
+$page_center = $pdf->getPageWidth() / 2;
 
 
-printhead1($plan);
+printhead1($ciap, $plan);
 
 $actionno = $posno = 0;
-$actions = $DB->get_records('ciap_actions', [ 'planid' => $plan->id ]);
 foreach ($actions as $action) {
     $actionno++;
     $posno++;
 
     if ($posno == 6) {
         $posno = 1;
-        printhead1($plan);
+        printhead1($ciap, $plan);
     }
 
     $final = headbod($action->description);
@@ -101,45 +112,8 @@ foreach ($actions as $action) {
     certificate_print_text($pdf, $y, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $actionno);
     certificate_print_text($pdf, $y + 5, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $actionhead, 160);
 
-    $values = $DB->get_record(
-        'customfield_data',
-        [
-            'fieldid' => 55,
-            'instanceid' => $action->id,
-        ]
-    );
-    if ($values) {
-        $value = null;
-        switch ($values->value) {
-            case '1':
-                $value = 'Integrity';
-
-                break;
-            case '2':
-                $value = 'Community First';
-
-                break;
-            case '3':
-                $value = 'Excellence';
-
-                break;
-            case '4':
-                $value = 'Respect';
-
-                break;
-            case '5':
-                $value = 'Compassion';
-
-                break;
-            case '6':
-                $value = 'Empower';
-
-                break;
-        }
-
-        if ($value) {
-            certificate_print_text($pdf, $y + 180, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $value);
-        }
+    if (isset($action->custom_fields->response)) {
+        certificate_print_text($pdf, $y + 180, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $action->custom_fields->response);
     }
 
     $actionid = $action->id;
@@ -230,59 +204,36 @@ foreach ($actions as $action) {
             certificate_print_text($pdf, $y + 10, $x + 37, 'l', 'Helvetica', 'i', 12, $actionbody, 240);
         }
 
-        $values = $DB->get_record('customfield_data', [ 'fieldid' => 55, 'instanceid' => $action->id ]);
-        $response = $DB->get_record('customfield_data', [ 'fieldid' => 58, 'instanceid' => $action->id ]);
+        if (isset($action->custom_fields->response)) {
+            certificate_print_text($pdf, $y, $x + 13, 'C', 'Helvetica', '', 9, 'This action promotes the GCH value of');
+            certificate_print_text($pdf, $y, $x + 21, 'C', 'Helvetica', '', 9, 'within our work unit');
 
-        $value = $logo = null;
-        if ($values) {
-            switch ($values->value) {
-                case '1':
-                    $value = 'Integrity';
-                    $logo = "$CFG->dirroot/mod/certificate/type/GFG/Integrity.png";
+            $pdf->SetTextColor(16, 75, 118);
+            certificate_print_text($pdf, $y, $x + 17, 'C', 'Helvetica', 'B', 9, $action->custom_fields->response);
 
-                    break;
-                case '2':
-                    $value = 'Community First';
-                    $logo = "$CFG->dirroot/mod/certificate/type/GFG/Community.png";
+            $responses = explode(', ', $action->custom_fields->response);
+            $response_count = count($responses);
+            $logos_size = ( $action_logo_size * $response_count ) + ( $action_logo_spacing * ( $response_count - 1 ));
+            $logos_start = $page_center - ( $logos_size / 2 );
 
-                    break;
-                case '3':
-                    $value = 'Excellence';
-                    $logo = "$CFG->dirroot/mod/certificate/type/GFG/Excellence.png";
+            foreach ($responses as $index => $response) {
+                $logo_path = "$CFG->dirroot/mod/certificate/type/GFG/$response.png";
+                $logo_x = $logos_start + ( $action_logo_size * $index ) + ( $action_logo_spacing * $index );
 
-                    break;
-                case '4':
-                    $value = 'Respect';
-                    $logo = "$CFG->dirroot/mod/certificate/type/GFG/Respect.png";
-
-                    break;
-                case '5':
-                    $value = 'Compassion';
-                    $logo = "$CFG->dirroot/mod/certificate/type/GFG/Compassion.png";
-
-                    break;
-                case '6':
-                    $value = 'Empower';
-                    $logo = "$CFG->dirroot/mod/certificate/type/GFG/Empower.png";
-
-                    break;
+                $pdf->Image($logo_path, $logo_x, 2, $action_logo_size, $action_logo_size);
             }
         }
 
-        if ($logo) {
-            $pdf->Image($logo, 138, 3, 20, 20);
+        if (isset($action->custom_fields->owner)) {
+            $pdf->SetTextColor(16, 75, 118);
+            certificate_print_text($pdf, $y + 10, $x + 60, 'l', 'Helvetica', 'B', 12, 'Who is responsible for this action?');
+            $pdf->SetTextColor(0, 0, 0);
+            certificate_print_text($pdf, $y + 83, $x + 60, 'l', 'Helvetica', '', 12, $action->custom_fields->owner, 75);
         }
 
-        certificate_print_text($pdf, $y, $x + 13, 'C', 'Helvetica', '', 9, 'This action promotes the GCH value of');
-        certificate_print_text($pdf, $y, $x + 21, 'C', 'Helvetica', '', 9, 'within our work unit');
-
         $pdf->SetTextColor(16, 75, 118);
-        certificate_print_text($pdf, $y, $x + 17, 'C', 'Helvetica', 'B', 9, $value);
-        certificate_print_text($pdf, $y + 10, $x + 60, 'l', 'Helvetica', 'B', 12, 'Who is responsible for this action?');
         certificate_print_text($pdf, $y + 160, $x + 60, 'l', 'Helvetica', 'B', 12, 'When is this action due?');
-
         $pdf->SetTextColor(0, 0, 0);
-        certificate_print_text($pdf, $y + 83, $x + 60, 'l', 'Helvetica', '', 12, $response->value, 75);
         certificate_print_text($pdf, $y + 212, $x + 60, 'l', 'Helvetica', '', 12, date('j F Y', $action->duedate));
 
         $pos++;
@@ -346,10 +297,8 @@ foreach ($actions as $action) {
     }
 }
 
-function printhead1($plan) {
-    global $pdf, $DB, $CFG, $x, $y, $page;
-
-    $ciap = $DB->get_record('ciap', [ 'id' => $plan->ciapid ]);
+function printhead1($ciap, $plan) {
+    global $pdf, $DB, $CFG, $x, $y, $page, $division_field, $position_field;
 
     $pdf->AddPage();
     $page++;
@@ -358,31 +307,35 @@ function printhead1($plan) {
     $pdf->SetTextColor(255, 255, 255);
     certificate_print_text($pdf, $y + 95, $x, 'l', 'Helvetica', 'B', 18, $plan->idnumber . ' ' . $plan->name);
 
-    $posid = $DB->get_record('ciap_owners', [ 'planid' => $plan->id ], '*', IGNORE_MULTIPLE);
-    if (!$posid->value) {
-        $user_id = $posid->userid;
+    $plan_owner = $DB->get_record('ciap_owners', [ 'planid' => $plan->id ], '*', IGNORE_MULTIPLE);
+    if ($plan_owner->type == 0) {
+        $user_id = $plan_owner->userid;
 
     } else {
-        $user_data = $DB->get_record_sql(
+        $user_id = $DB->get_field_sql(
             "
-                SELECT  *
+                SELECT  userid
                 FROM    {user_info_data}
-                WHERE " . $DB->sql_compare_text('data') . " = " . $DB->sql_compare_text(':data')
+                WHERE   fieldid = :field and
+                        " . $DB->sql_compare_text('data') . " = " . $DB->sql_compare_text(':data')
             ,
-            [ 'data' => $posid->value ],
+            [
+                'field' => $position_field->id,
+                'data' => $plan_owner->value,
+            ],
             IGNORE_MULTIPLE
         );
-        $user_id = $user_data->userid;
     }
 
-    $division = $DB->get_record('user_info_data', [ 'fieldid' => 20, 'userid' => $user_id ]);
-    if ($division) {
-        certificate_print_text($pdf, $y + 95, $x + 10, 'l', 'Helvetica', '', 12, $division->data);
+    if ($division_field) {
+        $division = $DB->get_record('user_info_data', [ 'fieldid' => $division_field->id, 'userid' => $user_id ]);
+        if ($division) {
+            certificate_print_text($pdf, $y + 95, $x + 10, 'l', 'Helvetica', '', 12, $division->data);
+        }
     }
 
-    $includes = $DB->get_record('customfield_data', [ 'fieldid' => '73', 'instanceid' => $plan->id ]);
-    if ($includes) {
-        certificate_print_text($pdf, $y + 95, $x + 17, 'l', 'Helvetica', '', 12, $includes->value);
+    if (isset($plan->custom_fields->mergein)) {
+        certificate_print_text($pdf, $y + 95, $x + 17, 'l', 'Helvetica', '', 12, $plan->custom_fields->mergein);
     }
 
     certificate_print_text($pdf, $y + 95, $x + 25, 'l', 'Helvetica', 'B', 18, "$ciap->name - Summary");
@@ -466,4 +419,28 @@ function outputdata() {
     }
 
     exit();
+}
+
+/**
+ *
+ *
+ * @param string $area
+ * @param int $ciap_id
+ * @param int $item_id
+ * @return stdClass
+ * @throws moodle_exception
+ */
+function get_custom_field_values(string $area, int $ciap_id, int $item_id): stdClass {
+    $handler = \core_customfield\handler::get_handler('mod_ciap', $area, $ciap_id);
+
+    $custom_field_values = [];
+    $custom_fields = $handler->get_instance_data($item_id);
+    foreach ($custom_fields as $custom_field) {
+        $field = $custom_field->get_field();
+        $field_name = $field->get('shortname');
+
+        $custom_field_values[$field_name] = $custom_field->export_value();
+    }
+
+    return (object)$custom_field_values;
 }
