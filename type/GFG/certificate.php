@@ -41,7 +41,7 @@ $ciap = $DB->get_record('ciap', [ 'id' => $plan->ciapid ]);
 $actions = $DB->get_records('ciap_actions', [ 'planid' => $plan->id ]);
 
 $plan->custom_fields = get_custom_field_values('plans', $ciap->id, $plan->id);
-foreach ($actions as &$action) {
+foreach ($actions as $action) {
     $action->custom_fields = get_custom_field_values('actions', $ciap->id, $action->id);
 }
 
@@ -98,10 +98,10 @@ foreach ($actions as $action) {
         printhead1($ciap, $plan);
     }
 
-    $final = headbod($action->description);
-    $actionhead = $final[0];
-    $actionbod = $final[1];
-
+    [
+        $actionhead,
+        $actionbod,
+    ] = get_action_content($action);
     if ($actionhead == NULL) {
         $actionhead = $actionbod;
         if (strlen($actionbod) > 140) {
@@ -113,7 +113,8 @@ foreach ($actions as $action) {
     certificate_print_text($pdf, $y + 5, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $actionhead, 160);
 
     if (isset($action->custom_fields->response)) {
-        certificate_print_text($pdf, $y + 180, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $action->custom_fields->response);
+        $response = str_replace(', ', '<br/>', $action->custom_fields->response);
+        certificate_print_text($pdf, $y + 180, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $response);
     }
 
     $actionid = $action->id;
@@ -156,7 +157,7 @@ foreach ($actions as $action) {
     }
 
     certificate_print_text($pdf, $y + 230, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $status);
-    certificate_print_text($pdf, $y + 230, $x + 45 + ($posno * 20), 'l', 'Helvetica', '', 11, $due);
+    certificate_print_text($pdf, $y + 230, $x + 46 + ($posno * 20), 'l', 'Helvetica', '', 11, $due);
 }
 
 $actionno = 0;
@@ -185,9 +186,14 @@ foreach ($actions as $action) {
 
         printhead2($plan);
 
-        $final = headbod($action->description);
-        $actionhead = $final[0];
-        $actionbody = $final[1];
+        [
+            $actionhead,
+            $actionbody,
+        ] = get_action_content($action);
+
+        if (strlen($actionhead) > 85) {
+            $actionhead = substr($actionhead, 0, 85) . '...';
+        }
 
         $pdf->SetTextColor(16, 75, 118);
         certificate_print_text($pdf, $y + 10, $x + 10, 'l', 'Helvetica', 'B', 37, 'Action ' . $actionno);
@@ -365,26 +371,41 @@ function printhead2($plan) {
     certificate_print_text($pdf, $y, $x + 185, 'C', 'Helvetica', 'B', 11, 'Printed on ' . date('j F Y', time()));
 }
 
-function headbod($text) {
+function get_action_content(stdClass $action) {
     $repl = [ " </p>", " /n", "</p>", "/n" ];
     $repl2 = [ '..', '.  .', '.  .', '. .', '.  .' ];
-    $text1 = str_replace($repl, '.', $text);
+
+    $text1 = str_replace($repl, '.', $action->description);
     $text2 = preg_replace('/^\s+|\s+$|\s+(?=\s)/', '', $text1);
     $text3 = strip_tags($text2);
     $text4 = trim(preg_replace('/\s\s+/', ' ', str_replace("\n", ' ', $text3)));
     $text5 = str_replace($repl2, '. ', $text4);
 
-    $pos = strpos($text5, '.');
-    if ($pos < 80 && $pos > 5) {
-        $head = substr($text5, 0, $pos + 1);
-        $body = substr($text5, $pos + 1);
-
-    } else {
-        $head = '';
-        $body = $text5;
+    // Distinct name/title and description/body.
+    if (!empty($action->name)) {
+        return [
+            $action->name,
+            $text5,
+        ];
     }
 
-    return [ $head, $body ];
+    // Try to determine heading from description.
+    $head = null;
+    $body = $text5;
+
+    $pos = strpos($text5, '.');
+    if (
+        $pos < 80 &&
+        $pos > 5
+    ) {
+        $head = substr($text5, 0, $pos + 1);
+        $body = substr($text5, $pos + 1);
+    }
+
+    return [
+        $head,
+        $body,
+    ];
 }
 
 function outputdata() {
