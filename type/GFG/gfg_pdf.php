@@ -131,30 +131,29 @@ class gfg_pdf extends TCPDF {
         $this->SetTextColor(255, 255, 255);
 
         certificate_print_text($this,
-            $this->lMargin + 95, $this->tMargin,
+            $this->lMargin + 95, 10,
             'l', 'Helvetica', 'B', 18,
             $this->plan->idnumber . ' ' . $this->plan->name
         );
 
-
         if ($this->division) {
             certificate_print_text($this,
-                $this->lMargin + 95, $this->tMargin + 10,
+                $this->lMargin + 95, 20,
                 'l', 'Helvetica', '', 12,
                 $this->division
             );
         }
 
-        if (isset($plan->custom_fields->mergein)) {
+        if (isset($this->plan->custom_fields->mergein)) {
             certificate_print_text($this,
-                $this->lMargin + 95, $this->tMargin + 17,
+                $this->lMargin + 95, 27,
                 'l', 'Helvetica', '', 12,
-                $plan->custom_fields->mergein
+                $this->plan->custom_fields->mergein
             );
         }
 
         certificate_print_text($this,
-            $this->lMargin + 95, $this->tMargin + 25,
+            $this->lMargin + 95, 35,
             'l', 'Helvetica', 'B', 18,
             $this->ciap->name . ' - Summary'
         );
