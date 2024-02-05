@@ -168,8 +168,6 @@ foreach ($actions as $action) {
 
     if (!$updates) {
         certificate_print_text($pdf, $x + 10, $y + 70, 'l', 'Helvetica', 'B', 16, 'An update has not been provided for this action');
-
-        continue;
     }
 
     [
