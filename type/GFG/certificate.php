@@ -29,6 +29,7 @@ if (!defined('MOODLE_INTERNAL')) {
 }
 require_once("$CFG->libdir/filelib.php");
 require_once("$CFG->libdir/completionlib.php");
+require_once(__DIR__ . '/gfg_pdf.php');
 
 $ciapid = optional_param('ciap', 0, PARAM_INT);
 
@@ -45,57 +46,36 @@ foreach ($actions as $action) {
     $action->custom_fields = get_custom_field_values('actions', $ciap->id, $action->id);
 }
 
-$division_field = $DB->get_record('user_info_field', [ 'shortname' => 'level8' ]);
-$position_field = $DB->get_record('user_info_field', [ 'shortname' => 'posid' ]);
-
-$pdf = new TCPDF($certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
-$pdf->SetTitle("$plan->name - Summary");
-$pdf->setPrintHeader(false);
-$pdf->setPrintFooter(false);
-$pdf->SetAutoPageBreak(false);
-
-// Define variables
-$page = 0;
 $x = 10;
 $y = 10;
-$sealx = 175;
-$sealy = 5;
-$sealw = 25;
-$sealh = 25;
-$sigx = 140;
-$sigy = 239;
-$custx = 30;
-$custy = 230;
-$wmarkx = 26;
-$wmarky = 58;
-$wmarkw = 158;
-$wmarkh = 170;
-$codey = 250;
-$datex = 20;
-$datey = 254;
-$head1y = 70;
-$head2y = 140;
-$head3y = 210;
-$box1 = 40;
-$box2 = 88;
-$box3 = 136;
-$box4 = 184;
-$box5 = 232;
+
+$pdf = new gfg_pdf($ciap, $plan, $certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
+$pdf->SetTitle("$plan->name - Summary");
+$pdf->SetAutoPageBreak(true, 25);
+$pdf->setMargins($x, $y + 25);
+$pdf->setFooterMargin(25);
+
+$pdf->AddPage();
+
+// Define variables
 $action_logo_size = 20;
 $action_logo_spacing = 5;
 $page_center = $pdf->getPageWidth() / 2;
 
 
-printhead1($ciap, $plan);
-
-$actionno = $posno = 0;
+$actionno = 1;
+$action_offset = 0;
 foreach ($actions as $action) {
-    $actionno++;
-    $posno++;
+    if ($action_offset == 5) {
+        $action_offset = 0;
+    }
 
-    if ($posno == 6) {
-        $posno = 1;
-        printhead1($ciap, $plan);
+    if ($action_offset == 0) {
+        $pdf->SetTextColor(16, 75, 118);
+
+        certificate_print_text($pdf, $y + 5, $x + 50, 'l', 'Helvetica', 'B', 14, 'What is the action we have committed to?');
+        certificate_print_text($pdf, $y + 180, $x + 50, 'l', 'Helvetica', 'B', 14, 'Value:');
+        certificate_print_text($pdf, $y + 230, $x + 50, 'l', 'Helvetica', 'B', 14, 'Action status:');
     }
 
     [
@@ -109,12 +89,16 @@ foreach ($actions as $action) {
         }
     }
 
-    certificate_print_text($pdf, $y, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $actionno);
-    certificate_print_text($pdf, $y + 5, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $actionhead, 160);
+    $x_offset = $x + 60 + ( $action_offset * 20 );
+
+    $pdf->setTextColor(0, 0, 0);
+
+    certificate_print_text($pdf, $y, $x_offset, 'l', 'Helvetica', '', 14, "$actionno.");
+    certificate_print_text($pdf, $y + 5, $x_offset, 'l', 'Helvetica', '', 14, $actionhead, 160);
 
     if (isset($action->custom_fields->response)) {
         $response = str_replace(', ', '<br/>', $action->custom_fields->response);
-        certificate_print_text($pdf, $y + 180, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $response);
+        certificate_print_text($pdf, $y + 180, $x_offset, 'l', 'Helvetica', '', 14, $response);
     }
 
     $actionid = $action->id;
@@ -156,13 +140,20 @@ foreach ($actions as $action) {
         }
     }
 
-    certificate_print_text($pdf, $y + 230, $x + 40 + ($posno * 20), 'l', 'Helvetica', '', 14, $status);
-    certificate_print_text($pdf, $y + 230, $x + 46 + ($posno * 20), 'l', 'Helvetica', '', 11, $due);
+    certificate_print_text($pdf, $y + 230, $x_offset, 'l', 'Helvetica', '', 14, $status);
+    certificate_print_text($pdf, $y + 230, $x_offset + 6, 'l', 'Helvetica', '', 11, $due);
+
+    $actionno++;
+    $action_offset++;
 }
 
-$actionno = 0;
+$pdf->set_is_summary_page(false);
+
+$actionno = 1;
 foreach ($actions as $action) {
-    $actionno++;
+    $pdf->set_action($action, $actionno);
+    $pdf->AddPage();
+
     $actionid = $action->id;
 
     $updates = $DB->get_records_sql(
@@ -177,72 +168,47 @@ foreach ($actions as $action) {
 
     if (!$updates) {
         certificate_print_text($pdf, $y + 10, $x + 70, 'l', 'Helvetica', 'B', 16, 'An update has not been provided for this action');
+
+        continue;
     }
 
-    $pos = $complete = 0;
+    [
+        $actionhead,
+        $actionbody,
+    ] = get_action_content($action);
+
+    if (strlen($actionhead) > 85) {
+        $actionhead = substr($actionhead, 0, 85) . '...';
+    }
+
+    $pdf->SetTextColor(0, 0, 0);
+    certificate_print_text($pdf, $y + 10, $x + 27, 'l', 'Helvetica', 'i', 18, $actionhead, 240);
+
+    if (strlen($actionbody) > 400) {
+        certificate_print_text($pdf, $y + 10, $x + 37, 'l', 'Helvetica', 'i', 12, (substr($actionbody, 0, 400) . '...'), 240);
+        $pdf->SetTextColor(187, 111, 122);
+        certificate_print_text($pdf, $y + 170, $x + 53, 'l', 'Helvetica', 'B', 12, 'Further details available over the page', 240);
+        $pdf->SetTextColor(0, 0, 0);
+
+    } else {
+        certificate_print_text($pdf, $y + 10, $x + 37, 'l', 'Helvetica', 'i', 12, $actionbody, 240);
+    }
+
+    if (isset($action->custom_fields->owner)) {
+        $pdf->SetTextColor(16, 75, 118);
+        certificate_print_text($pdf, $y + 10, $x + 60, 'l', 'Helvetica', 'B', 12, 'Who is responsible for this action?');
+        $pdf->SetTextColor(0, 0, 0);
+        certificate_print_text($pdf, $y + 83, $x + 60, 'l', 'Helvetica', '', 12, $action->custom_fields->owner, 75);
+    }
+
+    $pdf->SetTextColor(16, 75, 118);
+    certificate_print_text($pdf, $y + 160, $x + 60, 'l', 'Helvetica', 'B', 12, 'When is this action due?');
+    $pdf->SetTextColor(0, 0, 0);
+    certificate_print_text($pdf, $y + 212, $x + 60, 'l', 'Helvetica', '', 12, date('j F Y', $action->duedate));
+
+    $update_offset = 0;
+    $complete = false;
     foreach ($updates as $update) {
-        $pos = 0;
-        $actionbody = $actionhead = '';
-
-        printhead2($plan);
-
-        [
-            $actionhead,
-            $actionbody,
-        ] = get_action_content($action);
-
-        if (strlen($actionhead) > 85) {
-            $actionhead = substr($actionhead, 0, 85) . '...';
-        }
-
-        $pdf->SetTextColor(16, 75, 118);
-        certificate_print_text($pdf, $y + 10, $x + 10, 'l', 'Helvetica', 'B', 37, 'Action ' . $actionno);
-        $pdf->SetTextColor(0, 0, 0);
-        certificate_print_text($pdf, $y + 10, $x + 27, 'l', 'Helvetica', 'i', 18, $actionhead, 240);
-
-        if (strlen($actionbody) > 400) {
-            certificate_print_text($pdf, $y + 10, $x + 37, 'l', 'Helvetica', 'i', 12, (substr($actionbody, 0, 400) . '...'), 240);
-            $pdf->SetTextColor(187, 111, 122);
-            certificate_print_text($pdf, $y + 170, $x + 53, 'l', 'Helvetica', 'B', 12, 'Further details available over the page', 240);
-            $pdf->SetTextColor(0, 0, 0);
-
-        } else {
-            certificate_print_text($pdf, $y + 10, $x + 37, 'l', 'Helvetica', 'i', 12, $actionbody, 240);
-        }
-
-        if (isset($action->custom_fields->response)) {
-            certificate_print_text($pdf, $y, $x + 13, 'C', 'Helvetica', '', 9, 'This action promotes the GCH value of');
-            certificate_print_text($pdf, $y, $x + 21, 'C', 'Helvetica', '', 9, 'within our work unit');
-
-            $pdf->SetTextColor(16, 75, 118);
-            certificate_print_text($pdf, $y, $x + 17, 'C', 'Helvetica', 'B', 9, $action->custom_fields->response);
-
-            $responses = explode(', ', $action->custom_fields->response);
-            $response_count = count($responses);
-            $logos_size = ( $action_logo_size * $response_count ) + ( $action_logo_spacing * ( $response_count - 1 ));
-            $logos_start = $page_center - ( $logos_size / 2 );
-
-            foreach ($responses as $index => $response) {
-                $logo_path = "$CFG->dirroot/mod/certificate/type/GFG/$response.png";
-                $logo_x = $logos_start + ( $action_logo_size * $index ) + ( $action_logo_spacing * $index );
-
-                $pdf->Image($logo_path, $logo_x, 2, $action_logo_size, $action_logo_size);
-            }
-        }
-
-        if (isset($action->custom_fields->owner)) {
-            $pdf->SetTextColor(16, 75, 118);
-            certificate_print_text($pdf, $y + 10, $x + 60, 'l', 'Helvetica', 'B', 12, 'Who is responsible for this action?');
-            $pdf->SetTextColor(0, 0, 0);
-            certificate_print_text($pdf, $y + 83, $x + 60, 'l', 'Helvetica', '', 12, $action->custom_fields->owner, 75);
-        }
-
-        $pdf->SetTextColor(16, 75, 118);
-        certificate_print_text($pdf, $y + 160, $x + 60, 'l', 'Helvetica', 'B', 12, 'When is this action due?');
-        $pdf->SetTextColor(0, 0, 0);
-        certificate_print_text($pdf, $y + 212, $x + 60, 'l', 'Helvetica', '', 12, date('j F Y', $action->duedate));
-
-        $pos++;
         $perioddate = $DB->get_record('ciap_periods', [ 'id' => $update->periodid ]);
         switch ($update->status) {
             case '0':
@@ -255,7 +221,7 @@ foreach ($actions as $action) {
                 break;
             case '2':
                 $ans = 'Complete';
-                $complete = 1;
+                $complete = true;
 
                 break;
             case '3':
@@ -264,19 +230,19 @@ foreach ($actions as $action) {
                 break;
         }
 
-        $end_date = date('F Y', $perioddate->enddate);
-        $due_date = date('j F Y', $update->duedate);
-
-        certificate_print_text($pdf, $y + 10, $x + 40 + ($pos * 30), 'l', 'Helvetica', 'B', 12, "Update $update->periodid");
-        certificate_print_text($pdf, $y + 30, $x + 40 + ($pos * 30), 'l', 'Helvetica', '', 12, "($end_date)");
-        certificate_print_text($pdf, $y + 160, $x + 40 + ($pos * 30), 'l', 'Helvetica', 'B', 12, 'Status:');
-        certificate_print_text($pdf, $y + 180, $x + 40 + ($pos * 30), 'l', 'Helvetica', '', 12, $ans);
-
         if ($update->duedate) {
-            certificate_print_text($pdf, $y + 202, $x + 40 + ($pos * 30), 'l', 'Helvetica', '', 12, "($due_date)");
+            $due_date = date('j F Y', $update->duedate);
+            $ans .= " ($due_date)";
         }
 
-        certificate_print_text($pdf, $y + 10, $x + 50 + ($pos * 30), 'l', 'Helvetica', '', 12, $update->description);
+        $x_offset = $x + 70 + ($update_offset * 30);
+        $end_date = date('F Y', $perioddate->enddate);
+
+        certificate_print_text($pdf, $y + 10, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Update $update->periodid</strong> ($end_date)");
+        certificate_print_text($pdf, $y + 160, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Status:</strong> $ans");
+        certificate_print_text($pdf, $y + 10, $x_offset + 10, 'l', 'Helvetica', '', 12, $update->description);
+
+        $update_offset++;
     }
 
     if ($complete) {
@@ -286,89 +252,16 @@ foreach ($actions as $action) {
     }
 
     if (strlen($actionbody) > 400) {
-        printhead2($plan);
+        $pdf->AddPage();
 
-        $pdf->Image($logo, 138, 3, 20, 20);
-        certificate_print_text($pdf, $y, $x + 13, 'C', 'Helvetica', '', 9, 'This action promotes the GCH value of');
-        certificate_print_text($pdf, $y, $x + 21, 'C', 'Helvetica', '', 9, 'within our work unit');
-        $pdf->SetTextColor(16, 75, 118);
-        certificate_print_text($pdf, $y, $x + 17, 'C', 'Helvetica', 'B', 9, $value);
-        certificate_print_text($pdf, $y + 10, $x + 10, 'l', 'Helvetica', 'B', 37, "Action $actionno");
-        $pdf->SetTextColor(187, 111, 122);
-        certificate_print_text($pdf, $y + 10, $x + 25, 'l', 'Helvetica', 'B', 24, 'Appendix');
         $pdf->SetTextColor(0, 0, 0);
-        certificate_print_text($pdf, $y + 10, $x + 40, 'l', 'Helvetica', 'B', 12, $actionhead, 240);
-        certificate_print_text($pdf, $y + 10, $x + 50, 'l', 'Helvetica', 'i', 12, $actionbody, 240);
-
-    }
-}
-
-function printhead1($ciap, $plan) {
-    global $pdf, $DB, $CFG, $x, $y, $page, $division_field, $position_field;
-
-    $pdf->AddPage();
-    $page++;
-    $pdf->Image("$CFG->dirroot/mod/certificate/type/GFG/CIAP P1.jpg", 0, 0, 297, 210);
-
-    $pdf->SetTextColor(255, 255, 255);
-    certificate_print_text($pdf, $y + 95, $x, 'l', 'Helvetica', 'B', 18, $plan->idnumber . ' ' . $plan->name);
-
-    $plan_owner = $DB->get_record('ciap_owners', [ 'planid' => $plan->id ], '*', IGNORE_MULTIPLE);
-    if ($plan_owner->type == 0) {
-        $user_id = $plan_owner->userid;
-
-    } else {
-        $user_id = $DB->get_field_sql(
-            "
-                SELECT  userid
-                FROM    {user_info_data}
-                WHERE   fieldid = :field and
-                        " . $DB->sql_compare_text('data') . " = " . $DB->sql_compare_text(':data')
-            ,
-            [
-                'field' => $position_field->id,
-                'data' => $plan_owner->value,
-            ],
-            IGNORE_MULTIPLE
-        );
+        certificate_print_text($pdf, $y + 10, $x + 35, 'l', 'Helvetica', 'B', 12, $action->name ?? $actionhead, 240);
+        certificate_print_text($pdf, $y + 10, $x + 50, '', 'Helvetica', '', 12, $action->description);
     }
 
-    if ($division_field) {
-        $division = $DB->get_record('user_info_data', [ 'fieldid' => $division_field->id, 'userid' => $user_id ]);
-        if ($division) {
-            certificate_print_text($pdf, $y + 95, $x + 10, 'l', 'Helvetica', '', 12, $division->data);
-        }
-    }
+    $pdf->lastPage();
 
-    if (isset($plan->custom_fields->mergein)) {
-        certificate_print_text($pdf, $y + 95, $x + 17, 'l', 'Helvetica', '', 12, $plan->custom_fields->mergein);
-    }
-
-    certificate_print_text($pdf, $y + 95, $x + 25, 'l', 'Helvetica', 'B', 18, "$ciap->name - Summary");
-    $pdf->SetTextColor(16, 75, 118);
-
-    certificate_print_text($pdf, $y + 5, $x + 50, 'l', 'Helvetica', 'B', 14, 'What is the action we have committed to?');
-    certificate_print_text($pdf, $y + 180, $x + 50, 'l', 'Helvetica', 'B', 14, 'Value:');
-    certificate_print_text($pdf, $y + 230, $x + 50, 'l', 'Helvetica', 'B', 14, 'Action status:');
-
-    $pdf->SetTextColor(0, 0, 0);
-    certificate_print_text($pdf, $y, $x + 175, 'C', 'Helvetica', 'B', 11, "$ciap->name - Summary");
-    certificate_print_text($pdf, $y, $x + 180, 'C', 'Helvetica', 'B', 11, "$plan->idnumber $plan->name  -  page $page");
-    certificate_print_text($pdf, $y, $x + 185, 'C', 'Helvetica', 'B', 11, 'Printed on ' . date('j F Y', time()));
-}
-
-function printhead2($plan) {
-    global $pdf, $DB, $CFG, $x, $y, $page;
-
-    $ciap = $DB->get_record('ciap', [ 'id' => $plan->ciapid ]);
-
-    $pdf->AddPage();
-    $page++;
-    $pdf->Image("$CFG->dirroot/mod/certificate/type/GFG/CIAP P2.jpg", 0, 0, 297, 210);
-
-    certificate_print_text($pdf, $y, $x + 175, 'C', 'Helvetica', 'B', 11, $ciap->name . ' - Summary');
-    certificate_print_text($pdf, $y, $x + 180, 'C', 'Helvetica', 'B', 11, $plan->idnumber . ' ' . $plan->name . '  -  page ' . $page);
-    certificate_print_text($pdf, $y, $x + 185, 'C', 'Helvetica', 'B', 11, 'Printed on ' . date('j F Y', time()));
+    $actionno++;
 }
 
 function get_action_content(stdClass $action) {
@@ -409,7 +302,7 @@ function get_action_content(stdClass $action) {
 }
 
 function outputdata() {
-    global $pdf, $DB, $CFG, $x, $y, $page;
+    global $DB;
 
     $actions = $DB->get_records('ciap_actions');
     foreach ($actions as $action) {
