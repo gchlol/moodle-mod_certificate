@@ -11,6 +11,18 @@ class gfg_pdf extends TCPDF {
     private ?string $division = null;
     private bool $is_summary_page = true;
 
+    /**
+     * @param stdClass $ciap CIAP instance data.
+     * @param stdClass $plan Target CIAP plan.
+     * @param string $orientation page orientation. Possible values are (case insensitive):<ul><li>P or Portrait (default)</li><li>L or Landscape</li><li>'' (empty string) for automatic orientation</li></ul>
+     * @param string $unit User measure unit. Possible values are:<ul><li>pt: point</li><li>mm: millimeter (default)</li><li>cm: centimeter</li><li>in: inch</li></ul><br />A point equals 1/72 of inch, that is to say about 0.35 mm (an inch being 2.54 cm). This is a very common unit in typography; font sizes are expressed in that unit.
+     * @param mixed $format The format used for pages. It can be either: one of the string values specified at getPageSizeFromFormat() or an array of parameters specified at setPageFormat().
+     * @param boolean $unicode TRUE means that the input text is unicode (default = true)
+     * @param string $encoding Charset encoding (used only when converting back html entities); default is UTF-8.
+     * @param boolean $diskcache DEPRECATED FEATURE
+     * @param false|integer $thisa If not false, set the document to PDF/A mode and the good version (1 or 3).
+     * @throws dml_exception
+     */
     public function __construct(stdClass $ciap, stdClass $plan, $orientation = 'P', $unit = 'mm', $format = 'A4', $unicode = true, $encoding = 'UTF-8', $diskcache = false, $thisa = false) {
         parent::__construct($orientation, $unit, $format, $unicode, $encoding, $diskcache, $thisa);
 
@@ -20,6 +32,12 @@ class gfg_pdf extends TCPDF {
         $this->populate_owner_info();
     }
 
+    /**
+     * Populate information relevant to the target plan's owner for use in output.
+     *
+     * @return void
+     * @throws dml_exception
+     */
     private function populate_owner_info(): void {
         global $DB;
 
@@ -66,6 +84,13 @@ class gfg_pdf extends TCPDF {
         }
     }
 
+    /**
+     * Set the current action and associated action number.
+     *
+     * @param stdClass|null $action Current action.
+     * @param int $action_number Action number.
+     * @return void
+     */
     public function set_action(?stdClass $action, int $action_number = 0): void {
         $this->action = $action;
         $this->action_number = $action_number;
@@ -84,7 +109,7 @@ class gfg_pdf extends TCPDF {
     /**
      * @inheritDoc
      */
-    public function Header() {
+    public function Header(): void {
         $auto_page_break = $this->getAutoPageBreak();
         $break_margin = $this->getBreakMargin();
         $this->setAutoPageBreak(false);
@@ -102,7 +127,10 @@ class gfg_pdf extends TCPDF {
         $this->setPageMark();
     }
 
-    public function Footer() {
+    /**
+     * @inheritDoc
+     */
+    public function Footer(): void {
         $footer_start = $this->getPageHeight() - $this->getFooterMargin();
         $page_number_text = $this->get_page_number_text();
         $page_number_padding = str_repeat(' ', strlen($page_number_text));
@@ -127,6 +155,11 @@ class gfg_pdf extends TCPDF {
         $this->Image($background_path, 0, 0, $this->getPageWidth(), $this->getPageHeight());
     }
 
+    /**
+     * Print summary page specific header.
+     *
+     * @return void
+     */
     private function print_summary_header(): void {
         $this->SetTextColor(255, 255, 255);
 
@@ -159,6 +192,11 @@ class gfg_pdf extends TCPDF {
         );
     }
 
+    /**
+     * Print action specific header.
+     *
+     * @return void
+     */
     private function print_action_header(): void {
         $this->SetTextColor(16, 75, 118);
         certificate_print_text($this, $this->lMargin + 10, 5, 'l', 'Helvetica', 'B', 37, "Action $this->action_number");
@@ -182,6 +220,12 @@ class gfg_pdf extends TCPDF {
         $this->previous_action = $this->action;
     }
 
+    /**
+     * Print dynamic action header logos.
+     *
+     * @param string $values Comma delimited list of action values. Values should correspond to images in the `images` subdirectory.
+     * @return void
+     */
     function print_action_value_logos(string $values): void {
         $action_logo_size = 20;
         $action_logo_spacing = 5;
@@ -200,6 +244,11 @@ class gfg_pdf extends TCPDF {
         }
     }
 
+    /**
+     * Get the internal page number text.
+     *
+     * @return string Page number text.
+     */
     private function get_page_number_text(): string {
         $w_page = isset($this->l['w_page']) ? $this->l['w_page'] . ' ' : '';
 

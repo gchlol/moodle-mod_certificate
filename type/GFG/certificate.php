@@ -34,7 +34,7 @@ require_once(__DIR__ . '/gfg_pdf.php');
 $ciapid = optional_param('ciap', 0, PARAM_INT);
 
 if ($ciapid == '999999') {
-    outputdata();
+    output_data();
 }
 
 $plan = $DB->get_record('ciap_plans', [ 'id' => $ciapid ]);
@@ -264,7 +264,13 @@ foreach ($actions as $action) {
     $actionno++;
 }
 
-function get_action_content(stdClass $action) {
+/**
+ * Get distinct heading and body content from an action.
+ *
+ * @param stdClass $action Action
+ * @return string[] Array containing heading then body. Heading may be null where it can't be determined.
+ */
+function get_action_content(stdClass $action): array {
     $repl = [ " </p>", " /n", "</p>", "/n" ];
     $repl2 = [ '..', '.  .', '.  .', '. .', '.  .' ];
 
@@ -301,7 +307,13 @@ function get_action_content(stdClass $action) {
     ];
 }
 
-function outputdata() {
+/**
+ * Directly output all CIAP action data.
+ *
+ * @return void
+ * @throws dml_exception
+ */
+function output_data(): void {
     global $DB;
 
     $actions = $DB->get_records('ciap_actions');
@@ -336,12 +348,12 @@ function outputdata() {
 }
 
 /**
+ * Get custom field values for the defined CIAP item.
  *
- *
- * @param string $area
- * @param int $ciap_id
- * @param int $item_id
- * @return stdClass
+ * @param string $area Custom field data area. e.g. 'plans', 'actions'.
+ * @param int $ciap_id ID of the parent CIAP instance.
+ * @param int $item_id ID of the item relevant to the area. e.g. Plan ID.
+ * @return stdClass Custom field value object where key is the field shortname and value is the exported field value.
  * @throws moodle_exception
  */
 function get_custom_field_values(string $area, int $ciap_id, int $item_id): stdClass {
