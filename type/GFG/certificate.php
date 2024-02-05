@@ -319,30 +319,19 @@ function output_data(): void {
 
     $actions = $DB->get_records('ciap_actions');
     foreach ($actions as $action) {
+        [ $head, $body ] = get_action_content($action);
+
         echo "
-            <br>$action->planid<br>
-            <b>Original</b><br>
-            $action->description<br>
+            <strong>Action: </strong> $action->id<br>
+            <strong>Plan: </strong> $action->planid<br>
+            <strong>Title: </strong> $head<br>
+            <strong>Stripped:</strong><br>
+            <div style='border: 1px solid black'>$body</div><br>
+            <strong>Content:</strong><br>
+            <pre style='border: 1px solid black'>$action->description</pre><br>
+            <br><br>
+            <hr>
         ";
-
-        $repl = [ " </p>", " /n", "</p>", "/n" ];
-        $repl2 = [ '..', '.  .', '.  .', '. .', '.  .' ];
-        $action1 = str_replace($repl, '.', $action->description);
-        $action2 = preg_replace('/^\s+|\s+$|\s+(?=\s)/', '', $action1);
-        $action3 = strip_tags($action2);
-        $actionstxt = trim(preg_replace('/\s\s+/', ' ', str_replace("\n", ' ', $action3)));
-        $actiontxt = str_replace($repl2, '. ', $actionstxt);
-        echo "<br><b>Stripped</b><br>$actiontxt<br>";
-
-        $pos = strpos($actiontxt, '.');
-        if ($pos < 80 && $pos > 5) {
-            $actionhead = substr($actiontxt, 0, $pos + 1);
-            $actionbody = substr($actiontxt, $pos + 1);
-            echo "<br><b>Header</b><br>$actionhead<br>";
-            echo "<br><b>Body</b><br>$actionbody<br>";
-        }
-
-        echo '<br>';
     }
 
     exit();
