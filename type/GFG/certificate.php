@@ -52,7 +52,7 @@ $y = 10;
 $pdf = new gfg_pdf($ciap, $plan, $certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
 $pdf->SetTitle("$plan->name - Summary");
 $pdf->SetAutoPageBreak(true, 25);
-$pdf->setMargins($x, $y + 25);
+$pdf->setMargins($y, $x + 25);
 $pdf->setFooterMargin(25);
 
 $pdf->AddPage();
@@ -73,9 +73,9 @@ foreach ($actions as $action) {
     if ($action_offset == 0) {
         $pdf->SetTextColor(16, 75, 118);
 
-        certificate_print_text($pdf, $y + 5, $x + 50, 'l', 'Helvetica', 'B', 14, 'What is the action we have committed to?');
-        certificate_print_text($pdf, $y + 180, $x + 50, 'l', 'Helvetica', 'B', 14, 'Value:');
-        certificate_print_text($pdf, $y + 230, $x + 50, 'l', 'Helvetica', 'B', 14, 'Action status:');
+        certificate_print_text($pdf, $x + 5, $y + 50, 'l', 'Helvetica', 'B', 14, 'What is the action we have committed to?');
+        certificate_print_text($pdf, $x + 180, $y + 50, 'l', 'Helvetica', 'B', 14, 'Value:');
+        certificate_print_text($pdf, $x + 230, $y + 50, 'l', 'Helvetica', 'B', 14, 'Action status:');
     }
 
     [
@@ -89,16 +89,16 @@ foreach ($actions as $action) {
         }
     }
 
-    $x_offset = $x + 60 + ( $action_offset * 20 );
+    $x_offset = $y + 60 + ( $action_offset * 20 );
 
     $pdf->setTextColor(0, 0, 0);
 
-    certificate_print_text($pdf, $y, $x_offset, 'l', 'Helvetica', '', 14, "$actionno.");
-    certificate_print_text($pdf, $y + 5, $x_offset, 'l', 'Helvetica', '', 14, $actionhead, 160);
+    certificate_print_text($pdf, $x, $x_offset, 'l', 'Helvetica', '', 14, "$actionno.");
+    certificate_print_text($pdf, $x + 5, $x_offset, 'l', 'Helvetica', '', 14, $actionhead, 160);
 
     if (isset($action->custom_fields->response)) {
         $response = str_replace(', ', '<br/>', $action->custom_fields->response);
-        certificate_print_text($pdf, $y + 180, $x_offset, 'l', 'Helvetica', '', 14, $response);
+        certificate_print_text($pdf, $x + 180, $x_offset, 'l', 'Helvetica', '', 14, $response);
     }
 
     $actionid = $action->id;
@@ -140,8 +140,8 @@ foreach ($actions as $action) {
         }
     }
 
-    certificate_print_text($pdf, $y + 230, $x_offset, 'l', 'Helvetica', '', 14, $status);
-    certificate_print_text($pdf, $y + 230, $x_offset + 6, 'l', 'Helvetica', '', 11, $due);
+    certificate_print_text($pdf, $x + 230, $x_offset, 'l', 'Helvetica', '', 14, $status);
+    certificate_print_text($pdf, $x + 230, $x_offset + 6, 'l', 'Helvetica', '', 11, $due);
 
     $actionno++;
     $action_offset++;
@@ -167,7 +167,7 @@ foreach ($actions as $action) {
     );
 
     if (!$updates) {
-        certificate_print_text($pdf, $y + 10, $x + 70, 'l', 'Helvetica', 'B', 16, 'An update has not been provided for this action');
+        certificate_print_text($pdf, $x + 10, $y + 70, 'l', 'Helvetica', 'B', 16, 'An update has not been provided for this action');
 
         continue;
     }
@@ -182,29 +182,29 @@ foreach ($actions as $action) {
     }
 
     $pdf->SetTextColor(0, 0, 0);
-    certificate_print_text($pdf, $y + 10, $x + 27, 'l', 'Helvetica', 'i', 18, $actionhead, 240);
+    certificate_print_text($pdf, $x + 10, $y + 27, 'l', 'Helvetica', 'i', 18, $actionhead, 240);
 
     if (strlen($actionbody) > 400) {
-        certificate_print_text($pdf, $y + 10, $x + 37, 'l', 'Helvetica', 'i', 12, (substr($actionbody, 0, 400) . '...'), 240);
+        certificate_print_text($pdf, $x + 10, $y + 37, 'l', 'Helvetica', 'i', 12, (substr($actionbody, 0, 400) . '...'), 240);
         $pdf->SetTextColor(187, 111, 122);
-        certificate_print_text($pdf, $y + 170, $x + 53, 'l', 'Helvetica', 'B', 12, 'Further details available over the page', 240);
+        certificate_print_text($pdf, $x + 170, $y + 53, 'l', 'Helvetica', 'B', 12, 'Further details available over the page', 240);
         $pdf->SetTextColor(0, 0, 0);
 
     } else {
-        certificate_print_text($pdf, $y + 10, $x + 37, 'l', 'Helvetica', 'i', 12, $actionbody, 240);
+        certificate_print_text($pdf, $x + 10, $y + 37, 'l', 'Helvetica', 'i', 12, $actionbody, 240);
     }
 
     if (isset($action->custom_fields->owner)) {
         $pdf->SetTextColor(16, 75, 118);
-        certificate_print_text($pdf, $y + 10, $x + 60, 'l', 'Helvetica', 'B', 12, 'Who is responsible for this action?');
+        certificate_print_text($pdf, $x + 10, $y + 60, 'l', 'Helvetica', 'B', 12, 'Who is responsible for this action?');
         $pdf->SetTextColor(0, 0, 0);
-        certificate_print_text($pdf, $y + 83, $x + 60, 'l', 'Helvetica', '', 12, $action->custom_fields->owner, 75);
+        certificate_print_text($pdf, $x + 83, $y + 60, 'l', 'Helvetica', '', 12, $action->custom_fields->owner, 75);
     }
 
     $pdf->SetTextColor(16, 75, 118);
-    certificate_print_text($pdf, $y + 160, $x + 60, 'l', 'Helvetica', 'B', 12, 'When is this action due?');
+    certificate_print_text($pdf, $x + 160, $y + 60, 'l', 'Helvetica', 'B', 12, 'When is this action due?');
     $pdf->SetTextColor(0, 0, 0);
-    certificate_print_text($pdf, $y + 212, $x + 60, 'l', 'Helvetica', '', 12, date('j F Y', $action->duedate));
+    certificate_print_text($pdf, $x + 212, $y + 60, 'l', 'Helvetica', '', 12, date('j F Y', $action->duedate));
 
     $update_offset = 0;
     $complete = false;
@@ -235,19 +235,19 @@ foreach ($actions as $action) {
             $ans .= " ($due_date)";
         }
 
-        $x_offset = $x + 70 + ($update_offset * 30);
+        $x_offset = $y + 70 + ($update_offset * 30);
         $end_date = date('F Y', $perioddate->enddate);
 
-        certificate_print_text($pdf, $y + 10, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Update $update->periodid</strong> ($end_date)");
-        certificate_print_text($pdf, $y + 160, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Status:</strong> $ans");
-        certificate_print_text($pdf, $y + 10, $x_offset + 10, 'l', 'Helvetica', '', 12, $update->description);
+        certificate_print_text($pdf, $x + 10, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Update $update->periodid</strong> ($end_date)");
+        certificate_print_text($pdf, $x + 160, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Status:</strong> $ans");
+        certificate_print_text($pdf, $x + 10, $x_offset + 10, 'l', 'Helvetica', '', 12, $update->description);
 
         $update_offset++;
     }
 
     if ($complete) {
         $pdf->SetTextColor(187, 111, 122);
-        certificate_print_text($pdf, $y + 10, $x + 160, 'l', 'Helvetica', 'B', 16, 'Congratulations on completing this action - make sure you celebrate this win with your team!');
+        certificate_print_text($pdf, $x + 10, $y + 160, 'l', 'Helvetica', 'B', 16, 'Congratulations on completing this action - make sure you celebrate this win with your team!');
         $pdf->SetTextColor(0, 0, 0);
     }
 
@@ -255,8 +255,8 @@ foreach ($actions as $action) {
         $pdf->AddPage();
 
         $pdf->SetTextColor(0, 0, 0);
-        certificate_print_text($pdf, $y + 10, $x + 35, 'l', 'Helvetica', 'B', 12, $action->name ?? $actionhead, 240);
-        certificate_print_text($pdf, $y + 10, $x + 50, '', 'Helvetica', '', 12, $action->description);
+        certificate_print_text($pdf, $x + 10, $y + 35, 'l', 'Helvetica', 'B', 12, $action->name ?? $actionhead, 240);
+        certificate_print_text($pdf, $x + 10, $y + 50, '', 'Helvetica', '', 12, $action->description);
     }
 
     $pdf->lastPage();
