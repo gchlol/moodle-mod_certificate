@@ -226,7 +226,7 @@ class gfg_pdf extends TCPDF {
      * @param string $values Comma delimited list of action values. Values should correspond to images in the `images` subdirectory.
      * @return void
      */
-    function print_action_value_logos(string $values): void {
+    private function print_action_value_logos(string $values): void {
         $action_logo_size = 20;
         $action_logo_spacing = 5;
         $page_center = $this->getPageWidth() / 2;
