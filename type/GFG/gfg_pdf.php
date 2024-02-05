@@ -132,14 +132,14 @@ class gfg_pdf extends TCPDF {
      */
     public function Footer(): void {
         $footer_start = $this->getPageHeight() - $this->getFooterMargin();
-        $page_number_text = $this->get_page_number_text();
-        $page_number_padding = str_repeat(' ', strlen($page_number_text));
+        $page_number = $this->PageNo();
+        $page_number_padding = str_repeat(' ', strlen($page_number));
 
         $this->SetTextColor(0, 0, 0);
         $this->setFont('Helvetica', 'B', 11);
 
         $this->Text(0, $footer_start, $this->ciap->name . ' - Summary', 0 , false, true, 0, 0 , 'C');
-        $this->Text(0, $footer_start + 5, $page_number_padding . $this->plan->idnumber . ' ' . $this->plan->name . "  -  Page $page_number_text", 0 , false, true, 0, 0 , 'C');
+        $this->Text(0, $footer_start + 5, $page_number_padding . $this->plan->idnumber . ' ' . $this->plan->name . "  -  Page $page_number", 0 , false, true, 0, 0 , 'C');
         $this->Text(0, $footer_start + 10, 'Printed on ' . date('j F Y', time()), 0 , false, true, 0, 0 , 'C');
     }
 
@@ -242,20 +242,5 @@ class gfg_pdf extends TCPDF {
 
             $this->Image($logo_path, $logo_x, 2, $action_logo_size, $action_logo_size);
         }
-    }
-
-    /**
-     * Get the internal page number text.
-     *
-     * @return string Page number text.
-     */
-    private function get_page_number_text(): string {
-        $w_page = isset($this->l['w_page']) ? $this->l['w_page'] . ' ' : '';
-
-        if (!empty($this->pagegroups)) {
-            return $w_page . $this->getPageNumGroupAlias();
-        }
-
-        return $w_page . $this->getAliasNumPage();
     }
 }
