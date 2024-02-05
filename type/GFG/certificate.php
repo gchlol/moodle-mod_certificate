@@ -236,9 +236,10 @@ foreach ($actions as $action) {
         }
 
         $x_offset = $y + 70 + ($update_offset * 30);
+        $update_number = $update_offset + 1;
         $end_date = date('F Y', $perioddate->enddate);
 
-        certificate_print_text($pdf, $x + 10, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Update $update->periodid</strong> ($end_date)");
+        certificate_print_text($pdf, $x + 10, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Update $update_number</strong> ($end_date)");
         certificate_print_text($pdf, $x + 160, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Status:</strong> $ans");
         certificate_print_text($pdf, $x + 10, $x_offset + 10, 'l', 'Helvetica', '', 12, $update->description);
 
