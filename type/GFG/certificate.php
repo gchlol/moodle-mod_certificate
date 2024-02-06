@@ -182,11 +182,17 @@ foreach ($actions as $action) {
     $pdf->SetTextColor(0, 0, 0);
     certificate_print_text($pdf, $x + 10, $y + 27, 'l', 'Helvetica', 'i', 18, $actionhead, 240);
 
-    if (strlen($actionbody) > 400) {
-        certificate_print_text($pdf, $x + 10, $y + 37, 'l', 'Helvetica', 'i', 12, (substr($actionbody, 0, 400) . '...'), 240);
+    $long_description = is_long_content($pdf, $action->description);
+    if ($long_description) {
+        $description_output = $actionbody;
+        if (strlen($description_output) > 400) {
+            $description_output = substr($description_output, 0, 400);
+        }
+
+        certificate_print_text($pdf, $x + 10, $y + 37, 'l', 'Helvetica', 'i', 12, "$description_output...", 240);
+
         $pdf->SetTextColor(187, 111, 122);
         certificate_print_text($pdf, $x + 170, $y + 53, 'l', 'Helvetica', 'B', 12, 'Further details available over the page', 240);
-        $pdf->SetTextColor(0, 0, 0);
 
     } else {
         certificate_print_text($pdf, $x + 10, $y + 37, 'l', 'Helvetica', 'i', 12, $actionbody, 240);
@@ -250,7 +256,7 @@ foreach ($actions as $action) {
         $pdf->SetTextColor(0, 0, 0);
     }
 
-    if (strlen($actionbody) > 400) {
+    if ($long_description) {
         $pdf->AddPage();
 
         $pdf->SetTextColor(0, 0, 0);
@@ -357,4 +363,33 @@ function get_custom_field_values(string $area, int $ciap_id, int $item_id): stdC
     }
 
     return (object)$custom_field_values;
+}
+
+/**
+ * Determine whether the given content is classified as long content.
+ *
+ * @param TCPDF $pdf PDF instance being written to.
+ * @param string $content Content to check.
+ * @return bool Whether content is long.
+ */
+function is_long_content(TCPDF $pdf, string $content): bool {
+    // Remove trailing empty paragraph tags
+    $trimmed_content = preg_replace('/(<p dir="ltr" style="text-align: left;"><br><\/p>)+$/', '', $content);
+
+    $paragraph_count = substr_count($trimmed_content, '<p');
+    if ($paragraph_count > 1) {
+        return true;
+    }
+
+    $contains_big_tags = preg_match('/<div>|<img>|<li>|<table>/i', $trimmed_content);
+    if ($contains_big_tags) {
+        return true;
+    }
+
+    $content_lines = $pdf->getNumLines($trimmed_content, 200);
+    if ($content_lines > 3) {
+        return true;
+    }
+
+    return false;
 }
