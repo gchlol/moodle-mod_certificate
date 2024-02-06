@@ -1,6 +1,6 @@
 <?php
 
-class gfg_pdf extends TCPDF {
+class gfg_pdf extends pdf {
 
     private ?stdClass $action = null;
     private int $action_number;
@@ -19,12 +19,10 @@ class gfg_pdf extends TCPDF {
      * @param mixed $format The format used for pages. It can be either: one of the string values specified at getPageSizeFromFormat() or an array of parameters specified at setPageFormat().
      * @param boolean $unicode TRUE means that the input text is unicode (default = true)
      * @param string $encoding Charset encoding (used only when converting back html entities); default is UTF-8.
-     * @param boolean $diskcache DEPRECATED FEATURE
-     * @param false|integer $thisa If not false, set the document to PDF/A mode and the good version (1 or 3).
      * @throws dml_exception
      */
-    public function __construct(stdClass $ciap, stdClass $plan, $orientation = 'P', $unit = 'mm', $format = 'A4', $unicode = true, $encoding = 'UTF-8', $diskcache = false, $thisa = false) {
-        parent::__construct($orientation, $unit, $format, $unicode, $encoding, $diskcache, $thisa);
+    public function __construct(stdClass $ciap, stdClass $plan, $orientation = 'P', $unit = 'mm', $format = 'A4', $unicode = true, $encoding = 'UTF-8') {
+        parent::__construct($orientation, $unit, $format, $unicode, $encoding);
 
         $this->ciap = $ciap;
         $this->plan = $plan;
