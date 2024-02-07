@@ -6,7 +6,7 @@ use dml_exception;
 use stdClass;
 
 global $CFG;
-require_once($CFG->dirroot . '/mod/certificate/type/Portfolio/course_section.php');
+require_once(__DIR__ . '/../Portfolio/course_section.php');
 
 class portfolio_data {
 

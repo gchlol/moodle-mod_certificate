@@ -7,8 +7,8 @@ use stdClass;
 use TCPDF;
 
 global $CFG;
-require_once($CFG->dirroot . '/mod/certificate/type/Portfolio/portfolio_offsets.php');
-require_once($CFG->dirroot . '/mod/certificate/type/Portfolio/portfolio_colour.php');
+require_once(__DIR__ . '/../Portfolio/portfolio_offsets.php');
+require_once(__DIR__ . '/../Portfolio/portfolio_colour.php');
 
 abstract class portfolio_output_base {
 

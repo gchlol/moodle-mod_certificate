@@ -9,8 +9,7 @@ use TCPDF;
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-require_once($CFG->dirroot . '/mod/certificate/type/Portfolio/portfolio_output_base.php');
+require_once(__DIR__ . '/../Portfolio/portfolio_output_base.php');
 
 /**
  * @property stdClass|TCPDF $pdf
@@ -51,10 +50,7 @@ class portfolio_output extends portfolio_output_base {
     }
 
     protected function output_page_elements(): void {
-        global $CFG;
-
-        $identifier = $this->get_identifier();
-        $pix_root = "$CFG->dirroot/mod/certificate/type/$identifier/pix";
+        $pix_root = __DIR__ . '/pix';
 
         // Draw header image partially covered by a white rectangle
         $this->pdf->Image("$pix_root/header-background.png", 0, -50, 210, 0, '', '', 'M');

@@ -11,9 +11,9 @@ if (!defined('MOODLE_INTERNAL')) {
 require_once("$CFG->libdir/filelib.php");
 require_once("$CFG->libdir/completionlib.php");
 
-require_once("$CFG->dirroot/mod/certificate/type/Portfolio/portfolio_offsets.php");
-require_once("$CFG->dirroot/mod/certificate/type/Portfolio/portfolio_data.php");
-require_once("$CFG->dirroot/mod/certificate/type/portfolio_wm/portfolio_output.php");
+require_once(__DIR__ . '/../Portfolio/portfolio_offsets.php');
+require_once(__DIR__ . '/../Portfolio/portfolio_data.php');
+require_once(__DIR__ . '/portfolio_output.php');
 
 if (
     !empty($action) &&
