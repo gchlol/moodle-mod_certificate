@@ -6,9 +6,9 @@ use coding_exception;
 use stdClass;
 use TCPDF;
 
-global $CFG;
 require_once(__DIR__ . '/../Portfolio/portfolio_offsets.php');
 require_once(__DIR__ . '/../Portfolio/portfolio_colour.php');
+require_once(__DIR__ . '/../Portfolio/portfolio_string_manager.php');
 
 abstract class portfolio_output_base {
 
@@ -52,10 +52,14 @@ abstract class portfolio_output_base {
      */
     protected $record;
 
+    protected ?string $root_path;
+
     /**
      * @var stdClass User the certificate has been issued to.
      */
     protected $user;
+
+    protected portfolio_string_manager $string_manager;
 
     /**
      * @var int[][] Cache of parsed hex colours.
@@ -63,14 +67,29 @@ abstract class portfolio_output_base {
     private $colour_cache;
 
 
-    public function __construct(stdClass $certificate, stdClass $record, stdClass $user, TCPDF $pdf, portfolio_offsets $offsets) {
+    public function __construct(stdClass $certificate, stdClass $record, stdClass $user, TCPDF $pdf, portfolio_offsets $offsets, ?string $root_path = null) {
         $this->certificate = $certificate;
         $this->record = $record;
         $this->offsets = $offsets;
         $this->pdf = $pdf;
         $this->user = $user;
+        $this->root_path = $root_path;
 
         [ $this->course ] = get_course_and_cm_from_instance($certificate, 'certificate');
+        $this->string_manager = $this->init_string_manager();
+    }
+
+    /**
+     * Initialise portfolio language string manager.
+     *
+     * @return portfolio_string_manager String manager instance.
+     */
+    private function init_string_manager(): portfolio_string_manager {
+        $root_path = $this->root_path ?? __DIR__;
+        $lang_path =  "$root_path/lang";
+        $local_lang_root = is_dir($lang_path) ? $lang_path : null;
+
+        return new portfolio_string_manager($local_lang_root);
     }
 
     /**
@@ -80,18 +99,6 @@ abstract class portfolio_output_base {
      * @return void
      */
     public abstract function output_cover_page(stdClass $course): void;
-
-    /**
-     * Get the lang string identifier for the portfolio.
-     *
-     * This will be used as the prefix when fetching language strings.
-     * .e.g. `portfolio` will retrieve `portfolio_title` when used with `$this->get_string('title')`.
-     *
-     * @see portfolio_output_base::get_string()
-     *
-     * @return string Language string identifier for the portfolio.
-     */
-    protected abstract function get_identifier(): string;
 
     /**
      * Gets the number of available output rows on general pages before a new page is required.
@@ -118,10 +125,9 @@ abstract class portfolio_output_base {
      * @param string $identifier Identifier of the language string without the portfolio identifier. e.g. `title` instead of `portfolio_title`.
      * @param string|object|array $a Value to be injected into the language string.
      * @return string Language string value.
-     * @throws coding_exception If a language string doesn't exist for the given identifier.
      */
     protected function get_string(string $identifier, $a = null): string {
-        return get_string($this->get_identifier() . '_' . $identifier, 'certificate', $a);
+        return $this->string_manager->get_string($identifier, 'certificate', $a);
     }
 
     /**

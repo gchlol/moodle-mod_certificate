@@ -16,10 +16,6 @@ require_once(__DIR__ . '/../Portfolio/portfolio_output_base.php');
  */
 class portfolio_output extends portfolio_output_base {
 
-    protected function get_identifier(): string {
-        return 'portfolio_dd';
-    }
-
     protected function page_rows(): int {
         return 45;
     }

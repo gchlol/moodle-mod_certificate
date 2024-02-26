@@ -9,12 +9,10 @@
 * While developing a portfolio dummy data can be populated for the sections be appending `&debug` to the PDF output url.
 
 ## Using The Templates
-1. Create a new directory within `mod/certificate/type/` following the `portfolio_<acronym>` identifier pattern. e.g. `portfolio_gch` for Gold Coast Health.
-2. Copy both `certificate.php` and `portfolio_output.php` from this directory to your newly created directory.
+1. Create a new directory within `mod/certificate/type/` or your repository location if using, following the `portfolio_<acronym>` identifier pattern. e.g. `portfolio_gch` for Gold Coast Health.
+2. Copy the contents of this folder to your newly created directory, making sure to include the `lang` folder.
 3. Run a find and replace in both files to replace `portfolio_temp` with your identifier which should match the directory name. e.g. `portfolio_gch`.
-4. Add new language strings to `mod/certificate/lang/en/certificate.php` for your portfolio:
-   1. Type string to determine the name displayed in the templates list. e.g. `typeportfolio_gch`.
-   2. Main language keys block. This can be copied from an existing portfolio type which can be found under a comment like such; `type/portfolio_gch`. Be sure to change the identifier in the language keys to match yours.
+4. Customise the language strings in `lang/en_local/certificate.php` to your requirements.
 
 ## Implementation
 1. Add a new Certificate module on a course and select the Certificate Type option under Design Options that matches your type language string.
@@ -23,7 +21,7 @@
 4. Start your customisation by opening your `certificate.php` file and configuring both `$offsets->x` and `$offsets->y`.<br> These values will determine the base offset of every page on their given axis which can be useful to fit within page boarders when using a background border image.
 5. Next, open your `portfolio_output.php` file and navigating to the `output_cover_page()` function. This function controls the output of the first page of your portfolio and is designed to have a more significant output.<br> **Note:** You may notice the course list overlapping content while designing your cover page. This is expected and will be addressed in an upcoming step.
    1. Text colour is set using the `$this->apply_x_colour()` functions and will pull the hex colour configured in your language strings.
-   2. Language strings in your portfolio's language block will be pulled via the `$this->get_string(<string>)` function. The string parameter is the language string less your identifier. e.g. `portfolio_gch_title` is retrieved with `$this->get_string('title')` in `portfolio_gch`.
+   2. Language strings in your portfolio's language file will be pulled via the `$this->get_string(<string>)` function where the 'string' parameter is the language string key. e.g. `title` is retrieved with `$this->get_string('title')`.
    3. Text output is primarily achieved with the `$this->output_text()` function which will output text at a given offset from your base `x` and `y` offset values.
       1. `$this->output_text_static()` may also be used to output text at a fixed location rather than relative to the base offsets.
    4. The TCPDF instance is also available for direct output calls as `$this->pdf`.

@@ -21,13 +21,6 @@ class portfolio_output extends portfolio_output_base {
     /**
      * @inheritDoc
      */
-    protected function get_identifier(): string {
-        return 'portfolio_wm';
-    }
-
-    /**
-     * @inheritDoc
-     */
     protected function page_rows(): int {
         return 40;
     }

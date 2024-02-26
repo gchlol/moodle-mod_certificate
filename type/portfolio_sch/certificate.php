@@ -61,7 +61,8 @@ $cert_output = new portfolio_output(
     $certrecord,
     $user,
     $pdf,
-    $offsets
+    $offsets,
+    __DIR__
 );
 
 $course_sections = portfolio_data::get_course_section_data($userid);
