@@ -22,6 +22,8 @@ abstract class portfolio_output_base {
      */
     protected const OUTPUT_FONT = 'Helvetica';
 
+    protected const ROOT_PATH = __DIR__;
+
     /**
      * 1 January 1980 is used to credit long serving staff who have not formally completed training
      */
@@ -52,8 +54,6 @@ abstract class portfolio_output_base {
      */
     protected $record;
 
-    protected ?string $root_path;
-
     /**
      * @var stdClass User the certificate has been issued to.
      */
@@ -67,13 +67,12 @@ abstract class portfolio_output_base {
     private $colour_cache;
 
 
-    public function __construct(stdClass $certificate, stdClass $record, stdClass $user, TCPDF $pdf, portfolio_offsets $offsets, ?string $root_path = null) {
+    public function __construct(stdClass $certificate, stdClass $record, stdClass $user, TCPDF $pdf, portfolio_offsets $offsets) {
         $this->certificate = $certificate;
         $this->record = $record;
         $this->offsets = $offsets;
         $this->pdf = $pdf;
         $this->user = $user;
-        $this->root_path = $root_path;
 
         [ $this->course ] = get_course_and_cm_from_instance($certificate, 'certificate');
         $this->string_manager = $this->init_string_manager();
@@ -85,8 +84,7 @@ abstract class portfolio_output_base {
      * @return portfolio_string_manager String manager instance.
      */
     private function init_string_manager(): portfolio_string_manager {
-        $root_path = $this->root_path ?? __DIR__;
-        $lang_path =  "$root_path/lang";
+        $lang_path = static::ROOT_PATH . '/lang';
         $local_lang_root = is_dir($lang_path) ? $lang_path : null;
 
         return new portfolio_string_manager($local_lang_root);
