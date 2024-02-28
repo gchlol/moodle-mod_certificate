@@ -118,14 +118,26 @@ abstract class portfolio_output_base {
     //region Utilities
 
     /**
-     * Get a language string automatically prefixed with the portfolio identifier.
+     * Get a portfolio language string from the local language file.
      *
-     * @param string $identifier Identifier of the language string without the portfolio identifier. e.g. `title` instead of `portfolio_title`.
+     * @param string $identifier Identifier / key of the language string.
      * @param string|object|array $a Value to be injected into the language string.
      * @return string Language string value.
      */
     protected function get_string(string $identifier, $a = null): string {
-        return $this->string_manager->get_string($identifier, 'certificate', $a);
+        return $this->get_other_string($identifier, 'certificate', $a);
+    }
+
+    /**
+     * Get a language string from any component with local portfolio overrides applied.
+     *
+     * @param string $identifier Identifier / key of the language string.
+     * @param string $component Module the string is associated with.
+     * @param string|object|array $a Value to be injected into the language string.
+     * @return string
+     */
+    protected function get_other_string(string $identifier, string $component = '', $a = null): string {
+        return $this->string_manager->get_string($identifier, $component, $a);
     }
 
     /**
