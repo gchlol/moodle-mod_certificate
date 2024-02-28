@@ -12,7 +12,7 @@
 1. Create a new directory within `mod/certificate/type/` or your repository location if using, following the `portfolio_<acronym>` identifier pattern. e.g. `portfolio_gch` for Gold Coast Health.
 2. Copy the contents of this folder to your newly created directory, making sure to include the `lang` folder.
 3. Run a find and replace in both files to replace `portfolio_temp` with your identifier which should match the directory name. e.g. `portfolio_gch`.
-4. Customise the language strings in `lang/en_local/certificate.php` to your requirements.
+4. Customise the language strings in `lang/en/certificate.php` to your requirements.
 
 ## Implementation
 1. Add a new Certificate module on a course and select the Certificate Type option under Design Options that matches your type language string.
