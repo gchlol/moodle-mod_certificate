@@ -27,372 +27,374 @@
 if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.'); // It must be included from view.php
 }
-require_once($CFG->libdir . '/filelib.php');
-require_once($CFG->libdir . '/completionlib.php');
+require_once("$CFG->libdir/filelib.php");
+require_once("$CFG->libdir/completionlib.php");
+require_once(__DIR__ . '/gfg_pdf.php');
 
 $ciapid = optional_param('ciap', 0, PARAM_INT);
 
-if ($ciapid == "999999") {
-	outputdata();
+if ($ciapid == '999999') {
+    output_data();
 }
 
-$plan=$DB->get_record('ciap_plans', array('id' => $ciapid));
-$ciap=$DB->get_record('ciap', array('id' => $plan->ciapid));
+$plan = $DB->get_record('ciap_plans', [ 'id' => $ciapid ]);
+$ciap = $DB->get_record('ciap', [ 'id' => $plan->ciapid ]);
+$actions = $DB->get_records('ciap_actions', [ 'planid' => $plan->id ]);
 
-$pdf = new TCPDF($certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
+$plan->custom_fields = get_custom_field_values('plans', $ciap->id, $plan->id);
+foreach ($actions as $action) {
+    $action->custom_fields = get_custom_field_values('actions', $ciap->id, $action->id);
+}
 
-$pdf->SetTitle($plan->name.' - Summary');
-$pdf->setPrintHeader(false);
-$pdf->setPrintFooter(false);
-$pdf->SetAutoPageBreak(false, 0);
-$page = 0;
+$x = 10;
+$y = 10;
+
+$pdf = new gfg_pdf($ciap, $plan, $certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
+$pdf->SetTitle("$plan->name - Summary");
+$pdf->SetAutoPageBreak(true, 25);
+$pdf->setMargins($y, $x + 25);
+$pdf->setFooterMargin(25);
+
+$pdf->AddPage();
 
 // Define variables
-
-    $x = 10;
-    $y = 10;
-    $sealx = 175;
-    $sealy = 5;
-    $sealw = 25;
-    $sealh = 25;
-    $sigx = 140;
-    $sigy = 239;
-    $custx = 30;
-    $custy = 230;
-    $wmarkx = 26;
-    $wmarky = 58;
-    $wmarkw = 158;
-    $wmarkh = 170;
-    $codey = 250;
-    $datex = 20;
-    $datey = 254;
-	$head1y = 70;
-	$head2y = 140;
-	$head3y = 210;
-	$box1 = 40;
-	$box2 = 88;
-	$box3 = 136;
-	$box4 = 184;
-	$box5 = 232;
+$action_logo_size = 20;
+$action_logo_spacing = 5;
+$page_center = $pdf->getPageWidth() / 2;
 
 
-printhead1($plan);
+$actionno = 1;
+$action_offset = 0;
+foreach ($actions as $action) {
+    if ($action_offset == 5) {
+        $action_offset = 0;
 
-$actions=$DB->get_records('ciap_actions', array('planid' => $plan->id));
-$actionno=0;
-$posno=0;
-FOREACH ($actions AS $action) {
-	$actionno++;
-	$posno++;
-	if ($posno==6) {
-		$posno=1;
-		printhead1($plan);
-	}
-	$final=headbod($action->description);
-	$actionhead=$final[0];
-	$actionbod=$final[1];
-	
-	if($actionhead == NULL) {
-	$length=strlen($actionbod);
-		if (strlen($actionbod)>140) {
-		$actionhead=(substr($actionbod,0,140).'...');
-		}
-		ELSE {
-		$actionhead=$actionbod;
-		}
-	}
-	certificate_print_text($pdf, $y, $x+40+($posno*20), 'l', 'Helvetica', '' ,14, $actionno);
-	
-	certificate_print_text($pdf, $y+5, $x+40+($posno*20), 'l', 'Helvetica', '' ,14, $actionhead, 160);
-	$values=$DB->get_record('customfield_data', array('fieldid' => 55, 'instanceid' => $action->id));
-	switch ($values->value) {
-			CASE "1":
-				$value="Integrity";
-				break;
-			CASE "2":
-				$value="Community First";
-				break;
-			CASE "3":
-				$value="Excellence";
-				break;
-			CASE "4":
-				$value="Respect";
-				break;
-			CASE "5":
-				$value="Compassion";
-				break;
-			CASE "6":
-				$value="Empower";
-				break;
-	}
-	certificate_print_text($pdf, $y+180, $x+40+($posno*20), 'l', 'Helvetica', '' ,14, $value);
+        $pdf->AddPage();
+    }
 
-	$actionid=$action->id;
-	$sql="SELECT * FROM {ciap_updates} cu WHERE cu.actionid=$actionid ORDER BY cu.periodid ASC";
-	$updates=$DB->get_records_sql($sql);
-	IF (!$updates) {
-		$status="No update provided";
-		$due='';
-		}
-	FOREACH ($updates AS $update) {
-		$pos++;
-		$perioddate=$DB->get_record('ciap_periods', array('id' => $update->periodid));
-		switch ($update->status) {
-			CASE "0":
-				$status="Not yet started";
-				$due='(due '.date('d/m/y',$action->duedate).')';
-				break;
-			CASE "1":
-				$status="In progress";
-				$due='(due '.date('d/m/y',$action->duedate).')';
-				break;
-			CASE "2":
-				$status="Complete";
-				$due='';
-				break;
-			CASE "3":
-				$status="No longer required ";
-				$due='';
-				break;
+    if ($action_offset == 0) {
+        $pdf->SetTextColor(16, 75, 118);
 
-		}
-	}
-	certificate_print_text($pdf, $y+230, $x+40+($posno*20), 'l', 'Helvetica', '' ,14, $status);
-	certificate_print_text($pdf, $y+230, $x+45+($posno*20), 'l', 'Helvetica', '' ,11, $due);
+        certificate_print_text($pdf, $x + 5, $y + 50, 'l', 'Helvetica', 'B', 14, 'What is the action we have committed to?');
+        certificate_print_text($pdf, $x + 180, $y + 50, 'l', 'Helvetica', 'B', 14, 'Value:');
+        certificate_print_text($pdf, $x + 230, $y + 50, 'l', 'Helvetica', 'B', 14, 'Action status:');
+    }
 
-	
+    [
+        $actionhead,
+        $actionbod,
+    ] = get_action_content($action);
+    if ($actionhead == NULL) {
+        $actionhead = $actionbod;
+        if (strlen($actionbod) > 140) {
+            $actionhead = substr($actionbod, 0, 140) . '...';
+        }
+    }
+
+    $x_offset = $y + 60 + ( $action_offset * 20 );
+
+    $pdf->setTextColor(0, 0, 0);
+
+    $action_number_width = $pdf->GetStringWidth($actionno, 'Helvetica', '', 14);
+    $action_number_offset = round($action_number_width / 2);
+
+    certificate_print_text($pdf, $x - $action_number_offset, $x_offset, 'l', 'Helvetica', '', 14, "$actionno.");
+    certificate_print_text($pdf, $x + 5, $x_offset, 'l', 'Helvetica', '', 14, $actionhead, 160);
+
+    if (isset($action->custom_fields->response)) {
+        $response = str_replace(', ', '<br/>', $action->custom_fields->response);
+        certificate_print_text($pdf, $x + 180, $x_offset, 'l', 'Helvetica', '', 14, $response);
+    }
+
+    $actionid = $action->id;
+    $updates = $DB->get_records_sql(
+        "
+            SELECT  *
+            FROM    {ciap_updates} cu
+            WHERE   cu.actionid = :action
+            ORDER BY cu.periodid
+        ",
+        [ 'action' => $actionid ]
+    );
+
+    $status = 'No update provided';
+    $due = '';
+    foreach ($updates as $update) {
+        $perioddate = $DB->get_record('ciap_periods', [ 'id' => $update->periodid ]);
+        switch ($update->status) {
+            case '0':
+                $status = 'Not yet started';
+                $due_date = date('d/m/y', $action->duedate);
+                $due = "(due $due_date)";
+
+                break;
+            case '1':
+                $status = 'In progress';
+                $due_date = date('d/m/y', $action->duedate);
+                $due = "(due $due_date)";
+
+                break;
+            case '2':
+                $status = 'Complete';
+
+                break;
+            case '3':
+                $status = 'No longer required';
+
+                break;
+        }
+    }
+
+    certificate_print_text($pdf, $x + 230, $x_offset, 'l', 'Helvetica', '', 14, $status);
+    certificate_print_text($pdf, $x + 230, $x_offset + 6, 'l', 'Helvetica', '', 11, $due);
+
+    $actionno++;
+    $action_offset++;
 }
 
-$actionno=0;
-FOREACH ($actions AS $action) {
+$pdf->set_is_summary_page(false);
 
-	$actionno++;
-	$actionid=$action->id;
-	$sql="SELECT * FROM {ciap_updates} cu WHERE cu.actionid=$actionid ORDER BY cu.periodid ASC";
-	$updates=$DB->get_records_sql($sql);
-	$pos=0;
-	$complete=0;
-	IF (!$updates) {
-		certificate_print_text($pdf, $y+10, $x+70, 'l', 'Helvetica', 'B' ,16, 'An update has not been provided for this action');
-	}
-	FOREACH ($updates AS $update) {
+$actionno = 1;
+foreach ($actions as $action) {
+    $pdf->set_action($action, $actionno);
+    $pdf->AddPage();
 
-	$pos=0;
-	$actionbody="";
-	$actionhead="";
-	printhead2($plan);
-	$final=headbod($action->description);
-	$actionhead=$final[0];
-	$actionbody=$final[1];
+    $actionid = $action->id;
 
-	
-	$actiondate=$action->duedate;
-	$pdf->SetTextColor(16, 75, 118);
-	certificate_print_text($pdf, $y+10, $x+10, 'l', 'Helvetica', 'B' ,37, 'Action '.$actionno);
-	$pdf->SetTextColor(0, 0, 0);
-	certificate_print_text($pdf, $y+10, $x+27, 'l', 'Helvetica', 'i' ,18, $actionhead, 240);
-	if (strlen($actionbody)>400) {
-		certificate_print_text($pdf, $y+10, $x+37, 'l', 'Helvetica', 'i' ,12, (substr($actionbody,0,400).'...'), 240);
-		$pdf->SetTextColor(187, 111, 122);
-		certificate_print_text($pdf, $y+170, $x+53, 'l', 'Helvetica', 'B' ,12, "Further details available over the page", 240);
-		$pdf->SetTextColor(0, 0, 0);
-	} else {
-		certificate_print_text($pdf, $y+10, $x+37, 'l', 'Helvetica', 'i' ,12, $actionbody, 240);
-	}
-	
-	$response=$DB->get_record('customfield_data', array('fieldid' => 58, 'instanceid' => $action->id));
-	$values=$DB->get_record('customfield_data', array('fieldid' => 55, 'instanceid' => $action->id));
-	switch ($values->value) {
-			CASE "1":
-				$value="Integrity";
-				$logo="$CFG->dirroot/mod/certificate/type/GFG/Integrity.png";
-				break;
-			CASE "2":
-				$value="Community First";
-				$logo="$CFG->dirroot/mod/certificate/type/GFG/Community.png";
-				break;
-			CASE "3":
-				$value="Excellence";
-				$logo="$CFG->dirroot/mod/certificate/type/GFG/Excellence.png";
-				break;
-			CASE "4":
-				$value="Respect";
-				$logo="$CFG->dirroot/mod/certificate/type/GFG/Respect.png";
-				break;
-			CASE "5":
-				$value="Compassion";
-				$logo="$CFG->dirroot/mod/certificate/type/GFG/Compassion.png";
-				break;
-			CASE "6":
-				$value="Empower";
-				$logo="$CFG->dirroot/mod/certificate/type/GFG/Empower.png";
-				break;
-	}
-	$pdf->Image($logo, 138, 3, 20, 20);
-	certificate_print_text($pdf, $y, $x+13, 'C', 'Helvetica', '' ,9, 'This action promotes the GCH value of');
-	certificate_print_text($pdf, $y, $x+21, 'C', 'Helvetica', '' ,9, 'within our work unit');
-	
-			
-	$pdf->SetTextColor(16, 75, 118);
-	certificate_print_text($pdf, $y, $x+17, 'C', 'Helvetica', 'B' ,9, $value);
-	certificate_print_text($pdf, $y+10, $x+60, 'l', 'Helvetica', 'B' ,12, 'Who is responsible for this action?');
-	certificate_print_text($pdf, $y+160, $x+60, 'l', 'Helvetica', 'B' ,12, 'When is this action due?');
+    $updates = $DB->get_records_sql(
+        "
+            SELECT  *
+            FROM    {ciap_updates} cu
+            WHERE   cu.actionid = :action 
+            ORDER BY cu.periodid
+        ",
+        [ 'action' => $actionid ]
+    );
 
+    if (!$updates) {
+        certificate_print_text($pdf, $x + 10, $y + 70, 'l', 'Helvetica', 'B', 16, 'An update has not been provided for this action');
+    }
 
-	$pdf->SetTextColor(0, 0, 0);
-	certificate_print_text($pdf, $y+83, $x+60, 'l', 'Helvetica', '' ,12, $response->value,75);
-	certificate_print_text($pdf, $y+212, $x+60, 'l', 'Helvetica', '' ,12, date('j F Y',$action->duedate));
+    [
+        $actionhead,
+        $actionbody,
+    ] = get_action_content($action);
 
-		$pos++;
-		$perioddate=$DB->get_record('ciap_periods', array('id' => $update->periodid));
-		switch ($update->status) {
-			CASE "0":
-				$ans="Not yet started";
-				break;
-			CASE "1":
-				$ans="In progress";
-				break;
-			CASE "2":
-				$ans="Complete";
-				$complete=1;
-				break;
-			CASE "3":
-				$ans="No longer required";
-				break;
-		}
-		certificate_print_text($pdf, $y+10, $x+40+($pos*30), 'l', 'Helvetica', 'B' ,12, 'Update '.$update->periodid);
-		certificate_print_text($pdf, $y+30, $x+40+($pos*30), 'l', 'Helvetica', '' ,12, '('.date('F Y',$perioddate->enddate).')');
-		certificate_print_text($pdf, $y+160, $x+40+($pos*30), 'l', 'Helvetica', 'B' ,12, 'Status:');
-		certificate_print_text($pdf, $y+180, $x+40+($pos*30), 'l', 'Helvetica', '' ,12, $ans);
-		IF ($update->duedate) {
-			certificate_print_text($pdf, $y+202, $x+40+($pos*30), 'l', 'Helvetica', '' ,12, '('.date('j F Y',$update->duedate).')');
-		}
-		
-		certificate_print_text($pdf, $y+10, $x+50+($pos*30), 'l', 'Helvetica', '' ,12, $update->description);
-		
-		
-	}
-	IF ($complete) {
-		$pdf->SetTextColor(187, 111, 122);
-		certificate_print_text($pdf, $y+10, $x+160, 'l', 'Helvetica', 'B' ,16, 'Congratulations on completing this action - make sure you celebrate this win with your team!');
-		$pdf->SetTextColor(0, 0, 0);
-	}
-	IF (strlen($actionbody)>400) {
-		printhead2($plan);
-		$pdf->Image($logo, 138, 3, 20, 20);
-		certificate_print_text($pdf, $y, $x+13, 'C', 'Helvetica', '' ,9, 'This action promotes the GCH value of');
-		certificate_print_text($pdf, $y, $x+21, 'C', 'Helvetica', '' ,9, 'within our work unit');
-		$pdf->SetTextColor(16, 75, 118);
-		certificate_print_text($pdf, $y, $x+17, 'C', 'Helvetica', 'B' ,9, $value);
-		certificate_print_text($pdf, $y+10, $x+10, 'l', 'Helvetica', 'B' ,37, 'Action '.$actionno);
-		$pdf->SetTextColor(187, 111, 122);
-		certificate_print_text($pdf, $y+10, $x+25, 'l', 'Helvetica', 'B' ,24, 'Appendix');
-		$pdf->SetTextColor(0, 0, 0);
-		certificate_print_text($pdf, $y+10, $x+40, 'l', 'Helvetica', 'B' ,12, $actionhead, 240);
-		certificate_print_text($pdf, $y+10, $x+50, 'l', 'Helvetica', 'i' ,12, $actionbody, 240);
+    if (strlen($actionhead) > 85) {
+        $actionhead = substr($actionhead, 0, 85) . '...';
+    }
 
-	}
-}		
-	
+    $pdf->SetTextColor(0, 0, 0);
+    certificate_print_text($pdf, $x + 10, $y + 27, 'l', 'Helvetica', 'i', 18, $actionhead, 240);
 
-function printhead1($plan) {
-GLOBAL $pdf, $DB, $CFG, $x, $y, $page;
-$ciap=$DB->get_record('ciap', array('id' => $plan->ciapid));
-$pdf->AddPage();
-$page++;
-$pdf->Image("$CFG->dirroot/mod/certificate/type/GFG/CIAP P1.jpg", 0, 0, 297, 210);
+    $long_description = is_long_content($pdf, $action->description);
+    if ($long_description) {
+        $description_output = $actionbody;
+        if (strlen($description_output) > 400) {
+            $description_output = substr($description_output, 0, 400);
+        }
 
-$pdf->SetTextColor(255, 255, 255);
-certificate_print_text($pdf, $y+95, $x, 'l', 'Helvetica', 'B' ,18, $plan->idnumber.' '.$plan->name);
+        certificate_print_text($pdf, $x + 10, $y + 37, 'l', 'Helvetica', 'i', 12, "$description_output...", 240);
 
-$posid=$DB->get_record('ciap_owners', array('planid' => $plan->id));
-$includes=$DB->get_record('customfield_data', array('fieldid' => '73', 'instanceid' => $plan->id));
-if (!$posid->value) {
-		$userid->userid=$posid->userid;
-} ELSE {
+        $pdf->SetTextColor(187, 111, 122);
+        certificate_print_text($pdf, $x + 170, $y + 53, 'l', 'Helvetica', 'B', 12, 'Further details available over the page', 240);
 
-	$userid = $DB->get_record_sql('SELECT * FROM {user_info_data} WHERE ' . $DB->sql_compare_text('data') . ' = ' . $DB->sql_compare_text(':data'), ['data' => $posid->value], $strictness=IGNORE_MULTIPLE);
-}
-$division=$DB->get_record('user_info_data', array('fieldid' => 20, 'userid' => $userid->userid));
-certificate_print_text($pdf, $y+95, $x+10, 'l', 'Helvetica', '' ,12,$division->data);
-certificate_print_text($pdf, $y+95, $x+17, 'l', 'Helvetica', '' ,12,$includes->value);
+    } else {
+        certificate_print_text($pdf, $x + 10, $y + 37, 'l', 'Helvetica', 'i', 12, $actionbody, 240);
+    }
 
-certificate_print_text($pdf, $y+95, $x+25, 'l', 'Helvetica', 'B' ,18, $ciap->name.' - Summary');
-$pdf->SetTextColor(16, 75, 118);
+    if (isset($action->custom_fields->owner)) {
+        $pdf->SetTextColor(16, 75, 118);
+        certificate_print_text($pdf, $x + 10, $y + 60, 'l', 'Helvetica', 'B', 12, 'Who is responsible for this action?');
+        $pdf->SetTextColor(0, 0, 0);
+        certificate_print_text($pdf, $x + 83, $y + 60, 'l', 'Helvetica', '', 12, $action->custom_fields->owner, 75);
+    }
 
-certificate_print_text($pdf, $y+5, $x+50, 'l', 'Helvetica', 'B' ,14, 'What is the action we have committed to?');
-certificate_print_text($pdf, $y+180, $x+50, 'l', 'Helvetica', 'B' ,14, 'Value:');
-certificate_print_text($pdf, $y+230, $x+50, 'l', 'Helvetica', 'B' ,14, 'Action status:');
+    $pdf->SetTextColor(16, 75, 118);
+    certificate_print_text($pdf, $x + 160, $y + 60, 'l', 'Helvetica', 'B', 12, 'When is this action due?');
+    $pdf->SetTextColor(0, 0, 0);
+    certificate_print_text($pdf, $x + 212, $y + 60, 'l', 'Helvetica', '', 12, date('j F Y', $action->duedate));
 
-$pdf->SetTextColor(0, 0, 0);
-certificate_print_text($pdf, $y, $x+175, 'C', 'Helvetica', 'B' ,11, $ciap->name.' - Summary');
-certificate_print_text($pdf, $y, $x+180, 'C', 'Helvetica', 'B' ,11, $plan->idnumber.' '.$plan->name.'  -  page '.$page);
-certificate_print_text($pdf, $y, $x+185, 'C', 'Helvetica', 'B' ,11, 'Printed on '.date('j F Y',time()));
+    $update_offset = 0;
+    $complete = false;
+    foreach ($updates as $update) {
+        $perioddate = $DB->get_record('ciap_periods', [ 'id' => $update->periodid ]);
+        switch ($update->status) {
+            case '0':
+                $ans = 'Not yet started';
 
+                break;
+            case '1':
+                $ans = 'In progress';
+
+                break;
+            case '2':
+                $ans = 'Complete';
+                $complete = true;
+
+                break;
+            case '3':
+                $ans = 'No longer required';
+
+                break;
+        }
+
+        if ($update->duedate) {
+            $due_date = date('j F Y', $update->duedate);
+            $ans .= " ($due_date)";
+        }
+
+        $x_offset = $y + 70 + ($update_offset * 30);
+        $update_number = $update_offset + 1;
+        $end_date = date('F Y', $perioddate->enddate);
+
+        certificate_print_text($pdf, $x + 10, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Update $update_number</strong> ($end_date)");
+        certificate_print_text($pdf, $x + 160, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Status:</strong> $ans");
+        certificate_print_text($pdf, $x + 10, $x_offset + 10, 'l', 'Helvetica', '', 12, $update->description);
+
+        $update_offset++;
+    }
+
+    if ($complete) {
+        $pdf->SetTextColor(187, 111, 122);
+        certificate_print_text($pdf, $x + 10, $y + 160, 'l', 'Helvetica', 'B', 16, 'Congratulations on completing this action - make sure you celebrate this win with your team!');
+        $pdf->SetTextColor(0, 0, 0);
+    }
+
+    if ($long_description) {
+        $pdf->AddPage();
+
+        $pdf->SetTextColor(0, 0, 0);
+        certificate_print_text($pdf, $x + 10, $y + 35, 'l', 'Helvetica', 'B', 12, $action->name ?? $actionhead, 240);
+        certificate_print_text($pdf, $x + 10, $y + 50, '', 'Helvetica', '', 12, $action->description);
+    }
+
+    $pdf->lastPage();
+
+    $actionno++;
 }
 
+/**
+ * Get distinct heading and body content from an action.
+ *
+ * @param stdClass $action Action
+ * @return string[] Array containing heading then body. Heading may be null where it can't be determined.
+ */
+function get_action_content(stdClass $action): array {
+    $repl = [ " </p>", " /n", "</p>", "/n" ];
+    $repl2 = [ '..', '.  .', '.  .', '. .', '.  .' ];
 
-function printhead2($plan) {
-GLOBAL $pdf, $DB, $CFG, $x, $y, $page;
-$ciap=$DB->get_record('ciap', array('id' => $plan->ciapid));
-$pdf->AddPage();
-$page++;
-$pdf->Image("$CFG->dirroot/mod/certificate/type/GFG/CIAP P2.jpg", 0, 0, 297, 210);
+    $text1 = str_replace($repl, '.', $action->description);
+    $text2 = preg_replace('/^\s+|\s+$|\s+(?=\s)/', '', $text1);
+    $text3 = strip_tags($text2);
+    $text4 = trim(preg_replace('/\s\s+/', ' ', str_replace("\n", ' ', $text3)));
+    $text5 = str_replace($repl2, '. ', $text4);
 
-certificate_print_text($pdf, $y, $x+175, 'C', 'Helvetica', 'B' ,11, $ciap->name.' - Summary');
-certificate_print_text($pdf, $y, $x+180, 'C', 'Helvetica', 'B' ,11, $plan->idnumber.' '.$plan->name.'  -  page '.$page);
-certificate_print_text($pdf, $y, $x+185, 'C', 'Helvetica', 'B' ,11, 'Printed on '.date('j F Y',time()));
+    // Distinct name/title and description/body.
+    if (!empty($action->name)) {
+        return [
+            $action->name,
+            $text5,
+        ];
+    }
 
+    // Try to determine heading from description.
+    $head = null;
+    $body = $text5;
+
+    $pos = strpos($text5, '.');
+    if (
+        $pos < 80 &&
+        $pos > 5
+    ) {
+        $head = substr($text5, 0, $pos + 1);
+        $body = substr($text5, $pos + 1);
+    }
+
+    return [
+        $head,
+        $body,
+    ];
 }
 
-function headbod($text) {
-		$repl = array(" </p>"," /n","</p>","/n");
-		$repl2 = array("..",".  .",".  .",". .",".  .");
-		$text1=str_replace($repl,".",$text);
-		$text2=preg_replace('/^\s+|\s+$|\s+(?=\s)/', '', $text1);
-		$text3=strip_tags($text2);
-		$text4 = trim(preg_replace('/\s\s+/', ' ', str_replace("\n", " ", $text3)));
-		$text5=str_replace($repl2,". ",$text4);
-		$pos=strpos($text5,".");
-		if ($pos<80 && $pos>5) {
-			$head=substr($text5,0,$pos+1);
-			$body=substr($text5, $pos+1);
-		}
-		ELSE {
-				$body=$text5;
-		}
-		$final=array($head,$body);
-		return $final;
-}	
+/**
+ * Directly output all CIAP action data.
+ *
+ * @return void
+ * @throws dml_exception
+ */
+function output_data(): void {
+    global $DB;
 
-function outputdata() {
-GLOBAL $pdf, $DB, $CFG, $x, $y, $page;
-$actions=$DB->get_records(ciap_actions);
-$actionno=0;
-$posno=0;
+    $actions = $DB->get_records('ciap_actions');
+    foreach ($actions as $action) {
+        [ $head, $body ] = get_action_content($action);
 
-	FOREACH ($actions AS $action) {
-		echo "<br>".$action->planid."<br><b>Original</b><br>".$action->description . "<br>";
-		$repl = array(" </p>"," /n","</p>","/n");
-		$repl2 = array("..",".  .",".  .",". .",".  .");
-		$action1=str_replace($repl,".",$action->description);
-		$action2=preg_replace('/^\s+|\s+$|\s+(?=\s)/', '', $action1);
-		$action3=strip_tags($action2);
-		$actionstxt = trim(preg_replace('/\s\s+/', ' ', str_replace("\n", " ", $action3)));
-		$actiontxt=str_replace($repl2,". ",$actionstxt);
-		echo "<br><b>Stripped</b><br>".$actiontxt . "<br>";
-		$pos=strpos($actiontxt,".");
-		if ($pos<80 && $pos>5) {
-			$actionhead=substr($actiontxt,0,$pos+1);
-			$actionbody=substr($actiontxt, $pos+1);
-			echo "<br><b>Header</b><br>".$actionhead."<br>";
-			echo "<br><b>Body</b><br>".$actionbody."<br>";
-		}
-	echo "<br>";
-	$actionhead="";
-	$actionbody="";
-	}
-EXIT();
+        echo "
+            <strong>Action: </strong> $action->id<br>
+            <strong>Plan: </strong> $action->planid<br>
+            <strong>Title: </strong> $head<br>
+            <strong>Stripped:</strong><br>
+            <div style='border: 1px solid black'>$body</div><br>
+            <strong>Content:</strong><br>
+            <pre style='border: 1px solid black'>$action->description</pre><br>
+            <br><br>
+            <hr>
+        ";
+    }
+
+    exit();
 }
 
+/**
+ * Get custom field values for the defined CIAP item.
+ *
+ * @param string $area Custom field data area. e.g. 'plans', 'actions'.
+ * @param int $ciap_id ID of the parent CIAP instance.
+ * @param int $item_id ID of the item relevant to the area. e.g. Plan ID.
+ * @return stdClass Custom field value object where key is the field shortname and value is the exported field value.
+ * @throws moodle_exception
+ */
+function get_custom_field_values(string $area, int $ciap_id, int $item_id): stdClass {
+    $handler = \core_customfield\handler::get_handler('mod_ciap', $area, $ciap_id);
 
+    $custom_field_values = [];
+    $custom_fields = $handler->get_instance_data($item_id);
+    foreach ($custom_fields as $custom_field) {
+        $field = $custom_field->get_field();
+        $field_name = $field->get('shortname');
+
+        $custom_field_values[$field_name] = $custom_field->export_value();
+    }
+
+    return (object)$custom_field_values;
+}
+
+/**
+ * Determine whether the given content is classified as long content.
+ *
+ * @param TCPDF $pdf PDF instance being written to.
+ * @param string $content Content to check.
+ * @return bool Whether content is long.
+ */
+function is_long_content(TCPDF $pdf, string $content): bool {
+    // Remove trailing empty paragraph tags
+    $trimmed_content = preg_replace('/(<p dir="ltr" style="text-align: left;"><br><\/p>)+$/', '', $content);
+
+    $paragraph_count = substr_count($trimmed_content, '<p');
+    if ($paragraph_count > 1) {
+        return true;
+    }
+
+    $contains_big_tags = preg_match('/<div>|<img>|<li>|<table>/i', $trimmed_content);
+    if ($contains_big_tags) {
+        return true;
+    }
+
+    $content_lines = $pdf->getNumLines($trimmed_content, 200);
+    if ($content_lines > 3) {
+        return true;
+    }
+
+    return false;
+}
