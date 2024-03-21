@@ -31,13 +31,12 @@ require_once("$CFG->libdir/filelib.php");
 require_once("$CFG->libdir/completionlib.php");
 require_once(__DIR__ . '/gfg_pdf.php');
 
-$ciapid = optional_param('ciap', 0, PARAM_INT);
-
-if ($ciapid == '999999') {
+$plan_id = required_param('ciap', PARAM_INT);
+if ($plan_id == '999999') {
     output_data();
 }
 
-$plan = $DB->get_record('ciap_plans', [ 'id' => $ciapid ]);
+$plan = $DB->get_record('ciap_plans', [ 'id' => $plan_id ]);
 $ciap = $DB->get_record('ciap', [ 'id' => $plan->ciapid ]);
 $actions = $DB->get_records('ciap_actions', [ 'planid' => $plan->id ]);
 
