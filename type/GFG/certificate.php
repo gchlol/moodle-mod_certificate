@@ -68,6 +68,8 @@ $action_offset = 0;
 foreach ($actions as $action) {
     if ($action_offset == 5) {
         $action_offset = 0;
+
+        $pdf->AddPage();
     }
 
     if ($action_offset == 0) {
