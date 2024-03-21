@@ -95,7 +95,10 @@ foreach ($actions as $action) {
 
     $pdf->setTextColor(0, 0, 0);
 
-    certificate_print_text($pdf, $x, $x_offset, 'l', 'Helvetica', '', 14, "$actionno.");
+    $action_number_width = $pdf->GetStringWidth($actionno, 'Helvetica', '', 14);
+    $action_number_offset = round($action_number_width / 2);
+
+    certificate_print_text($pdf, $x - $action_number_offset, $x_offset, 'l', 'Helvetica', '', 14, "$actionno.");
     certificate_print_text($pdf, $x + 5, $x_offset, 'l', 'Helvetica', '', 14, $actionhead, 160);
 
     if (isset($action->custom_fields->response)) {
