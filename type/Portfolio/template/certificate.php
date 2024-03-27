@@ -77,3 +77,5 @@ foreach ($course_sections as $course_section) {
         $course_section->required
     );
 }
+
+$cert_output->finalise();
