@@ -149,6 +149,12 @@ class portfolio_data {
         return strip_tags($description);
     }
 
+    /**
+     * Add debug data to an existing list of course sections.
+     *
+     * @param course_section[] $base_course_data Base list of course sections.
+     * @return course_section[] Updated list of course sections.
+     */
     protected static function populate_debug_data(array $base_course_data): array {
         $course_data = [];
 
