@@ -5,7 +5,6 @@ namespace mod_certificate\type\Portfolio;
 use dml_exception;
 use stdClass;
 
-global $CFG;
 require_once(__DIR__ . '/../Portfolio/course_section.php');
 
 class portfolio_data {
