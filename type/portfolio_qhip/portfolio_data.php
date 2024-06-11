@@ -14,7 +14,7 @@ class portfolio_data extends \mod_certificate\type\Portfolio\portfolio_data {
      * @inheritDoc
      */
     public static function get_course_section_data(int $user_id, bool $debug = false): array {
-        return [
+        $course_data = [
             new course_section(
                 'QHIP Courses',
                 '',
@@ -22,6 +22,15 @@ class portfolio_data extends \mod_certificate\type\Portfolio\portfolio_data {
                 false
             ),
         ];
+
+        if (
+            $debug ||
+            isset($_GET['debug'])
+        ) {
+            $course_data = self::populate_debug_data($course_data);
+        }
+
+        return $course_data;
     }
 
     /**

@@ -149,7 +149,7 @@ class portfolio_data {
         return strip_tags($description);
     }
 
-    private static function populate_debug_data(array $base_course_data): array {
+    protected static function populate_debug_data(array $base_course_data): array {
         $course_data = [];
 
         foreach ($base_course_data as $index => $base_course_section) {
