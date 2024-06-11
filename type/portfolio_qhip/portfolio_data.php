@@ -47,7 +47,8 @@ class portfolio_data extends \mod_certificate\type\Portfolio\portfolio_data {
             "
                 select  qhiptr.*
                 from    (
-                            select  course.fullname,
+                            select  concat(course.id, '-recompletion-', course_recompletions.id) as 'id',
+                                    course.fullname,
                                     course_recompletions.timecompleted
                 
                             from    {local_recompletion_cc} course_recompletions
@@ -60,7 +61,8 @@ class portfolio_data extends \mod_certificate\type\Portfolio\portfolio_data {
                 
                         union all
                 
-                            select  course.fullname,
+                            select  concat(course.id, '-completion-', course_completions.id) as 'id',
+                                    course.fullname,
                                     course_completions.timecompleted
                 
                             from    {course_completions} course_completions
@@ -73,7 +75,8 @@ class portfolio_data extends \mod_certificate\type\Portfolio\portfolio_data {
                 
                         union all
                 
-                            select  case
+                            select  concat(course.id, '-module-', modules_completion.id) as 'id',
+                                    case
                                         when course_modules.id = '13527' then (select fullname from {course} where id = 606)
                                         when course_modules.id = '13507' then (select fullname from {course} where id = 607)
                                         when course_modules.id = '13516' then (select fullname from {course} where id = 608)
