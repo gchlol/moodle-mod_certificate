@@ -59,6 +59,10 @@ class portfolio_output extends portfolio_output_base {
 
         } else {
             $previous_course_name = $course->fullname;
+
+            if ($previous_course_name !== null) {
+                $this->offsets->add_row();
+            }
         }
 
         parent::output_course_result($course);
