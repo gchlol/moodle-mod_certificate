@@ -47,4 +47,20 @@ class portfolio_output extends portfolio_output_base {
         $this->output_page_footer();
         $this->output_page_footer_dynamic($course);
     }
+
+    /**
+     * @inheritDoc
+     */
+    protected function output_course_result(stdClass $course) {
+        // Blank course name if it's the same as the previous one.
+        static $previous_course_name;
+        if ($previous_course_name === $course->fullname) {
+            $course->fullname = '';
+
+        } else {
+            $previous_course_name = $course->fullname;
+        }
+
+        parent::output_course_result($course);
+    }
 }
