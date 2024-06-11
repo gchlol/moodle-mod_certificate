@@ -58,11 +58,11 @@ class portfolio_output extends portfolio_output_base {
             $course->fullname = '';
 
         } else {
-            $previous_course_name = $course->fullname;
-
             if ($previous_course_name !== null) {
                 $this->offsets->add_row();
             }
+
+            $previous_course_name = $course->fullname;
         }
 
         parent::output_course_result($course);
