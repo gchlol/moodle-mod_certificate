@@ -6,7 +6,7 @@ use dml_exception;
 use stdClass;
 
 global $CFG;
-require_once($CFG->dirroot . '/mod/certificate/type/Portfolio/course_section.php');
+require_once(__DIR__ . '/../Portfolio/course_section.php');
 
 class portfolio_data {
 
@@ -24,11 +24,16 @@ class portfolio_data {
 
         $course_data = [];
         foreach ($header_fields as $header_field) {
-            $description = self::cleanse_field_description($header_field->description);
-            $required = self::is_field_required($description);
+            $description = $header_field->description ?? '';
+            $required = false;
 
-            if ($required) {
-                $description = self::strip_required_word($description);
+            if ($description) {
+                $description = self::cleanse_field_description($description);
+                $required = self::is_field_required($description);
+
+                if ($required) {
+                    $description = self::strip_required_word($description);
+                }
             }
 
             $course_data[] = new course_section(

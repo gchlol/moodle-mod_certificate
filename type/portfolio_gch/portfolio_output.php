@@ -9,17 +9,14 @@ use TCPDF;
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-require_once($CFG->dirroot . '/mod/certificate/type/Portfolio/portfolio_output_base.php');
+require_once(__DIR__ . '/../Portfolio/portfolio_output_base.php');
 
 /**
  * @property stdClass|TCPDF $pdf
  */
 class portfolio_output extends portfolio_output_base {
 
-    protected function get_identifier(): string {
-        return 'portfolio_gch';
-    }
+    protected const ROOT_PATH = __DIR__;
 
     protected function page_rows(): int {
         return 47;

@@ -9,8 +9,8 @@ if (!defined('MOODLE_INTERNAL')) {
 require_once($CFG->libdir . '/filelib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
-require_once($CFG->dirroot . '/mod/certificate/type/Portfolio/portfolio_offsets.php');
-require_once($CFG->dirroot . '/mod/certificate/type/Portfolio/portfolio_output.php');
+require_once(__DIR__ . '/../Portfolio/portfolio_offsets.php');
+require_once(__DIR__ . '/../Portfolio/portfolio_output.php');
 
 $userid = optional_param('userid', $USER->id, PARAM_INT);
 $user = $DB->get_record('user', ['id' => $userid]);

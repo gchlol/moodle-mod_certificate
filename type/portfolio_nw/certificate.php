@@ -2,7 +2,7 @@
 
 use mod_certificate\type\Portfolio\portfolio_data;
 use mod_certificate\type\Portfolio\portfolio_offsets;
-use mod_certificate\type\portfolio_temp\portfolio_output;
+use mod_certificate\type\portfolio_nw\portfolio_output;
 
 if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.'); // It must be included from view.php
@@ -40,18 +40,18 @@ $offsets = new portfolio_offsets();
 $offsets->load_pdf_dimensions($pdf);
 
 $offsets->x = 15;
-$offsets->y = 15;
+$offsets->y = 40;
 
 $offsets->row_indent = 1;
 
 $offsets->code_y = 250;
-$offsets->date_y = 240;
-$offsets->page_num_y = 273;
+$offsets->date_y = 258;
+$offsets->page_num_y = 280;
 $offsets->seal_x = 160;
 $offsets->seal_y = 78;
 $offsets->signature_x = 140;
 $offsets->signature_y = 239;
-$offsets->site_service_y = 250;
+$offsets->site_service_y = 265;
 $offsets->watermark_x = 26;
 $offsets->watermark_y = 58;
 $offsets->watermark_w = 158;
