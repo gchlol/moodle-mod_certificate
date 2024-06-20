@@ -114,10 +114,6 @@ if (empty($action)) { // Not displaying PDF
         echo html_writer::tag('div', $url, array('class' => 'reportlink'));
     }
 
-    if (!empty($certificate->intro)) {
-        echo $OUTPUT->box(format_module_intro('certificate', $certificate, $cm->id), 'generalbox', 'intro');
-    }
-
     if ($attempts = certificate_get_attempts($certificate->id)) {
         echo certificate_print_attempts($course, $certificate, $attempts);
     }
