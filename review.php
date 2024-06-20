@@ -88,10 +88,6 @@ if (has_capability('mod/certificate:manage', $context)) {
     echo html_writer::tag('div', $url, array('class' => 'reportlink'));
 }
 
-if (!empty($certificate->intro)) {
-    echo $OUTPUT->box(format_module_intro('certificate', $certificate, $cm->id), 'generalbox', 'intro');
-}
-
 echo html_writer::tag('p', get_string('viewed', 'certificate'). '<br />' . userdate($certrecord->timecreated), array('style' => 'text-align:center'));
 
 $link = new moodle_url('/mod/certificate/review.php?id='.$cm->id.'&action=get');
