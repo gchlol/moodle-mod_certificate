@@ -519,6 +519,82 @@ abstract class portfolio_output_base {
     }
 
     /**
+     * Output the configured certificate grade element.
+     *
+     * @param stdClass $course Course used for grade and outcome information.
+     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
+     * @return void
+     */
+    protected function output_grade(stdClass $course, string $colour = portfolio_colour::MINOR): void {
+        $this->apply_colour($colour);
+
+        $this->output_text(
+            certificate_get_grade($this->certificate, $course),
+            0, 102,
+            10, 'C'
+        );
+
+        $this->apply_base_colour();
+    }
+
+    /**
+     * Output the configured certificate outcome element.
+     *
+     * @param stdClass $course Course used for grade and outcome information.
+     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
+     * @return void
+     */
+    protected function output_outcome(stdClass $course, string $colour = portfolio_colour::MINOR): void {
+        $this->apply_colour($colour);
+
+        $this->output_text(
+            certificate_get_outcome($this->certificate, $course),
+            0, 112,
+            10, 'C'
+        );
+
+        $this->apply_base_colour();
+    }
+
+    /**
+     * Output the configured certificate hours element.
+     *
+     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
+     * @return void
+     * @throws coding_exception
+     */
+    protected function output_hours(string $colour = portfolio_colour::MINOR): void {
+        $this->apply_colour($colour);
+
+        $this->output_text(
+            get_string('credithours', 'certificate') . ': ' . $this->certificate->printhours,
+            0, 122,
+            10, 'C'
+        );
+
+        $this->apply_base_colour();
+    }
+
+    /**
+     * Output the certificate code element.
+     *
+     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
+     * @return void
+     */
+    protected function output_code(string $colour = portfolio_colour::MINOR): void {
+        $this->apply_colour($colour);
+
+        $this->output_text_static(
+            certificate_get_code($this->certificate, $this->record),
+            $this->offsets->x,
+            $this->offsets->code_y,
+            10, 'C'
+        );
+
+        $this->apply_base_colour();
+    }
+
+    /**
      * Output the page header designed for pages after the first.
      *
      * Contains the site service name and user's name.
@@ -555,28 +631,25 @@ abstract class portfolio_output_base {
      * Contains grade information as well as certificate specific information like the hours and code.
      *
      * @param stdClass $course Course used for grade and outcome information.
-     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
      * @throws coding_exception
      */
-    protected function output_page_footer_dynamic(stdClass $course, string $colour = portfolio_colour::MINOR): void {
-        $this->apply_colour($colour);
-
-        $this->output_text(certificate_get_grade($this->certificate, $course), 0, 102, 10, 'C', '', 'Times');
-        $this->output_text(certificate_get_outcome($this->certificate, $course), 0, 112, 10, 'C', '', 'Times');
-
-        if ($this->certificate->printhours) {
-            $this->output_text(get_string('credithours', 'certificate') . ': ' . $this->certificate->printhours, 0, 122, 10, 'C', '', 'Times');
+    protected function output_page_footer_dynamic(stdClass $course): void {
+        if ($this->certificate->printgrade > 0) {
+            $this->output_grade($course);
         }
 
-        $this->output_text_static(
-            certificate_get_code($this->certificate, $this->record),
-            $this->offsets->x,
-            $this->offsets->code_y,
-            10, 'C', '', 'Times'
-        );
+        if ($this->certificate->printoutcome > 0) {
+            $this->output_outcome($course);
+        }
 
-        $this->apply_base_colour();
+        if (!empty($this->certificate->printhours)) {
+            $this->output_hours();
+        }
+
+        if ($this->certificate->printnumber) {
+            $this->output_code();
+        }
     }
 
     //endregion Document
