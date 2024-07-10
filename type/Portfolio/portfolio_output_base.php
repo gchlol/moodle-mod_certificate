@@ -3,6 +3,7 @@
 namespace mod_certificate\type\Portfolio;
 
 use coding_exception;
+use moodle_exception;
 use stdClass;
 use TCPDF;
 
@@ -29,44 +30,32 @@ abstract class portfolio_output_base {
      */
     private const MAGIC_DATE = 315496800;
 
-    /**
-     * @var stdClass Module instance.
-     */
-    protected $certificate;
+    protected stdClass $certificate;
+    protected stdClass $course;
+    protected portfolio_offsets $offsets;
+    protected stdClass $record;
+    protected stdClass $user;
+    protected portfolio_string_manager $string_manager;
 
     /**
-     * @var stdClass Course containing this portfolio.
-     */
-    protected $course;
-
-    /**
-     * @var portfolio_offsets Offsets tracking object.
-     */
-    protected $offsets;
-
-    /**
-     * @var TCPDF|stdClass PDF instance used for output.
+     * @var TCPDF|stdClass
      */
     protected $pdf;
 
     /**
-     * @var stdClass Specific certificate instance.
-     */
-    protected $record;
-
-    /**
-     * @var stdClass User the certificate has been issued to.
-     */
-    protected $user;
-
-    protected portfolio_string_manager $string_manager;
-
-    /**
      * @var int[][] Cache of parsed hex colours.
      */
-    private $colour_cache;
+    private array $colour_cache;
 
 
+    /**
+     * @param stdClass $certificate Certificate instance.
+     * @param stdClass $record Specific certificate instance.
+     * @param stdClass $user User the certificate has been issued to.
+     * @param TCPDF $pdf PDF instance used for output.
+     * @param portfolio_offsets $offsets Offsets tracking object.
+     * @throws moodle_exception
+     */
     public function __construct(stdClass $certificate, stdClass $record, stdClass $user, TCPDF $pdf, portfolio_offsets $offsets) {
         $this->certificate = $certificate;
         $this->record = $record;
@@ -75,7 +64,7 @@ abstract class portfolio_output_base {
         $this->user = $user;
 
         [ $this->course ] = get_course_and_cm_from_instance($certificate, 'certificate');
-        $this->string_manager = $this->init_string_manager();
+        $this->string_manager = static::init_string_manager();
     }
 
     /**
@@ -83,7 +72,7 @@ abstract class portfolio_output_base {
      *
      * @return portfolio_string_manager String manager instance.
      */
-    private function init_string_manager(): portfolio_string_manager {
+    private static function init_string_manager(): portfolio_string_manager {
         $lang_path = static::ROOT_PATH . '/lang';
         $local_lang_root = is_dir($lang_path) ? $lang_path : null;
 
@@ -146,7 +135,7 @@ abstract class portfolio_output_base {
      * @param string $hex Input hexadecimal string.
      * @return int[] Colour array containing the parsed r, g, and b components.
      */
-    private function parse_hex_colour(string $hex): array {
+    private static function parse_hex_colour(string $hex): array {
         [$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
 
         return [$r, $g, $b];
@@ -157,11 +146,10 @@ abstract class portfolio_output_base {
      *
      * @param string $identifier Identifier for the language string containing the hexadecimal colour string.
      * @return array Colour array containing the parsed r, g, and b components.
-     * @throws coding_exception If a language string doesn't exist for the given identifier.
      */
     protected function get_colour(string $identifier): array {
         if (!isset($this->colour_cache[$identifier])) {
-            $this->colour_cache[$identifier] = $this->parse_hex_colour($this->get_string($identifier));
+            $this->colour_cache[$identifier] = static::parse_hex_colour($this->get_string($identifier));
         }
 
         return $this->colour_cache[$identifier];
@@ -224,7 +212,6 @@ abstract class portfolio_output_base {
      *
      * @param string $identifier Identifier for the language string containing the hexadecimal colour string.
      * @return void
-     * @throws coding_exception If a language string doesn't exist for the given identifier.
      */
     protected function apply_colour(string $identifier): void {
         $colour = $this->get_colour($identifier);
@@ -238,7 +225,6 @@ abstract class portfolio_output_base {
      * @see apply_colour()
      *
      * @return void
-     * @throws coding_exception
      */
     protected function apply_primary_colour(): void {
         $this->apply_colour(portfolio_colour::PRIMARY);
@@ -250,7 +236,6 @@ abstract class portfolio_output_base {
      * @see apply_colour()
      *
      * @return void
-     * @throws coding_exception
      */
     protected function apply_secondary_colour(): void {
         $this->apply_colour(portfolio_colour::SECONDARY);
@@ -262,7 +247,6 @@ abstract class portfolio_output_base {
      * @see apply_colour()
      *
      * @return void
-     * @throws coding_exception
      */
     protected function apply_base_colour(): void {
         $this->apply_colour(portfolio_colour::BASE);
@@ -274,7 +258,6 @@ abstract class portfolio_output_base {
      * @see apply_colour()
      *
      * @return void
-     * @throws coding_exception
      */
     protected function apply_minor_colour(): void {
         $this->apply_colour(portfolio_colour::MINOR);
@@ -288,7 +271,6 @@ abstract class portfolio_output_base {
      * Finalise the PDF document with any elements that require all pages to be present.
      *
      * @return void
-     * @throws coding_exception
      */
     public function finalise() {
         $this->output_page_numbers();
@@ -438,7 +420,6 @@ abstract class portfolio_output_base {
      *
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
-     * @throws coding_exception
      */
     protected function output_page_number(string $colour = portfolio_colour::MINOR): void {
         $this->apply_colour($colour);
@@ -461,7 +442,6 @@ abstract class portfolio_output_base {
      * Using getAliasNbPages results in incorrect alignment due to aligning on the template string not the final number.
      *
      * @return void
-     * @throws coding_exception
      */
     protected function output_page_numbers() {
         $page_count = $this->pdf->getNumPages();
@@ -483,7 +463,6 @@ abstract class portfolio_output_base {
      *
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
-     * @throws coding_exception
      */
     protected function output_printed_date(string $colour = portfolio_colour::MINOR): void {
         $this->apply_colour($colour);
@@ -503,7 +482,6 @@ abstract class portfolio_output_base {
      *
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
-     * @throws coding_exception
      */
     protected function output_site_service(string $colour = portfolio_colour::PRIMARY): void {
         $this->apply_colour($colour);
@@ -601,7 +579,6 @@ abstract class portfolio_output_base {
      *
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
-     * @throws coding_exception
      */
     protected function output_page_header(string $colour = portfolio_colour::PRIMARY): void {
         $this->apply_colour($colour);
@@ -618,7 +595,6 @@ abstract class portfolio_output_base {
      * Can be overridden to control exactly which elements are output.
      *
      * @return void
-     * @throws coding_exception
      */
     protected function output_page_footer(): void {
         $this->output_site_service();
@@ -696,7 +672,6 @@ abstract class portfolio_output_base {
      * @param string $header Header string passed to {@link output_course_header()}.
      * @param string $subheader Subheader string passed to {@link output_course_header()}.
      * @return void
-     * @throws coding_exception
      */
     protected function output_empty_course(string $header, string $subheader) {
         $this->output_course_header($header, $subheader);
@@ -716,7 +691,6 @@ abstract class portfolio_output_base {
      * @param string $subheader Subheader conditionally output if not empty.
      * @param bool $continued When true the alternate continued variant will be used.
      * @return void
-     * @throws coding_exception
      */
     protected function output_course_header(string $header, string $subheader, bool $continued = false): void {
         $course_header = $header;
