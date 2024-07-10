@@ -94,7 +94,6 @@ abstract class portfolio_output_base {
      *
      * @return int Number of output rows on pages.
      */
-
     protected abstract function page_rows(): int;
 
     /**
@@ -104,6 +103,11 @@ abstract class portfolio_output_base {
      */
     protected abstract function cover_offset(): int;
 
+    /**
+     * Gets the font scale for course list output.
+     *
+     * @return float Font scale.
+     */
     protected function course_font_scale(): float {
         return 3;
     }
