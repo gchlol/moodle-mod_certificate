@@ -28,7 +28,7 @@ abstract class portfolio_output_base {
     /**
      * 1 January 1980 is used to credit long serving staff who have not formally completed training
      */
-    private const MAGIC_DATE = 315496800;
+    protected const MAGIC_DATE = 315496800;
 
     protected stdClass $certificate;
     protected stdClass $course;
