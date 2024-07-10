@@ -44,16 +44,23 @@ class portfolio_data extends \mod_certificate\type\Portfolio\portfolio_data {
         global $DB;
 
         return $DB->get_records_sql(
+            /** @lang MySQL */
             "
                 select  qhiptr.*
                 from    (
                             select  concat(course.id, '-recompletion-', course_recompletions.id) as 'id',
                                     course.fullname,
-                                    course_recompletions.timecompleted
+                                    course_recompletions.timecompleted,
+                                    cpd_data.value as 'cpd'
                 
                             from    {local_recompletion_cc} course_recompletions
                                     join {course} course on
                                         course.id = course_recompletions.course
+                                    left join {customfield_field} cpd_field on
+                                        cpd_field.shortname = 'cpd'
+                                    left join {customfield_data} cpd_data on
+                                        cpd_data.fieldid = cpd_field.id and
+                                        cpd_data.instanceid = course.id
                 
                             where   course_recompletions.timecompleted is not null and
                                     course_recompletions.userid = :user_recompletion and
@@ -63,11 +70,17 @@ class portfolio_data extends \mod_certificate\type\Portfolio\portfolio_data {
                 
                             select  concat(course.id, '-completion-', course_completions.id) as 'id',
                                     course.fullname,
-                                    course_completions.timecompleted
+                                    course_completions.timecompleted,
+                                    cpd_data.value as 'cpd'
                 
                             from    {course_completions} course_completions
                                     join {course} course on
                                         course.id = course_completions.course
+                                    left join {customfield_field} cpd_field on
+                                        cpd_field.shortname = 'cpd'
+                                    left join {customfield_data} cpd_data on
+                                        cpd_data.fieldid = cpd_field.id and
+                                        cpd_data.instanceid = course.id
                 
                             where   course_completions.timecompleted is not null and
                                     course_completions.userid = :user_completion and
@@ -100,6 +113,30 @@ class portfolio_data extends \mod_certificate\type\Portfolio\portfolio_data {
                                         when course_modules.id = '26896' then (select fullname from {course} where id = 627)
                                         else course.fullname
                                     end as 'fullname',
+                                    case
+                                        when course_modules.id = '13527' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 606 and cpd.fieldid = 5)
+                                        when course_modules.id = '13507' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 607 and cpd.fieldid = 5)
+                                        when course_modules.id = '13516' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 608 and cpd.fieldid = 5)
+                                        when course_modules.id = '13509' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 609 and cpd.fieldid = 5)
+                                        when course_modules.id = '13517' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 610 and cpd.fieldid = 5)
+                                        when course_modules.id = '13522' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 611 and cpd.fieldid = 5)
+                                        when course_modules.id = '13523' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 612 and cpd.fieldid = 5)
+                                        when course_modules.id = '13524' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 613 and cpd.fieldid = 5)
+                                        when course_modules.id = '13525' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 614 and cpd.fieldid = 5)
+                                        when course_modules.id = '13526' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 615 and cpd.fieldid = 5)
+                                        when course_modules.id = '26878' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 616 and cpd.fieldid = 5)
+                                        when course_modules.id = '26879' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 617 and cpd.fieldid = 5)
+                                        when course_modules.id = '13528' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 620 and cpd.fieldid = 5)
+                                        when course_modules.id = '13529' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 619 and cpd.fieldid = 5)
+                                        when course_modules.id = '26883' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 618 and cpd.fieldid = 5)
+                                        when course_modules.id = '26884' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 621 and cpd.fieldid = 5)
+                                        when course_modules.id = '26885' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 622 and cpd.fieldid = 5)
+                                        when course_modules.id = '13531' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 624 and cpd.fieldid = 5)
+                                        when course_modules.id = '26894' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 625 and cpd.fieldid = 5)
+                                        when course_modules.id = '26895' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 626 and cpd.fieldid = 5)
+                                        when course_modules.id = '26896' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 627 and cpd.fieldid = 5)
+                                        else course.fullname
+                                    end as 'cpd',
                                     modules_completion.timemodified as 'timecompleted'
                 
                             from    {course} course
