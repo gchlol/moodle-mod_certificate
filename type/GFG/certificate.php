@@ -390,7 +390,10 @@ function is_long_content(TCPDF $pdf, string $content): bool {
         return true;
     }
 
-    $content_lines = $pdf->getNumLines($trimmed_content, 200);
+    $content_lines = $pdf->getNumLines(
+        $trimmed_content,
+        $pdf->getPageWidth()
+    );
     if ($content_lines > 3) {
         return true;
     }
