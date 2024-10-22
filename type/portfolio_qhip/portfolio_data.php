@@ -136,7 +136,7 @@ class portfolio_data extends \mod_certificate\type\Portfolio\portfolio_data {
                                         when course_modules.id = '26894' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 625 and cpd.fieldid = 5)
                                         when course_modules.id = '26895' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 626 and cpd.fieldid = 5)
                                         when course_modules.id = '26896' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 627 and cpd.fieldid = 5)
-                                        else course.fullname
+                                        else 'N/A'
                                     end as 'cpd'
                 
                             from    {course} course
