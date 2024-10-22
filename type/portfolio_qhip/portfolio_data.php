@@ -113,6 +113,7 @@ class portfolio_data extends \mod_certificate\type\Portfolio\portfolio_data {
                                         when course_modules.id = '26896' then (select fullname from {course} where id = 627)
                                         else course.fullname
                                     end as 'fullname',
+                                    modules_completion.timemodified as 'timecompleted',
                                     case
                                         when course_modules.id = '13527' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 606 and cpd.fieldid = 5)
                                         when course_modules.id = '13507' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 607 and cpd.fieldid = 5)
@@ -136,8 +137,7 @@ class portfolio_data extends \mod_certificate\type\Portfolio\portfolio_data {
                                         when course_modules.id = '26895' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 626 and cpd.fieldid = 5)
                                         when course_modules.id = '26896' then (select cpd.value as cpd from {customfield_data} cpd where cpd.instanceid = 627 and cpd.fieldid = 5)
                                         else course.fullname
-                                    end as 'cpd',
-                                    modules_completion.timemodified as 'timecompleted'
+                                    end as 'cpd'
                 
                             from    {course} course
                                     join {enrol} enrol on
