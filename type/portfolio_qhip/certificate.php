@@ -46,7 +46,7 @@ $offsets->row_indent = 1;
 
 $offsets->code_y = 250;
 $offsets->date_y = 240;
-$offsets->page_num_y = 273;
+$offsets->page_num_y = 285;
 $offsets->seal_x = 160;
 $offsets->seal_y = 78;
 $offsets->signature_x = 140;

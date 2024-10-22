@@ -99,6 +99,10 @@ class portfolio_output extends portfolio_output_base {
         // Intentionally empty
     }
 
+    protected function output_page_number(string $colour = portfolio_colour::BASE): void {
+        parent::output_page_number($colour);
+    }
+
     /**
      * Output the certificate code element.
      *
