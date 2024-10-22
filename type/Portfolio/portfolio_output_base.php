@@ -667,10 +667,11 @@ abstract class portfolio_output_base {
 
         $this->output_course_header($header, $subheader);
 
-        for ($index = 0; $index < count($courses); $index++) {
-            $course = $courses[$index];
-            $previous_course = $courses[$index - 1] ?? null;
-            $next_course = $courses[$index + 1] ?? null;
+        $course_values = array_values($courses);
+        for ($index = 0; $index < count($course_values); $index++) {
+            $course = $course_values[$index];
+            $previous_course = $course_values[$index - 1] ?? null;
+            $next_course = $course_values[$index + 1] ?? null;
 
             $this->output_course($course, $previous_course, $next_course, $header, $subheader);
         }
