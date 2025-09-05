@@ -256,6 +256,9 @@ foreach ($actions as $action) {
         $pdf->SetTextColor(0, 0, 0);
     }
 
+    // Update page pointer to handle update descriptions that wrap to next page.
+    $pdf->lastPage();
+
     if ($long_description) {
         $pdf->AddPage();
 
@@ -374,7 +377,7 @@ function get_custom_field_values(string $area, int $ciap_id, int $item_id): stdC
  */
 function is_long_content(TCPDF $pdf, string $content): bool {
     // Remove trailing empty paragraph tags
-    $trimmed_content = preg_replace('/(<p dir="ltr" style="text-align: left;"><br><\/p>)+$/', '', $content);
+    $trimmed_content = preg_replace('/(?:<p[^>]*>(?:<br>|&nbsp;)<\/p>)+$/', 'stripped', $content);
 
     $paragraph_count = substr_count($trimmed_content, '<p');
     if ($paragraph_count > 1) {
