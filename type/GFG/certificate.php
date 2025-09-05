@@ -179,12 +179,8 @@ foreach ($actions as $action) {
         $actionbody,
     ] = get_action_content($action);
 
-    if (strlen($actionhead) > 85) {
-        $actionhead = substr($actionhead, 0, 85) . '...';
-    }
-
     $pdf->SetTextColor(0, 0, 0);
-    certificate_print_text($pdf, $x + 10, $y + 27, 'l', 'Helvetica', 'i', 18, $actionhead, 240);
+    $pdf->print_truncated_text($x + 10, $y + 27, 'l', 'Helvetica', 'i', 18, $actionhead ?? '', 240);
 
     $long_description = is_long_content($pdf, $action->description);
     if ($long_description) {
