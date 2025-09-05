@@ -179,7 +179,7 @@ class gfg_pdf extends pdf {
      */
     public function get_truncated_text($text, $width, $font = 'freeserif', $style = '', $size = 10): string {
         $textwidth = $this->GetStringWidth($text, $font, $style, $size);
-        if ($textwidth <= $width) {
+        if ($textwidth + static::TRUNCATION_MARGIN <= $width) {
             return $text;
         }
 
