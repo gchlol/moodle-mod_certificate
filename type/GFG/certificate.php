@@ -179,12 +179,8 @@ foreach ($actions as $action) {
         $actionbody,
     ] = get_action_content($action);
 
-    if (strlen($actionhead) > 85) {
-        $actionhead = substr($actionhead, 0, 85) . '...';
-    }
-
     $pdf->SetTextColor(0, 0, 0);
-    certificate_print_text($pdf, $x + 10, $y + 27, 'l', 'Helvetica', 'i', 18, $actionhead, 240);
+    $pdf->print_truncated_text($x + 10, $y + 27, 'l', 'Helvetica', 'i', 18, $actionhead ?? '', 240);
 
     $long_description = is_long_content($pdf, $action->description);
     if ($long_description) {
@@ -259,6 +255,9 @@ foreach ($actions as $action) {
         certificate_print_text($pdf, $x + 10, $y + 160, 'l', 'Helvetica', 'B', 16, 'Congratulations on completing this action - make sure you celebrate this win with your team!');
         $pdf->SetTextColor(0, 0, 0);
     }
+
+    // Update page pointer to handle update descriptions that wrap to next page.
+    $pdf->lastPage();
 
     if ($long_description) {
         $pdf->AddPage();
@@ -378,7 +377,7 @@ function get_custom_field_values(string $area, int $ciap_id, int $item_id): stdC
  */
 function is_long_content(TCPDF $pdf, string $content): bool {
     // Remove trailing empty paragraph tags
-    $trimmed_content = preg_replace('/(<p dir="ltr" style="text-align: left;"><br><\/p>)+$/', '', $content);
+    $trimmed_content = preg_replace('/(?:<p[^>]*>(?:<br>|&nbsp;)<\/p>)+$/', 'stripped', $content);
 
     $paragraph_count = substr_count($trimmed_content, '<p');
     if ($paragraph_count > 1) {

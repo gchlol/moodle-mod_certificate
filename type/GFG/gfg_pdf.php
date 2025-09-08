@@ -2,6 +2,9 @@
 
 class gfg_pdf extends pdf {
 
+    private const TRUNCATION_STRING = '...';
+    private const TRUNCATION_MARGIN = 2;
+
     private ?stdClass $action = null;
     private int $action_number;
     private stdClass $ciap;
@@ -139,6 +142,62 @@ class gfg_pdf extends pdf {
         $this->Text(0, $footer_start, $this->ciap->name . ' - Summary', 0 , false, true, 0, 0 , 'C');
         $this->Text(0, $footer_start + 5, $page_number_padding . $this->plan->idnumber . ' ' . $this->plan->name . "  -  Page $page_number", 0 , false, true, 0, 0 , 'C');
         $this->Text(0, $footer_start + 10, 'Printed on ' . date('j F Y', time()), 0 , false, true, 0, 0 , 'C');
+    }
+
+    /**
+     * Print text truncated to a given length.
+     *
+     * @param int $x horizontal position.
+     * @param int $y vertical position.
+     * @param string $align L=left, C=center, R=right.
+     * @param string $font any available font in font directory.
+     * @param string $style ''=normal, B=bold, I=italic, U=underline.
+     * @param int $size font size in points.
+     * @param string $text the text to print.
+     * @param int|null $width Optional horizontal dimension of text block. Defaults to available page width when not provided.
+     * @return void
+     */
+    public function print_truncated_text(int $x, int $y, string $align, string $font = 'freeserif', string $style = '', int $size = 10, string $text = '', ?int $width = null) {
+        if ($width === null) {
+            $width = $this->getPageWidth() - ( $this->lMargin + $this->rMargin );
+        }
+
+        $printtext = $this->get_truncated_text($text, $width, $font, $style, $size);
+
+        certificate_print_text($this, $x, $y, $align, $font, $style, $size, $printtext, $width);
+    }
+
+    /**
+     * Get a printable string truncated to the given available width.
+     *
+     * @param string $text the text to print.
+     * @param int $width Horizontal dimension of text block.
+     * @param string $font any available font in font directory.
+     * @param string $style ''=normal, B=bold, I=italic, U=underline.
+     * @param int $size font size in points.
+     * @return string Truncated string.
+     */
+    public function get_truncated_text($text, $width, $font = 'freeserif', $style = '', $size = 10): string {
+        $textwidth = $this->GetStringWidth($text, $font, $style, $size);
+        if ($textwidth + static::TRUNCATION_MARGIN <= $width) {
+            return $text;
+        }
+
+        $truncationwidth = $this->GetStringWidth(static::TRUNCATION_STRING, $font, $style, $size);
+        $charwidths = $this->GetStringWidth($text, $font, $style, $size, true);
+
+        $truncatedstring = '';
+        $stringlength = $truncationwidth + static::TRUNCATION_MARGIN;
+        foreach ($charwidths as $charindex => $charwidth) {
+            $stringlength += $charwidth;
+            if ($stringlength > $width) {
+                break;
+            }
+
+            $truncatedstring .= mb_substr($text, $charindex, 1);
+        }
+
+        return $truncatedstring . self::TRUNCATION_STRING;
     }
 
     /**
