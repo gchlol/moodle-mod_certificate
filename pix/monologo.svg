@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-1, .cls-2 {
+        stroke: #000;
+        stroke-miterlimit: 10;
+        stroke-width: .9px;
+      }
+
+      .cls-2 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <polyline class="cls-2" points="12.5 19.63 3.45 19.63 3.45 7.74 7.78 3.37"/>
+  <polyline class="cls-2" points="5.33 7.74 7.82 7.74 7.82 3.45 16.66 3.45 16.66 7.85"/>
+  <line class="cls-2" x1="9.04" y1="6.45" x2="16.51" y2="6.45"/>
+  <line class="cls-2" x1="5.33" y1="10.93" x2="11.5" y2="10.93"/>
+  <line class="cls-2" x1="5.33" y1="12.9" x2="11.5" y2="12.9"/>
+  <line class="cls-2" x1="5.33" y1="14.87" x2="12.02" y2="14.87"/>
+  <polyline class="cls-2" points="15.82 18.44 13.62 19.7 13.62 15.16"/>
+  <polyline class="cls-2" points="15.82 16.41 15.82 19.96 17.8 18.21 19.69 19.96 19.69 14.91"/>
+  <rect class="cls-2" x="12.7" y="8.82" width="7.77" height="7.59" rx="3.79" ry="3.79"/>
+  <rect class="cls-1" x="14.39" y="10.47" width="4.4" height="4.29" rx="2.15" ry="2.15"/>
+</svg>
