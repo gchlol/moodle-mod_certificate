@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  *
  * @return int
  */
-function certificate_get_requested_userid() {
+function certificate_requested_userid() {
     static $requestedid = null;
 
     if ($requestedid !== null) {
@@ -57,7 +57,7 @@ function certificate_get_requested_userid() {
  * @param context_module $context
  * @return stdClass the resolved user record
  */
-function certificate_get_target_user($course, $cm, $context) {
+function certificate_target_user($course, $cm, $context) {
     global $DB, $USER;
 
     static $targetuser = null;
@@ -66,7 +66,7 @@ function certificate_get_target_user($course, $cm, $context) {
         return $targetuser;
     }
 
-    $requestedid = certificate_get_requested_userid();
+    $requestedid = certificate_requested_userid();
     if (empty($requestedid) || $requestedid == $USER->id) {
         $targetuser = $USER;
 
@@ -98,6 +98,32 @@ function certificate_get_target_user($course, $cm, $context) {
 }
 
 /**
+ * Creates a certificate issue record without triggering email notifications.
+ *
+ * @param stdClass $course
+ * @param stdClass $user
+ * @param stdClass $certificate
+ * @param stdClass $cm
+ * @return stdClass the certificate issue
+ */
+function certificate_issue_no_email($course, $user, $certificate, $cm) {
+    global $DB;
+
+    if ($certissue = $DB->get_record('certificate_issues', array('userid' => $user->id, 'certificateid' => $certificate->id))) {
+        return $certissue;
+    }
+
+    $certissue = new stdClass();
+    $certissue->certificateid = $certificate->id;
+    $certissue->userid = $user->id;
+    $certissue->code = certificate_generate_code();
+    $certissue->timecreated = time();
+    $certissue->id = $DB->insert_record('certificate_issues', $certissue);
+
+    return $certissue;
+}
+
+/**
  * Builds the standard parameter array for certificate view URLs.
  *
  * @param int $cmid
@@ -105,7 +131,7 @@ function certificate_get_target_user($course, $cm, $context) {
  * @param array $extra
  * @return array
  */
-function certificate_get_page_params($cmid, $requesteduserid = 0, array $extra = array()) {
+function certificate_view_params($cmid, $requesteduserid = 0, array $extra = array()) {
     $params = array('id' => $cmid);
     if (!empty($requesteduserid)) {
         $params['userid'] = $requesteduserid;
@@ -126,8 +152,8 @@ function certificate_get_page_params($cmid, $requesteduserid = 0, array $extra =
  * @param array $extra
  * @return moodle_url
  */
-function certificate_make_view_url($cmid, $requesteduserid = 0, array $extra = array()) {
-    $params = certificate_get_page_params($cmid, $requesteduserid, $extra);
+function certificate_view_url($cmid, $requesteduserid = 0, array $extra = array()) {
+    $params = certificate_view_params($cmid, $requesteduserid, $extra);
 
     return new moodle_url('/mod/certificate/view.php', $params);
 }
@@ -139,9 +165,9 @@ function certificate_make_view_url($cmid, $requesteduserid = 0, array $extra = a
  * @param stdClass $certificate
  * @param int $userid
  */
-function certificate_render_attempts_for_user($course, $certificate, $userid) {
-    if ($attempts = certificate_get_attempts_for_user($certificate->id, $userid)) {
-        certificate_print_attempts_for_user($course, $certificate, $attempts, $userid);
+function certificate_render_user_attempts($course, $certificate, $userid) {
+    if ($attempts = certificate_user_attempts($certificate->id, $userid)) {
+        certificate_print_user_attempts($course, $certificate, $attempts, $userid);
     }
 }
 
@@ -152,7 +178,7 @@ function certificate_render_attempts_for_user($course, $certificate, $userid) {
  * @param int $userid
  * @return array|bool
  */
-function certificate_get_attempts_for_user($certificateid, $userid) {
+function certificate_user_attempts($certificateid, $userid) {
     global $DB;
 
     $sql = "SELECT *
@@ -176,7 +202,7 @@ function certificate_get_attempts_for_user($certificateid, $userid) {
  * @param array $attempts
  * @param int $userid
  */
-function certificate_print_attempts_for_user($course, $certificate, $attempts, $userid) {
+function certificate_print_user_attempts($course, $certificate, $attempts, $userid) {
     global $OUTPUT;
 
     echo $OUTPUT->heading(get_string('summaryofattempts', 'certificate'));
