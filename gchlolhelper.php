@@ -183,10 +183,12 @@ function certificate_user_attempts($certificateid, $userid) {
         return certificate_get_attempts($certificateid);
     }
 
-    $sql = "SELECT *
-              FROM {certificate_issues} i
-             WHERE certificateid = :certificateid
-               AND userid = :userid";
+    $sql = "
+        SELECT  i.*
+        FROM    {certificate_issues} i
+        WHERE   i.certificateid = :certificateid AND
+                i.userid = :userid
+    ";
 
     if ($issues = $DB->get_records_sql($sql, array('certificateid' => $certificateid, 'userid' => $userid))) {
         return $issues;
