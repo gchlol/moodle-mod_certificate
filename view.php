@@ -51,6 +51,10 @@ $targetuser = certificate_target_user($course, $cm, $context);
 $isself = ($targetuser->id === $USER->id);
 $originaluser = $USER;
 
+if (!empty($requesteduserid) && $isself) {
+    redirect(certificate_view_url($cm->id));
+}
+
 $event = \mod_certificate\event\course_module_viewed::create(array(
     'objectid' => $certificate->id,
     'context' => $context,
