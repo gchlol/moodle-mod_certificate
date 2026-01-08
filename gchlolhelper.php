@@ -28,7 +28,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Returns the requested user id coming from the userid URL parameter.
+ * Returns requested user id coming from userid URL parameter.
  *
  * @return int
  */
@@ -50,12 +50,12 @@ function certificate_requested_userid() {
 }
 
 /**
- * Resolves the user that should be used for issuing a certificate.
+ * Resolves user that should be used for issuing a certificate.
  *
  * @param stdClass $course
  * @param stdClass $cm
  * @param context_module $context
- * @return stdClass the resolved user record
+ * @return stdClass resolved user record
  */
 function certificate_target_user($course, $cm, $context) {
     global $DB, $USER;
@@ -104,27 +104,25 @@ function certificate_target_user($course, $cm, $context) {
  * @param stdClass $user
  * @param stdClass $certificate
  * @param stdClass $cm
- * @return stdClass the certificate issue
+ * @return stdClass certificate issue
  */
 function certificate_issue_no_email($course, $user, $certificate, $cm) {
-    global $DB;
+    $originalemailteachers = $certificate->emailteachers;
+    $originalemailothers = $certificate->emailothers;
 
-    if ($certissue = $DB->get_record('certificate_issues', array('userid' => $user->id, 'certificateid' => $certificate->id))) {
-        return $certissue;
-    }
+    $certificate->emailteachers = 0;
+    $certificate->emailothers = '';
 
-    $certissue = new stdClass();
-    $certissue->certificateid = $certificate->id;
-    $certissue->userid = $user->id;
-    $certissue->code = certificate_generate_code();
-    $certissue->timecreated = time();
-    $certissue->id = $DB->insert_record('certificate_issues', $certissue);
+    $certissue = certificate_get_issue($course, $user, $certificate, $cm);
+
+    $certificate->emailteachers = $originalemailteachers;
+    $certificate->emailothers = $originalemailothers;
 
     return $certissue;
 }
 
 /**
- * Builds the standard parameter array for certificate view URLs.
+ * Builds standard parameter array for certificate view URLs.
  *
  * @param int $cmid
  * @param int $requesteduserid
@@ -145,7 +143,7 @@ function certificate_view_params($cmid, $requesteduserid = 0, array $extra = arr
 }
 
 /**
- * Helper to construct a view URL with the relevant parameters.
+ * Helper to construct a view URL with relevant parameters.
  *
  * @param int $cmid
  * @param int $requesteduserid
@@ -159,7 +157,7 @@ function certificate_view_url($cmid, $requesteduserid = 0, array $extra = array(
 }
 
 /**
- * Renders the attempt list for a specific user if attempts exist.
+ * Renders attempt list for a specific user if attempts exist.
  *
  * @param stdClass $course
  * @param stdClass $certificate
@@ -179,7 +177,11 @@ function certificate_render_user_attempts($course, $certificate, $userid) {
  * @return array|bool
  */
 function certificate_user_attempts($certificateid, $userid) {
-    global $DB;
+    global $DB, $USER;
+
+    if ($userid == $USER->id) {
+        return certificate_get_attempts($certificateid);
+    }
 
     $sql = "SELECT *
               FROM {certificate_issues} i
@@ -187,7 +189,6 @@ function certificate_user_attempts($certificateid, $userid) {
                AND userid = :userid";
 
     if ($issues = $DB->get_records_sql($sql, array('certificateid' => $certificateid, 'userid' => $userid))) {
-
         return $issues;
     }
 
@@ -195,7 +196,7 @@ function certificate_user_attempts($certificateid, $userid) {
 }
 
 /**
- * Outputs the attempt table for the supplied user.
+ * Outputs the attempt table for the supplied user with a cached grade.
  *
  * @param stdClass $course
  * @param stdClass $certificate
@@ -217,6 +218,7 @@ function certificate_print_user_attempts($course, $certificate, $attempts, $user
         $table->head[] = get_string('grade');
         $table->align[] = 'center';
         $table->size[] = '';
+        $attemptgrade = certificate_get_grade($certificate, $course, $userid);
     }
 
     foreach ($attempts as $attempt) {
@@ -224,7 +226,7 @@ function certificate_print_user_attempts($course, $certificate, $attempts, $user
         $row[] = userdate($attempt->timecreated);
 
         if ($gradecolumn) {
-            $row[] = certificate_get_grade($certificate, $course, $userid);
+            $row[] = $attemptgrade;
         }
 
         $table->data[$attempt->id] = $row;
