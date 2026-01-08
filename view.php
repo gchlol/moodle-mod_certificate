@@ -49,6 +49,7 @@ require_capability('mod/certificate:view', $context);
 $requesteduserid = certificate_requested_userid();
 $targetuser = certificate_target_user($course, $cm, $context);
 $isself = ($targetuser->id === $USER->id);
+$originaluser = $USER;
 
 $event = \mod_certificate\event\course_module_viewed::create(array(
     'objectid' => $certificate->id,
@@ -106,9 +107,15 @@ $repo_name = get_config('certificate', 'reponame');
 if (!empty($repo_name)) {
     $require_path = "$CFG->dataroot/repository/$repo_name/CERTIFICATE/type/$certificate->certificatetype/certificate.php";
 }
+if (!$isself) {
+    $USER = $targetuser;
+}
 require($require_path);
 
 if (empty($action)) { // Not displaying PDF
+    if (!$isself) {
+        $USER = $originaluser;
+    }
     echo $OUTPUT->header();
 
     $viewurl = certificate_view_url($cm->id, $requesteduserid);
@@ -161,13 +168,22 @@ if (empty($action)) { // Not displaying PDF
 
     if ($certificate->delivery == 0) {
         // Open in browser.
+        if (!$isself) {
+            $USER = $originaluser;
+        }
         send_file($filecontents, $filename, 0, 0, true, false, 'application/pdf');
     } elseif ($certificate->delivery == 1) {
         // Force download.
+        if (!$isself) {
+            $USER = $originaluser;
+        }
         send_file($filecontents, $filename, 0, 0, true, true, 'application/pdf');
     } elseif ($certificate->delivery == 2) {
         if ($isself) {
             certificate_email_student($course, $certificate, $certrecord, $context, $filecontents, $filename);
+        }
+        if (!$isself) {
+            $USER = $originaluser;
         }
         send_file($filecontents, $filename, 0, 0, true, false, 'application/pdf');
     }

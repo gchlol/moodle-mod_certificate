@@ -16,7 +16,7 @@
 
 
 /**
- * Display saved Custom Reports in table customreports .
+ * Helper functions to support certificate issuance via URL parameters.
  *
  * @package     mod_certificate
  * @copyright   2025 Gold Coast Health
