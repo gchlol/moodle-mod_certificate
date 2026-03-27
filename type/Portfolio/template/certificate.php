@@ -1,15 +1,27 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 use mod_certificate\type\Portfolio\portfolio_data;
 use mod_certificate\type\Portfolio\portfolio_offsets;
 use mod_certificate\type\portfolio_temp\portfolio_output;
 
-if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.'); // It must be included from view.php
-}
+defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir . '/filelib.php');
-require_once($CFG->libdir . '/completionlib.php');
+require_once("$CFG->libdir/filelib.php");
+require_once("$CFG->libdir/completionlib.php");
 
 require_once(__DIR__ . '/../Portfolio/portfolio_offsets.php');
 require_once(__DIR__ . '/../Portfolio/portfolio_data.php');
@@ -23,7 +35,7 @@ if (
 }
 
 $userid = optional_param('userid', $USER->id, PARAM_INT);
-$user = $DB->get_record('user', ['id' => $userid]);
+$user = $DB->get_record('user', [ 'id' => $userid ]);
 
 /** @var TCPDF|stdClass $pdf */
 $pdf = new TCPDF($certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
@@ -35,7 +47,7 @@ $pdf->SetAutoPageBreak(false);
 $pdf->SetRightMargin(15);
 $pdf->AddPage();
 
-// Define variables
+// Define variables.
 $offsets = new portfolio_offsets();
 $offsets->load_pdf_dimensions($pdf);
 

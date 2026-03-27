@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mod_certificate\type\portfolio_temp;
 
@@ -11,6 +25,12 @@ defined('MOODLE_INTERNAL') || die();
 require_once(__DIR__ . '/../Portfolio/portfolio_output_base.php');
 
 /**
+ * Portfolio output class.
+ *
+ * @package    mod_certificate
+ * @copyright  2022 Gold Coast Health
+ * @author     Nicholas Lambell
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @property stdClass|TCPDF $pdf
  */
 class portfolio_output extends portfolio_output_base {
@@ -28,7 +48,6 @@ class portfolio_output extends portfolio_output_base {
     public function output_cover_page(stdClass $course): void {
         $this->output_cover_page_elements();
 
-        // Add text
         $this->apply_primary_colour();
         $this->output_text($this->get_string('site'), 0, 0, 37.5, 'C', 'B');
 

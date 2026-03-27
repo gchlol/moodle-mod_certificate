@@ -1,23 +1,44 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mod_certificate\type\Portfolio;
 
 use dml_exception;
 use stdClass;
 
-global $CFG;
+defined('MOODLE_INTERNAL') || die();
+
 require_once(__DIR__ . '/../Portfolio/course_section.php');
 
+/**
+ * Portfolio data fetching class.
+ *
+ * @package    mod_certificate
+ * @copyright  2022 Nicholas Lambell
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class portfolio_data {
 
-    private const REQUIRED_WORD = 'required';
+    protected const REQUIRED_WORD = 'required';
 
     /**
      * Gets the formatted course completion data for a given user.
      *
      * @param int $user_id ID of the user to retrieve completion data for.
      * @return course_section[] List of {@link course_section} data.
-     * @throws dml_exception
      */
     public static function get_course_section_data(int $user_id, bool $debug = false): array {
         $header_fields = self::get_header_custom_fields();
@@ -60,9 +81,8 @@ class portfolio_data {
      * @param int $custom_field_id Custom field ID that courses must have a value for.
      * @param int $user_id ID of the user to retrieve completion data for.
      * @return stdClass[] List of courses completed by the user within the custom field filtering.
-     * @throws dml_exception
      */
-    private static function get_courses(int $custom_field_id, int $user_id): array {
+    protected static function get_courses(int $custom_field_id, int $user_id): array {
         global $DB;
 
         $course_sql = "
@@ -72,11 +92,11 @@ class portfolio_data {
                     INNER JOIN {customfield_data} cd ON
                         cd.instanceid = c.id AND
                         cd.intvalue = 1 AND
-                        cd.fieldid = ? 
+                        cd.fieldid = ?
                     INNER JOIN (
                         (
                             SELECT  *
-                            FROM    {course_completions} ccc 
+                            FROM    {course_completions} ccc
                             WHERE   ccc.userid = ?
                         ) UNION
                         (
@@ -86,18 +106,18 @@ class portfolio_data {
                         )
                     ) cc ON
                         cc.course = c.id AND
-                        cc.userid = ? AND 
+                        cc.userid = ? AND
                         cc.timecompleted IS NOT NULL
             GROUP BY c.id
             ORDER BY c.fullname
         ";
 
-        // Moodle doesn't allow reusing named params so, we need to do this instead
+        // Moodle doesn't allow reusing named params so, we need to do this instead.
         $course_params = [ $custom_field_id, $user_id, $user_id, $user_id ];
 
         return $DB->get_records_sql(
             $course_sql,
-            $course_params
+            $course_params,
         );
     }
 
@@ -105,15 +125,14 @@ class portfolio_data {
      * Get the list of custom fields identified by the `port_` prefix as portfolio headers.
      *
      * @return stdClass[] A list of custom field values containing; `id`, `name`, and `description`.
-     * @throws dml_exception
      */
-    private static function get_header_custom_fields(): array {
+    protected static function get_header_custom_fields(): array {
         global $DB;
 
         return $DB->get_records_select(
             'customfield_field',
             $DB->sql_like('shortname', ':shortname'),
-            ['shortname' => 'port_%'],
+            [ 'shortname' => 'port_%' ],
             'sortorder',
             'id, name, description'
         );
@@ -125,7 +144,7 @@ class portfolio_data {
      * @param string $description String to be searched.
      * @return bool Whether the {@link REQUIRED_WORD} was found.
      */
-    private static function is_field_required(string $description): bool {
+    protected static function is_field_required(string $description): bool {
         return substr($description, 0, strlen(self::REQUIRED_WORD)) === self::REQUIRED_WORD;
     }
 
@@ -135,7 +154,7 @@ class portfolio_data {
      * @param string $description String to operate on.
      * @return string Input string less the {@link REQUIRED_WORD}.
      */
-    private static function strip_required_word(string $description): string {
+    protected static function strip_required_word(string $description): string {
         return substr($description, strlen(self::REQUIRED_WORD));
     }
 
@@ -145,11 +164,17 @@ class portfolio_data {
      * @param string $description String to operate on.
      * @return string Input string less invalid content.
      */
-    private static function cleanse_field_description(string $description): string {
+    protected static function cleanse_field_description(string $description): string {
         return strip_tags($description);
     }
 
-    private static function populate_debug_data(array $base_course_data): array {
+    /**
+     * Generate debug data based on existing base course data.
+     *
+     * @param course_section[] $base_course_data List of base course data.
+     * @return course_section[] List of course data with debug courses added.
+     */
+    protected static function populate_debug_data(array $base_course_data): array {
         $course_data = [];
 
         foreach ($base_course_data as $index => $base_course_section) {

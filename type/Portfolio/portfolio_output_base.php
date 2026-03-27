@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mod_certificate\type\Portfolio;
 
@@ -6,10 +20,20 @@ use coding_exception;
 use stdClass;
 use TCPDF;
 
+defined('MOODLE_INTERNAL') || die();
+
 require_once(__DIR__ . '/../Portfolio/portfolio_offsets.php');
 require_once(__DIR__ . '/../Portfolio/portfolio_colour.php');
 require_once(__DIR__ . '/../Portfolio/portfolio_string_manager.php');
 
+/**
+ * Base portfolio output class.
+ *
+ * @package    mod_certificate
+ * @copyright  2022 Gold Coast Health
+ * @author     Nicholas Lambell
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 abstract class portfolio_output_base {
 
     /**
@@ -22,6 +46,9 @@ abstract class portfolio_output_base {
      */
     protected const OUTPUT_FONT = 'Helvetica';
 
+    /**
+     * Root path for the portfolio implementation.
+     */
     protected const ROOT_PATH = __DIR__;
 
     /**
@@ -32,41 +59,53 @@ abstract class portfolio_output_base {
     /**
      * @var stdClass Module instance.
      */
-    protected $certificate;
+    protected stdClass $certificate;
 
     /**
      * @var stdClass Course containing this portfolio.
      */
-    protected $course;
+    protected stdClass $course;
 
     /**
      * @var portfolio_offsets Offsets tracking object.
      */
-    protected $offsets;
+    protected portfolio_offsets $offsets;
 
     /**
      * @var TCPDF|stdClass PDF instance used for output.
      */
-    protected $pdf;
+    protected stdClass|TCPDF $pdf;
 
     /**
      * @var stdClass Specific certificate instance.
      */
-    protected $record;
+    protected stdClass $record;
 
     /**
      * @var stdClass User the certificate has been issued to.
      */
-    protected $user;
+    protected stdClass $user;
 
+    /**
+     * @var portfolio_string_manager Language string manager instance.
+     */
     protected portfolio_string_manager $string_manager;
 
     /**
      * @var int[][] Cache of parsed hex colours.
      */
-    private $colour_cache;
+    private array $colour_cache;
 
 
+    /**
+     * Constructor.
+     *
+     * @param stdClass $certificate
+     * @param stdClass $record
+     * @param stdClass $user
+     * @param TCPDF $pdf
+     * @param portfolio_offsets $offsets
+     */
     public function __construct(stdClass $certificate, stdClass $record, stdClass $user, TCPDF $pdf, portfolio_offsets $offsets) {
         $this->certificate = $certificate;
         $this->record = $record;
@@ -75,7 +114,7 @@ abstract class portfolio_output_base {
         $this->user = $user;
 
         [ $this->course ] = get_course_and_cm_from_instance($certificate, 'certificate');
-        $this->string_manager = $this->init_string_manager();
+        $this->string_manager = static::init_string_manager();
     }
 
     /**
@@ -83,7 +122,7 @@ abstract class portfolio_output_base {
      *
      * @return portfolio_string_manager String manager instance.
      */
-    private function init_string_manager(): portfolio_string_manager {
+    protected static function init_string_manager(): portfolio_string_manager {
         $lang_path = static::ROOT_PATH . '/lang';
         $local_lang_root = is_dir($lang_path) ? $lang_path : null;
 
@@ -96,7 +135,7 @@ abstract class portfolio_output_base {
      * @param stdClass $course Course to pull grade and outcome information from.
      * @return void
      */
-    public abstract function output_cover_page(stdClass $course): void;
+    abstract public function output_cover_page(stdClass $course): void;
 
     /**
      * Gets the number of available output rows on general pages before a new page is required.
@@ -105,15 +144,14 @@ abstract class portfolio_output_base {
      *
      * @return int Number of output rows on pages.
      */
-
-    protected abstract function page_rows(): int;
+    abstract protected function page_rows(): int;
 
     /**
      * Gets the starting y offset for course list output on the cover page.
      *
      * @return int Y offset.
      */
-    protected abstract function cover_offset(): int;
+    abstract protected function cover_offset(): int;
 
     //region Utilities
 
@@ -146,10 +184,8 @@ abstract class portfolio_output_base {
      * @param string $hex Input hexadecimal string.
      * @return int[] Colour array containing the parsed r, g, and b components.
      */
-    private function parse_hex_colour(string $hex): array {
-        [$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
-
-        return [$r, $g, $b];
+    protected static function parse_hex_colour(string $hex): array {
+        return sscanf($hex, '#%02x%02x%02x');
     }
 
     /**
@@ -157,11 +193,10 @@ abstract class portfolio_output_base {
      *
      * @param string $identifier Identifier for the language string containing the hexadecimal colour string.
      * @return array Colour array containing the parsed r, g, and b components.
-     * @throws coding_exception If a language string doesn't exist for the given identifier.
      */
     protected function get_colour(string $identifier): array {
         if (!isset($this->colour_cache[$identifier])) {
-            $this->colour_cache[$identifier] = $this->parse_hex_colour($this->get_string($identifier));
+            $this->colour_cache[$identifier] = static::parse_hex_colour($this->get_string($identifier));
         }
 
         return $this->colour_cache[$identifier];
@@ -224,7 +259,6 @@ abstract class portfolio_output_base {
      *
      * @param string $identifier Identifier for the language string containing the hexadecimal colour string.
      * @return void
-     * @throws coding_exception If a language string doesn't exist for the given identifier.
      */
     protected function apply_colour(string $identifier): void {
         $colour = $this->get_colour($identifier);
@@ -238,7 +272,6 @@ abstract class portfolio_output_base {
      * @see apply_colour()
      *
      * @return void
-     * @throws coding_exception
      */
     protected function apply_primary_colour(): void {
         $this->apply_colour(portfolio_colour::PRIMARY);
@@ -250,7 +283,6 @@ abstract class portfolio_output_base {
      * @see apply_colour()
      *
      * @return void
-     * @throws coding_exception
      */
     protected function apply_secondary_colour(): void {
         $this->apply_colour(portfolio_colour::SECONDARY);
@@ -262,7 +294,6 @@ abstract class portfolio_output_base {
      * @see apply_colour()
      *
      * @return void
-     * @throws coding_exception
      */
     protected function apply_base_colour(): void {
         $this->apply_colour(portfolio_colour::BASE);
@@ -274,7 +305,6 @@ abstract class portfolio_output_base {
      * @see apply_colour()
      *
      * @return void
-     * @throws coding_exception
      */
     protected function apply_minor_colour(): void {
         $this->apply_colour(portfolio_colour::MINOR);
@@ -288,9 +318,8 @@ abstract class portfolio_output_base {
      * Finalise the PDF document with any elements that require all pages to be present.
      *
      * @return void
-     * @throws coding_exception
      */
-    public function finalise() {
+    public function finalise(): void {
         $this->output_page_numbers();
     }
 
@@ -319,18 +348,17 @@ abstract class portfolio_output_base {
      * Updates offset values and draws the page border and frame.
      *
      * @return void
-     * @throws coding_exception
      */
     protected function add_page(): void {
-        // Add page
+        // Add page.
         $this->offsets->page++;
         $this->offsets->row_count = 0;
         $this->pdf->AddPage();
 
-        // Draw new page elements. This must be before any other output otherwise text gets hidden
+        // Draw new page elements. This must be before any other output otherwise text gets hidden.
         $this->output_page_elements();
 
-        // Output base page content
+        // Output base page content.
         $this->output_page_header();
         $this->output_page_footer();
         $this->output_page_footer_dynamic($this->course);
@@ -350,7 +378,7 @@ abstract class portfolio_output_base {
      * @param string|null $font Output font. If null {@link OUTPUT_FONT} will be used.
      * @return void
      */
-    protected function output_text_static(string $text, int $x, int $y, int $size = 10, string $align = 'L', string $style = '', string $font = null): void {
+    protected function output_text_static(string $text, int $x, int $y, int $size = 10, string $align = 'L', string $style = '', ?string $font = null): void {
         if ($font === null) {
             $font = static::OUTPUT_FONT;
         }
@@ -380,7 +408,7 @@ abstract class portfolio_output_base {
      * @param string|null $font Output font. If null {@link OUTPUT_FONT} will be used.
      * @return void
      */
-    protected function output_text(string $text, int $x_offset, int $y_offset, int $size = 10, string $align = 'L', string $style = '', string $font = null): void {
+    protected function output_text(string $text, int $x_offset, int $y_offset, int $size = 10, string $align = 'L', string $style = '', ?string $font = null): void {
         $this->output_text_static(
             $text,
             $this->offsets->x($x_offset),
@@ -398,7 +426,7 @@ abstract class portfolio_output_base {
      * @return void
      */
     protected function output_page_elements(): void {
-        // Output border frame
+        // Output border frame.
         certificate_print_image(
             $this->pdf,
             $this->certificate,
@@ -419,14 +447,38 @@ abstract class portfolio_output_base {
     protected function output_cover_page_elements(): void {
         $this->output_page_elements();
 
-        // Output semi-transparent watermark
+        // Output semi-transparent watermark.
         $this->pdf->SetAlpha(0.2);
-        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_WATERMARK, $this->offsets->watermark_x, $this->offsets->watermark_y, $this->offsets->watermark_w, $this->offsets->watermark_h);
+        certificate_print_image(
+            $this->pdf,
+            $this->certificate,
+            CERT_IMAGE_WATERMARK,
+            $this->offsets->watermark_x,
+            $this->offsets->watermark_y,
+            $this->offsets->watermark_w,
+            $this->offsets->watermark_h
+        );
         $this->pdf->SetAlpha();
 
-        // Output regular image elements
-        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_SEAL, $this->offsets->seal_x, $this->offsets->seal_y, '', '');
-        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_SIGNATURE, $this->offsets->signature_x, $this->offsets->signature_y, '', '');
+        // Output regular image elements.
+        certificate_print_image(
+            $this->pdf,
+            $this->certificate,
+            CERT_IMAGE_SEAL,
+            $this->offsets->seal_x,
+            $this->offsets->seal_y,
+            '',
+            ''
+        );
+        certificate_print_image(
+            $this->pdf,
+            $this->certificate,
+            CERT_IMAGE_SIGNATURE,
+            $this->offsets->signature_x,
+            $this->offsets->signature_y,
+            '',
+            ''
+        );
     }
 
     /**
@@ -438,7 +490,6 @@ abstract class portfolio_output_base {
      *
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
-     * @throws coding_exception
      */
     protected function output_page_number(string $colour = portfolio_colour::MINOR): void {
         $this->apply_colour($colour);
@@ -447,7 +498,8 @@ abstract class portfolio_output_base {
             'Page ' . $this->pdf->getPage() . ' of ' . $this->pdf->getNumPages(),
             $this->offsets->x,
             $this->offsets->page_num_y,
-            10, 'C'
+            10,
+            'C'
         );
 
         $this->apply_base_colour();
@@ -461,12 +513,11 @@ abstract class portfolio_output_base {
      * Using getAliasNbPages results in incorrect alignment due to aligning on the template string not the final number.
      *
      * @return void
-     * @throws coding_exception
      */
-    protected function output_page_numbers() {
+    protected function output_page_numbers(): void {
         $page_count = $this->pdf->getNumPages();
 
-        // Don't print page count if we only have a single page
+        // Don't print page count if we only have a single page.
         if ($page_count == 1) {
             return;
         }
@@ -483,7 +534,6 @@ abstract class portfolio_output_base {
      *
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
-     * @throws coding_exception
      */
     protected function output_printed_date(string $colour = portfolio_colour::MINOR): void {
         $this->apply_colour($colour);
@@ -492,7 +542,8 @@ abstract class portfolio_output_base {
             $this->get_string('printedon', date('j F Y')),
             $this->offsets->x,
             $this->offsets->date_y,
-            10, 'R'
+            10,
+            'R'
         );
 
         $this->apply_base_colour();
@@ -503,7 +554,6 @@ abstract class portfolio_output_base {
      *
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
-     * @throws coding_exception
      */
     protected function output_site_service(string $colour = portfolio_colour::PRIMARY): void {
         $this->apply_colour($colour);
@@ -512,7 +562,8 @@ abstract class portfolio_output_base {
             $this->get_string('siteservicelabel', '<strong>' . $this->get_string('siteservice') . '</strong>'),
             $this->offsets->x,
             $this->offsets->site_service_y,
-            14, 'C'
+            14,
+            'C'
         );
 
         $this->apply_base_colour();
@@ -525,7 +576,6 @@ abstract class portfolio_output_base {
      *
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
-     * @throws coding_exception
      */
     protected function output_page_header(string $colour = portfolio_colour::PRIMARY): void {
         $this->apply_colour($colour);
@@ -542,7 +592,6 @@ abstract class portfolio_output_base {
      * Can be overridden to control exactly which elements are output.
      *
      * @return void
-     * @throws coding_exception
      */
     protected function output_page_footer(): void {
         $this->output_site_service();
@@ -557,7 +606,6 @@ abstract class portfolio_output_base {
      * @param stdClass $course Course used for grade and outcome information.
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
-     * @throws coding_exception
      */
     protected function output_page_footer_dynamic(stdClass $course, string $colour = portfolio_colour::MINOR): void {
         $this->apply_colour($colour);
@@ -566,7 +614,11 @@ abstract class portfolio_output_base {
         $this->output_text(certificate_get_outcome($this->certificate, $course), 0, 112, 10, 'C', '', 'Times');
 
         if ($this->certificate->printhours) {
-            $this->output_text(get_string('credithours', 'certificate') . ': ' . $this->certificate->printhours, 0, 122, 10, 'C', '', 'Times');
+            $this->output_text(
+                get_string('credithours', 'certificate') . ': ' . $this->certificate->printhours,
+                0, 122,
+                10, 'C', '', 'Times'
+            );
         }
 
         $this->output_text_static(
@@ -591,10 +643,9 @@ abstract class portfolio_output_base {
      * @param string $subheader Subheader conditionally output if not empty.
      * @param bool $display_empty When true the header and a special output will be displayed for headers with no courses.
      * @return void
-     * @throws coding_exception
      */
     public function output_courses(array $courses, string $header, string $subheader, bool $display_empty): void {
-        // Handle empty course list
+        // Handle empty course list.
         if (empty($courses)) {
             if ($display_empty) {
                 $this->output_empty_course($header, $subheader);
@@ -603,7 +654,7 @@ abstract class portfolio_output_base {
             return;
         }
 
-        // If output is close to the end of the page create a new page for the courses
+        // If output is close to the end of the page create a new page for the courses.
         if (( $this->offsets->row_count + 5 ) >= $this->current_page_rows()) {
             $this->add_page();
         }
@@ -623,14 +674,19 @@ abstract class portfolio_output_base {
      * @param string $header Header string passed to {@link output_course_header()}.
      * @param string $subheader Subheader string passed to {@link output_course_header()}.
      * @return void
-     * @throws coding_exception
      */
-    protected function output_empty_course(string $header, string $subheader) {
+    protected function output_empty_course(string $header, string $subheader): void {
         $this->output_course_header($header, $subheader);
 
         $this->apply_base_colour();
 
-        $this->output_text_static($this->get_string('nonecomplete', $header), $this->offsets->x, $this->page_offset(2), $this->line_font_size(3.5), 'C');
+        $this->output_text_static(
+            $this->get_string('nonecomplete', $header),
+            $this->offsets->x,
+            $this->page_offset(2),
+            $this->line_font_size(3.5),
+            'C'
+        );
         $this->offsets->add_rows(4);
     }
 
@@ -643,7 +699,6 @@ abstract class portfolio_output_base {
      * @param string $subheader Subheader conditionally output if not empty.
      * @param bool $continued When true the alternate continued variant will be used.
      * @return void
-     * @throws coding_exception
      */
     protected function output_course_header(string $header, string $subheader, bool $continued = false): void {
         $course_header = $header;
@@ -653,8 +708,15 @@ abstract class portfolio_output_base {
 
         $this->apply_primary_colour();
 
-        // Shift the header up 2 units to account for the size
-        $this->output_text_static($course_header, $this->offsets->x, $this->page_offset(-2), $this->line_font_size(4), 'L', 'B');
+        // Shift the header up 2 units to account for the size.
+        $this->output_text_static(
+            $course_header,
+            $this->offsets->x,
+            $this->page_offset(-2),
+            $this->line_font_size(4),
+            'L',
+            'B'
+        );
         $this->offsets->add_row();
 
         if (!empty($subheader)) {
@@ -671,9 +733,8 @@ abstract class portfolio_output_base {
      *
      * @param stdClass $course Course instance to output results for.
      * @return void
-     * @throws coding_exception
      */
-    protected function output_course_result(stdClass $course) {
+    protected function output_course_result(stdClass $course): void {
         $completion_output = userdate($course->timecompleted, get_string('strftimedate'));
         if ($course->timecompleted == self::MAGIC_DATE) {
             $completion_output = $this->get_string('magiccomplete');
@@ -683,7 +744,7 @@ abstract class portfolio_output_base {
         $completion_offset = $this->pdf->getPageWidth() - $this->pdf->getMargins()['right'] - 35;
         $this->output_text_static($completion_output, $completion_offset, $this->page_offset(), $this->line_font_size(3));
 
-        // Automatically wrap the course name over as many lines as required as to not overlap the date
+        // Automatically wrap the course name over as many lines as required as to not overlap the date.
         $break_string = '%break%';
         $course_name_pieces = explode($break_string, wordwrap($course->fullname, 80, $break_string));
 
@@ -702,21 +763,20 @@ abstract class portfolio_output_base {
      * @param string $header Header string passed to {@link output_course_header()}.
      * @param string $subheader Subheader string passed to {@link output_course_header()}.
      * @return void
-     * @throws coding_exception
      */
     protected function output_course(stdClass $course, string $header, string $subheader): void {
         if (!$course->timecompleted) {
             return;
         }
 
-        // Simple result output on the current page
+        // Simple result output on the current page.
         if ($this->offsets->row_count <= $this->current_page_rows()) {
             $this->output_course_result($course);
 
             return;
         }
 
-        // Result output on new page
+        // Result output on new page.
         $this->add_page();
 
         $this->output_course_header($header, $subheader, true);

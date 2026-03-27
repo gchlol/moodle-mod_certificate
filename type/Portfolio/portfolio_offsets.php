@@ -1,39 +1,64 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mod_certificate\type\Portfolio;
 
 use TCPDF;
 
+/**
+ * Portfolio offsets data container.
+ *
+ * @package    mod_certificate
+ * @copyright  2022 Gold Coast Health
+ * @author     Nicholas Lambell
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class portfolio_offsets {
-    // Base
-    public $x;
-    public $y;
+    // Base.
+    public int $x;
+    public int $y;
 
-    // Counters
-    public $page;
-    public $row_count;
+    // Counters.
+    public int $page;
+    public int $row_count;
 
-    // Options
-    public $row_indent;
+    // Options.
+    public int $row_indent;
 
-    // Offsets
-    public $border_x;
-    public $border_y;
-    public $border_w;
-    public $border_h;
-    public $code_y;
-    public $date_y;
-    public $page_num_y;
-    public $seal_x;
-    public $seal_y;
-    public $signature_x;
-    public $signature_y;
-    public $site_service_y;
-    public $watermark_x;
-    public $watermark_y;
-    public $watermark_w;
-    public $watermark_h;
+    // Offsets.
+    public int $border_x;
+    public int $border_y;
+    public int $border_w;
+    public int $border_h;
+    public int $code_y;
+    public int $date_y;
+    public int $page_num_y;
+    public int $seal_x;
+    public int $seal_y;
+    public int $signature_x;
+    public int $signature_y;
+    public int $site_service_y;
+    public int $watermark_x;
+    public int $watermark_y;
+    public int $watermark_w;
+    public int $watermark_h;
 
+    /**
+     * Constructor
+     */
     public function __construct() {
         $this->page = 1;
         $this->row_count = 1;
@@ -50,7 +75,7 @@ class portfolio_offsets {
      * @param TCPDF $pdf PDF instance to load from.
      * @return void
      */
-    public function load_pdf_dimensions(TCPDF $pdf) {
+    public function load_pdf_dimensions(TCPDF $pdf): void {
         $this->border_w = $pdf->getPageWidth();
         $this->border_h = $pdf->getPageHeight();
     }
