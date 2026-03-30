@@ -16,8 +16,6 @@
 
 namespace mod_certificate\type\Portfolio;
 
-use coding_exception;
-use moodle_exception;
 use stdClass;
 use TCPDF;
 
@@ -91,11 +89,6 @@ abstract class portfolio_output_base {
      * @var portfolio_string_manager Language string manager instance.
      */
     protected portfolio_string_manager $string_manager;
-
-    /**
-     * @var TCPDF|stdClass
-     */
-    protected $pdf;
 
     /**
      * @var int[][] Cache of parsed hex colours.
@@ -627,7 +620,6 @@ abstract class portfolio_output_base {
      *
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
-     * @throws coding_exception
      */
     protected function output_hours(string $colour = portfolio_colour::MINOR): void {
         $this->apply_colour($colour);
@@ -890,7 +882,6 @@ abstract class portfolio_output_base {
      * @param stdClass|null $previous_course Previous course instance that was output or null if this is the first course.
      * @param stdClass|null $next_course Next course instance to be output or null if this is the last course.
      * @return void
-     * @throws coding_exception
      */
     protected function output_course_result(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course): void {
         $this->output_course_completion($course, $previous_course, $next_course);

@@ -16,7 +16,6 @@
 
 namespace mod_certificate\type\Portfolio;
 
-use dml_exception;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
