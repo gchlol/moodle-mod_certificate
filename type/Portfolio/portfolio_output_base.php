@@ -17,6 +17,7 @@
 namespace mod_certificate\type\Portfolio;
 
 use coding_exception;
+use moodle_exception;
 use stdClass;
 use TCPDF;
 
@@ -92,6 +93,11 @@ abstract class portfolio_output_base {
     protected portfolio_string_manager $string_manager;
 
     /**
+     * @var TCPDF|stdClass
+     */
+    protected $pdf;
+
+    /**
      * @var int[][] Cache of parsed hex colours.
      */
     private array $colour_cache;
@@ -152,6 +158,15 @@ abstract class portfolio_output_base {
      * @return int Y offset.
      */
     abstract protected function cover_offset(): int;
+
+    /**
+     * Gets the font scale for course list output.
+     *
+     * @return float Font scale.
+     */
+    protected function course_font_scale(): float {
+        return 3;
+    }
 
     //region Utilities
 
@@ -570,6 +585,82 @@ abstract class portfolio_output_base {
     }
 
     /**
+     * Output the configured certificate grade element.
+     *
+     * @param stdClass $course Course used for grade and outcome information.
+     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
+     * @return void
+     */
+    protected function output_grade(stdClass $course, string $colour = portfolio_colour::MINOR): void {
+        $this->apply_colour($colour);
+
+        $this->output_text(
+            certificate_get_grade($this->certificate, $course),
+            0, 102,
+            10, 'C'
+        );
+
+        $this->apply_base_colour();
+    }
+
+    /**
+     * Output the configured certificate outcome element.
+     *
+     * @param stdClass $course Course used for grade and outcome information.
+     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
+     * @return void
+     */
+    protected function output_outcome(stdClass $course, string $colour = portfolio_colour::MINOR): void {
+        $this->apply_colour($colour);
+
+        $this->output_text(
+            certificate_get_outcome($this->certificate, $course),
+            0, 112,
+            10, 'C'
+        );
+
+        $this->apply_base_colour();
+    }
+
+    /**
+     * Output the configured certificate hours element.
+     *
+     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
+     * @return void
+     * @throws coding_exception
+     */
+    protected function output_hours(string $colour = portfolio_colour::MINOR): void {
+        $this->apply_colour($colour);
+
+        $this->output_text(
+            get_string('credithours', 'certificate') . ': ' . $this->certificate->printhours,
+            0, 122,
+            10, 'C'
+        );
+
+        $this->apply_base_colour();
+    }
+
+    /**
+     * Output the certificate code element.
+     *
+     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
+     * @return void
+     */
+    protected function output_code(string $colour = portfolio_colour::MINOR): void {
+        $this->apply_colour($colour);
+
+        $this->output_text_static(
+            certificate_get_code($this->certificate, $this->record),
+            $this->offsets->x,
+            $this->offsets->code_y,
+            10, 'C'
+        );
+
+        $this->apply_base_colour();
+    }
+
+    /**
      * Output the page header designed for pages after the first.
      *
      * Contains the site service name and user's name.
@@ -604,31 +695,24 @@ abstract class portfolio_output_base {
      * Contains grade information as well as certificate specific information like the hours and code.
      *
      * @param stdClass $course Course used for grade and outcome information.
-     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
      */
-    protected function output_page_footer_dynamic(stdClass $course, string $colour = portfolio_colour::MINOR): void {
-        $this->apply_colour($colour);
-
-        $this->output_text(certificate_get_grade($this->certificate, $course), 0, 102, 10, 'C', '', 'Times');
-        $this->output_text(certificate_get_outcome($this->certificate, $course), 0, 112, 10, 'C', '', 'Times');
-
-        if ($this->certificate->printhours) {
-            $this->output_text(
-                get_string('credithours', 'certificate') . ': ' . $this->certificate->printhours,
-                0, 122,
-                10, 'C', '', 'Times'
-            );
+    protected function output_page_footer_dynamic(stdClass $course): void {
+        if ($this->certificate->printgrade > 0) {
+            $this->output_grade($course);
         }
 
-        $this->output_text_static(
-            certificate_get_code($this->certificate, $this->record),
-            $this->offsets->x,
-            $this->offsets->code_y,
-            10, 'C', '', 'Times'
-        );
+        if ($this->certificate->printoutcome > 0) {
+            $this->output_outcome($course);
+        }
 
-        $this->apply_base_colour();
+        if (!empty($this->certificate->printhours)) {
+            $this->output_hours();
+        }
+
+        if ($this->certificate->printnumber) {
+            $this->output_code();
+        }
     }
 
     //endregion Document
@@ -661,8 +745,13 @@ abstract class portfolio_output_base {
 
         $this->output_course_header($header, $subheader);
 
-        foreach ($courses as $course) {
-            $this->output_course($course, $header, $subheader);
+        $course_values = array_values($courses);
+        for ($index = 0; $index < count($course_values); $index++) {
+            $course = $course_values[$index];
+            $previous_course = $course_values[$index - 1] ?? null;
+            $next_course = $course_values[$index + 1] ?? null;
+
+            $this->output_course($course, $previous_course, $next_course, $header, $subheader);
         }
 
         $this->offsets->add_rows(3);
@@ -729,49 +818,105 @@ abstract class portfolio_output_base {
     }
 
     /**
-     * Output a course result row with the course name and completion date.
+     * Output course completion date to the page.
      *
-     * @param stdClass $course Course instance to output results for.
+     * @param stdClass $course Course instance to output completion for.
+     * @param stdClass|null $previous_course Previous course instance that was output or null if this is the first course.
+     * @param stdClass|null $next_course Next course instance to be output or null if this is the last course.
+     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
      */
-    protected function output_course_result(stdClass $course): void {
+    protected function output_course_completion(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course, string $colour = portfolio_colour::BASE): void {
         $completion_output = userdate($course->timecompleted, get_string('strftimedate'));
         if ($course->timecompleted == self::MAGIC_DATE) {
             $completion_output = $this->get_string('magiccomplete');
         }
 
-        $this->apply_base_colour();
         $completion_offset = $this->pdf->getPageWidth() - $this->pdf->getMargins()['right'] - 35;
-        $this->output_text_static($completion_output, $completion_offset, $this->page_offset(), $this->line_font_size(3));
 
-        // Automatically wrap the course name over as many lines as required as to not overlap the date.
-        $break_string = '%break%';
-        $course_name_pieces = explode($break_string, wordwrap($course->fullname, 80, $break_string));
+        $this->apply_colour($colour);
 
-        foreach ($course_name_pieces as $course_name_piece) {
-            $this->output_text_static($course_name_piece, $this->offsets->x($this->offsets->row_indent), $this->page_offset(), $this->line_font_size(3));
-            $this->offsets->add_row();
-        }
+        $this->output_text_static(
+            $completion_output,
+            $completion_offset,
+            $this->page_offset(),
+            $this->line_font_size($this->course_font_scale())
+        );
+
+        $this->apply_base_colour();
     }
 
     /**
-     * Output a course result to the page.
+     * Output course name to the page.
+     *
+     * @param stdClass $course Course instance to output the name for.
+     * @param stdClass|null $previous_course Previous course instance that was output or null if this is the first course.
+     * @param stdClass|null $next_course Next course instance to be output or null if this is the last course.
+     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
+     * @return void
+     */
+    protected function output_course_name(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course, string $colour = portfolio_colour::BASE): void {
+        // Automatically wrap the course name over as many lines as required as to not overlap the date
+        $break_string = '%break%';
+        $course_name_pieces = explode(
+            $break_string,
+            wordwrap(
+                $course->fullname,
+                80,
+                $break_string
+            )
+        );
+
+        $this->apply_colour($colour);
+
+        foreach ($course_name_pieces as $course_name_piece) {
+            $this->output_text_static(
+                $course_name_piece,
+                $this->offsets->x($this->offsets->row_indent),
+                $this->page_offset(),
+                $this->line_font_size($this->course_font_scale())
+            );
+
+            $this->offsets->add_row();
+        }
+
+        $this->apply_base_colour();
+    }
+
+    /**
+     * Output course result row to the page.
+     *
+     * @param stdClass $course Course instance to output results for.
+     * @param stdClass|null $previous_course Previous course instance that was output or null if this is the first course.
+     * @param stdClass|null $next_course Next course instance to be output or null if this is the last course.
+     * @return void
+     * @throws coding_exception
+     */
+    protected function output_course_result(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course): void {
+        $this->output_course_completion($course, $previous_course, $next_course);
+        $this->output_course_name($course, $previous_course, $next_course);
+    }
+
+    /**
+     * Output a course to the page.
      *
      * Dynamically adds pages as required depending on the number of rows.
      *
      * @param stdClass $course Course instance to output.
+     * @param stdClass|null $previous_course Previous course instance that was output or null if this is the first course.
+     * @param stdClass|null $next_course Next course instance to be output or null if this is the last course.
      * @param string $header Header string passed to {@link output_course_header()}.
      * @param string $subheader Subheader string passed to {@link output_course_header()}.
      * @return void
      */
-    protected function output_course(stdClass $course, string $header, string $subheader): void {
+    protected function output_course(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course, string $header, string $subheader): void {
         if (!$course->timecompleted) {
             return;
         }
 
         // Simple result output on the current page.
         if ($this->offsets->row_count <= $this->current_page_rows()) {
-            $this->output_course_result($course);
+            $this->output_course_result($course, $previous_course, $next_course);
 
             return;
         }
@@ -780,7 +925,7 @@ abstract class portfolio_output_base {
         $this->add_page();
 
         $this->output_course_header($header, $subheader, true);
-        $this->output_course_result($course);
+        $this->output_course_result($course, $previous_course, $next_course);
     }
 
     //endregion Output
