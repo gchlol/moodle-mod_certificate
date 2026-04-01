@@ -51,9 +51,14 @@ abstract class portfolio_output_base {
     protected const ROOT_PATH = __DIR__;
 
     /**
+     * Right offset padding to ensure text does not get too close to the right edge of the page.
+     */
+    protected const RIGHT_OFFSET_PADDING = 35;
+
+    /**
      * 1 January 1980 is used to credit long serving staff who have not formally completed training
      */
-    private const MAGIC_DATE = 315496800;
+    protected const MAGIC_DATE = 315496800;
 
     /**
      * @var stdClass Module instance.
@@ -231,6 +236,18 @@ abstract class portfolio_output_base {
         $y_offset += $additional;
 
         return $y_offset;
+    }
+
+    /**
+     * Calculate an x offset for left aligned text to be output on the right side of the page.
+     *
+     * @param int $additional Extra offset to apply to the calculated offset.
+     * @return int X offset.
+     */
+    protected function right_offset(int $additional = 0): int {
+        $offset = static::RIGHT_OFFSET_PADDING + $additional;
+
+        return $this->pdf->getPageWidth() - $this->pdf->getMargins()['right'] - $offset;
     }
 
     /**
@@ -820,17 +837,15 @@ abstract class portfolio_output_base {
      */
     protected function output_course_completion(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course, string $colour = portfolio_colour::BASE): void {
         $completion_output = userdate($course->timecompleted, get_string('strftimedate'));
-        if ($course->timecompleted == self::MAGIC_DATE) {
+        if ($course->timecompleted == static::MAGIC_DATE) {
             $completion_output = $this->get_string('magiccomplete');
         }
-
-        $completion_offset = $this->pdf->getPageWidth() - $this->pdf->getMargins()['right'] - 35;
 
         $this->apply_colour($colour);
 
         $this->output_text_static(
             $completion_output,
-            $completion_offset,
+            static::right_offset(),
             $this->page_offset(),
             $this->line_font_size($this->course_font_scale())
         );
@@ -848,6 +863,15 @@ abstract class portfolio_output_base {
      * @return void
      */
     protected function output_course_name(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course, string $colour = portfolio_colour::BASE): void {
+        if (
+            $previous_course !== null &&
+            $previous_course->id === $course->id
+        ) {
+            $this->offsets->add_row();
+
+            return;
+        }
+
         // Automatically wrap the course name over as many lines as required as to not overlap the date
         $break_string = '%break%';
         $course_name_pieces = explode(
@@ -876,6 +900,40 @@ abstract class portfolio_output_base {
     }
 
     /**
+     * Output course CPD to the page.
+     *
+     * @param stdClass $course Course instance to output CPD for.
+     * @param stdClass|null $previous_course Previous course instance that was output or null if this is the first course.
+     * @param stdClass|null $next_course Next course instance to be output or null if this is the last course.
+     * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
+     * @return void
+     */
+    protected function output_course_cpd(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course, string $colour = portfolio_colour::BASE): void {
+        if (
+            empty($course->cpd) ||
+            (
+                $next_course !== null &&
+                $next_course->id === $course->id
+            )
+        ) {
+            return;
+        }
+
+        $this->apply_colour($colour);
+
+        $this->output_text_static(
+            $this->get_string('coursecpd', $course->cpd),
+            static::right_offset(),
+            $this->page_offset(),
+            $this->line_font_size($this->course_font_scale()),
+        );
+
+        $this->apply_base_colour();
+
+        $this->offsets->add_row();
+    }
+
+    /**
      * Output course result row to the page.
      *
      * @param stdClass $course Course instance to output results for.
@@ -886,6 +944,7 @@ abstract class portfolio_output_base {
     protected function output_course_result(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course): void {
         $this->output_course_completion($course, $previous_course, $next_course);
         $this->output_course_name($course, $previous_course, $next_course);
+        $this->output_course_cpd($course, $previous_course, $next_course);
     }
 
     /**

@@ -16,6 +16,7 @@
 
 namespace mod_certificate\type\Portfolio;
 
+use core_customfield\field;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -31,7 +32,15 @@ require_once(__DIR__ . '/../Portfolio/course_section.php');
  */
 class portfolio_data {
 
+    protected const FIELD_CPD = 'chp_cpd';
+    protected const FIELD_SHOW_CPD = 'showport_cpd';
+    protected const FIELD_SHOW_HISTORY = 'showport_history';
     protected const REQUIRED_WORD = 'required';
+
+    /**
+     * @var array<string, field> Cache of custom field instances.
+     */
+    protected static array $fieldcache = [];
 
     /**
      * Gets the formatted course completion data for a given user.
@@ -84,40 +93,161 @@ class portfolio_data {
     protected static function get_courses(int $custom_field_id, int $user_id): array {
         global $DB;
 
-        $course_sql = "
-            SELECT  c.fullname,
-                    max(cc.timecompleted) as timecompleted
+        [
+            $completionselects,
+            $completionjoins,
+            $completiongroups,
+            $completionparams
+        ] = self::get_completion_sql($user_id);
+        [
+            $cpdselects,
+            $cpdjoins,
+            $cpdparams
+        ] = self::get_cpd_sql();
+
+        $sql = "
+            SELECT  cc.ident,
+                    c.id,
+                    c.id,
+                    c.fullname
+                    $completionselects
+                    $cpdselects
             FROM    {course} c
-                    INNER JOIN {customfield_data} cd ON
+                    JOIN {customfield_data} cd ON
                         cd.instanceid = c.id AND
                         cd.intvalue = 1 AND
-                        cd.fieldid = ?
-                    INNER JOIN (
-                        (
-                            SELECT  *
-                            FROM    {course_completions} ccc
-                            WHERE   ccc.userid = ?
-                        ) UNION
-                        (
-                            SELECT  *
-                            FROM    {local_recompletion_cc} rcc
-                            WHERE   rcc.userid = ?
-                        )
-                    ) cc ON
-                        cc.course = c.id AND
-                        cc.userid = ? AND
-                        cc.timecompleted IS NOT NULL
-            GROUP BY c.id
-            ORDER BY c.fullname
+                        cd.fieldid = :fieldtype
+                    $completionjoins
+                    $cpdjoins
+
+            $completiongroups
+            ORDER BY c.fullname, cc.timecompleted DESC
         ";
 
-        // Moodle doesn't allow reusing named params so, we need to do this instead.
-        $course_params = [ $custom_field_id, $user_id, $user_id, $user_id ];
+        $params = array_merge(
+            [ 'fieldtype' => $custom_field_id ],
+            $completionparams,
+            $cpdparams
+        );
 
         return $DB->get_records_sql(
-            $course_sql,
-            $course_params,
+            $sql,
+            $params,
         );
+    }
+
+    /**
+     * Get the SQL components to retrieve course completion data for a given user.
+     *
+     * @param int $userid Target user ID.
+     * @return array{ selects: string, joins: string, groups: string, params: array } SQL components.
+     */
+    protected static function get_completion_sql(int $userid): array {
+        $selects = ", MAX(cc.timecompleted) AS 'timecompleted'";
+        $joins = "
+            JOIN (
+                    SELECT  *,
+                            CONCAT('completion-', id) AS 'ident'
+                    FROM    {course_completions}
+                    WHERE   userid = :usercompletion
+                UNION
+                    SELECT  *,
+                            CONCAT('recompletion-', id) AS 'ident'
+                    FROM    {local_recompletion_cc}
+                    WHERE   userid = :userrecompletion
+            ) cc ON
+                cc.course = c.id AND
+                cc.timecompleted IS NOT NULL
+        ";
+        $groups = 'GROUP BY c.id';
+        $params = [
+            'usercompletion' => $userid,
+            'userrecompletion' => $userid,
+        ];
+
+        $showhistoryfield = static::get_custom_field(self::FIELD_SHOW_HISTORY);
+        if (!$showhistoryfield) {
+            return [ $selects, $joins, $groups, $params ];
+        }
+
+        $historycondition = "historyshowdata.intvalue = 1";
+        $fieldconfig = $showhistoryfield->get('configdata');
+        if ($fieldconfig->checkbydefault) {
+            $historycondition = "(
+                $historycondition OR
+                historyshowdata.intvalue IS NULL
+            )";
+        }
+
+        $selects = "
+            , IF (
+                $historycondition,
+                cc.timecompleted,
+                MAX(cc.timecompleted)
+            ) AS 'timecompleted'
+        ";
+        $joins .= "
+            LEFT JOIN {customfield_data} historyshowdata ON
+                historyshowdata.instanceid = c.id AND
+                historyshowdata.fieldid = :fieldshowhistory
+        ";
+        $params['fieldshowhistory'] = $showhistoryfield->get('id');
+        $groups = "
+            GROUP BY IF (
+                $historycondition,
+                cc.ident,
+                c.id
+            )
+        ";
+
+        return [ $selects, $joins, $groups, $params ];
+    }
+
+    /**
+     * Get the SQL components to retrieve CPD data for courses.
+     *
+     * @return array{ selects: string, joins: string, params: array } SQL components.
+     */
+    protected static function get_cpd_sql(): array {
+        $showcpdfield = static::get_custom_field(self::FIELD_SHOW_CPD);
+        if (!$showcpdfield) {
+            return [ '', '', [] ];
+        }
+
+        $cpdfield = static::get_custom_field(self::FIELD_CPD);
+        if (!$cpdfield) {
+            return [ '', '', [] ];
+        }
+
+        $cpdcondition = "cpdshowdata.intvalue = 1";
+        $fieldconfig = $showcpdfield->get('configdata');
+        if ($fieldconfig->checkbydefault) {
+            $cpdcondition = "(
+                $cpdcondition OR
+                cpdshowdata.intvalue IS NULL
+            )";
+        }
+
+        $joins = "
+            LEFT JOIN {customfield_data} cpdshowdata ON
+                cpdshowdata.instanceid = c.id AND
+                cpdshowdata.fieldid = :fieldshowcpd AND
+                cpdshowdata.intvalue = 1
+            LEFT JOIN {customfield_data} cpddata ON
+                cpddata.instanceid = c.id AND
+                cpddata.fieldid = :fieldcpd AND
+                $cpdcondition
+        ";
+        $params = [
+            'fieldshowcpd' => $showcpdfield->get('id'),
+            'fieldcpd' => $cpdfield->get('id'),
+        ];
+
+        return [
+            ', cpddata.value AS cpd',
+            $joins,
+            $params,
+        ];
     }
 
     /**
@@ -131,10 +261,21 @@ class portfolio_data {
         return $DB->get_records_select(
             'customfield_field',
             $DB->sql_like('shortname', ':shortname'),
-            [ 'shortname' => 'port_%' ],
+            [ 'shortname' => 'port\_%' ],
             'sortorder',
             'id, name, description'
         );
+    }
+
+    protected static function get_custom_field(string $shortname): ?field {
+        if (isset(static::$fieldcache[$shortname])) {
+            return static::$fieldcache[$shortname];
+        }
+
+        $field = field::get_record([ 'shortname' => $shortname ]);
+        static::$fieldcache[$shortname] = $field;
+
+        return $field;
     }
 
     /**
