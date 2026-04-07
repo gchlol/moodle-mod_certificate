@@ -338,10 +338,26 @@ class portfolio_data {
                     $fullname .= ' - Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua';
                 }
 
-                $course_section->courses[] = (object)[
-                    'fullname' => $fullname,
-                    'timecompleted' => mt_rand(1, time()),
-                ];
+                // Make every 1 in 15 courses have CPD data to trigger CPD display.
+                $cpd = null;
+                if (mt_rand(0, 15) == 0) {
+                    $cpd = (string)mt_rand(15, 60);
+                }
+
+                // Make every 1 in 20 courses have at least two completions to trigger grouping.
+                $completioncount = 1;
+                if (mt_rand(0, 20) == 0) {
+                    $completioncount = mt_rand(2, 5);
+                }
+
+                for ($completionoffset = 0; $completionoffset < $completioncount; $completionoffset++) {
+                    $course_section->courses[] = (object)[
+                        'id' => $offset,
+                        'fullname' => $fullname,
+                        'timecompleted' => mt_rand(1, time()),
+                        'cpd' => $cpd,
+                    ];
+                }
             }
 
             $course_data[$index] = $course_section;
