@@ -35,16 +35,37 @@ require_once(__DIR__ . '/../Portfolio/portfolio_output_base.php');
  */
 class portfolio_output extends portfolio_output_base {
 
+    /**
+     * Root path for the portfolio implementation.
+     */
     protected const ROOT_PATH = __DIR__;
 
+    /**
+     * Gets the number of available output rows on general pages before a new page is required.
+     *
+     * @see output_course()
+     *
+     * @return int Number of output rows on pages.
+     */
     protected function page_rows(): int {
         return 47;
     }
 
+    /**
+     * Gets the starting y offset for course list output on the cover page.
+     *
+     * @return int Y offset.
+     */
     protected function cover_offset(): int {
         return 90;
     }
 
+    /**
+     * Output the unique cover page containing the intro text and images.
+     *
+     * @param stdClass $course Course to pull grade and outcome information from.
+     * @return void
+     */
     public function output_cover_page(stdClass $course): void {
         $this->output_cover_page_elements();
 

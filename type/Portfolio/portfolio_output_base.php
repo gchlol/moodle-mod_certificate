@@ -36,32 +36,32 @@ require_once(__DIR__ . '/../Portfolio/portfolio_string_manager.php');
 abstract class portfolio_output_base {
 
     /**
-     * Y offset to account for the page header on non-cover pages
+     * @var int Y offset to account for the page header on non-cover pages
      */
     protected const HEADER_OFFSET = 20;
 
     /**
-     * Primary font used for output.
+     * @var string Primary font used for output.
      */
     protected const OUTPUT_FONT = 'Helvetica';
 
     /**
-     * Root path for the portfolio implementation.
+     * @var string Root path for the portfolio implementation.
      */
     protected const ROOT_PATH = __DIR__;
 
     /**
-     * Additional right offset for CPD output.
+     * @var int Additional right offset for CPD output.
      */
     protected const RIGHT_OFFSET_CPD = 2;
 
     /**
-     * Right offset padding to ensure text does not get too close to the right edge of the page.
+     * @var int Right offset padding to ensure text does not get too close to the right edge of the page.
      */
     protected const RIGHT_OFFSET_PADDING = 35;
 
     /**
-     * 1 January 1980 is used to credit long serving staff who have not formally completed training
+     * @var int 1 January 1980 is used to credit long serving staff who have not formally completed training
      */
     protected const MAGIC_DATE = 315496800;
 
@@ -98,12 +98,12 @@ abstract class portfolio_output_base {
     /**
      * @var portfolio_string_manager Language string manager instance.
      */
-    protected portfolio_string_manager $string_manager;
+    protected portfolio_string_manager $stringmanager;
 
     /**
      * @var int[][] Cache of parsed hex colours.
      */
-    private array $colour_cache;
+    private array $colourcache;
 
 
     /**
@@ -123,7 +123,7 @@ abstract class portfolio_output_base {
         $this->user = $user;
 
         [ $this->course ] = get_course_and_cm_from_instance($certificate, 'certificate');
-        $this->string_manager = static::init_string_manager();
+        $this->stringmanager = static::init_string_manager();
     }
 
     /**
@@ -132,10 +132,10 @@ abstract class portfolio_output_base {
      * @return portfolio_string_manager String manager instance.
      */
     protected static function init_string_manager(): portfolio_string_manager {
-        $lang_path = static::ROOT_PATH . '/lang';
-        $local_lang_root = is_dir($lang_path) ? $lang_path : null;
+        $langpath = static::ROOT_PATH . '/lang';
+        $locallangroot = is_dir($langpath) ? $langpath : null;
 
-        return new portfolio_string_manager($local_lang_root);
+        return new portfolio_string_manager($locallangroot);
     }
 
     /**
@@ -193,7 +193,7 @@ abstract class portfolio_output_base {
      * @return string
      */
     protected function get_other_string(string $identifier, string $component = '', $a = null): string {
-        return $this->string_manager->get_string($identifier, $component, $a);
+        return $this->stringmanager->get_string($identifier, $component, $a);
     }
 
     /**
@@ -213,11 +213,11 @@ abstract class portfolio_output_base {
      * @return array Colour array containing the parsed r, g, and b components.
      */
     protected function get_colour(string $identifier): array {
-        if (!isset($this->colour_cache[$identifier])) {
-            $this->colour_cache[$identifier] = static::parse_hex_colour($this->get_string($identifier));
+        if (!isset($this->colourcache[$identifier])) {
+            $this->colourcache[$identifier] = static::parse_hex_colour($this->get_string($identifier));
         }
 
-        return $this->colour_cache[$identifier];
+        return $this->colourcache[$identifier];
     }
 
     /**
@@ -226,7 +226,7 @@ abstract class portfolio_output_base {
      * @return int The y offset.
      */
     protected function row_offset(): int {
-        return $this->offsets->row_count * $this->line_height();
+        return $this->offsets->rowcount * $this->line_height();
     }
 
     /**
@@ -236,11 +236,11 @@ abstract class portfolio_output_base {
      * @return int Y offset for the current output line.
      */
     protected function page_offset(int $additional = 0): int {
-        $y_offset = ($this->offsets->page == 1 ? $this->cover_offset() : $this->offsets->y(static::HEADER_OFFSET));
-        $y_offset += $this->row_offset();
-        $y_offset += $additional;
+        $yoffset = ($this->offsets->page == 1 ? $this->cover_offset() : $this->offsets->y(static::HEADER_OFFSET));
+        $yoffset += $this->row_offset();
+        $yoffset += $additional;
 
-        return $y_offset;
+        return $yoffset;
     }
 
     /**
@@ -261,10 +261,10 @@ abstract class portfolio_output_base {
      * @return int Output rows available for the cover page.
      */
     protected function cover_rows(): int {
-        $offset_difference = $this->cover_offset() - $this->offsets->y - static::HEADER_OFFSET;
-        $row_difference = $offset_difference / $this->line_height();
+        $offsetdifference = $this->cover_offset() - $this->offsets->y - static::HEADER_OFFSET;
+        $rowdifference = $offsetdifference / $this->line_height();
 
-        return $this->page_rows() - $row_difference;
+        return $this->page_rows() - $rowdifference;
     }
 
     /**
@@ -382,7 +382,7 @@ abstract class portfolio_output_base {
     protected function add_page(): void {
         // Add page.
         $this->offsets->page++;
-        $this->offsets->row_count = 0;
+        $this->offsets->rowcount = 0;
         $this->pdf->AddPage();
 
         // Draw new page elements. This must be before any other output otherwise text gets hidden.
@@ -408,7 +408,15 @@ abstract class portfolio_output_base {
      * @param string|null $font Output font. If null {@link OUTPUT_FONT} will be used.
      * @return void
      */
-    protected function output_text_static(string $text, int $x, int $y, int $size = 10, string $align = 'L', string $style = '', ?string $font = null): void {
+    protected function output_text_static(
+        string $text,
+        int $x,
+        int $y,
+        int $size = 10,
+        string $align = 'L',
+        string $style = '',
+        ?string $font = null
+    ): void {
         if ($font === null) {
             $font = static::OUTPUT_FONT;
         }
@@ -430,19 +438,27 @@ abstract class portfolio_output_base {
      * Print text to the PDF document at given offsets from base x and y values.
      *
      * @param string $text Text to be printed.
-     * @param int $x_offset Offset from the base X value.
-     * @param int $y_offset Offset from the base Y value.
+     * @param int $xoffset Offset from the base X value.
+     * @param int $yoffset Offset from the base Y value.
      * @param int $size Font size.
      * @param string $align Text alignment; L=left, C=center, R=right.
      * @param string $style Font style; ''=normal, B=bold, I=italic, U=underline.
      * @param string|null $font Output font. If null {@link OUTPUT_FONT} will be used.
      * @return void
      */
-    protected function output_text(string $text, int $x_offset, int $y_offset, int $size = 10, string $align = 'L', string $style = '', ?string $font = null): void {
+    protected function output_text(
+        string $text,
+        int $xoffset,
+        int $yoffset,
+        int $size = 10,
+        string $align = 'L',
+        string $style = '',
+        ?string $font = null
+    ): void {
         $this->output_text_static(
             $text,
-            $this->offsets->x($x_offset),
-            $this->offsets->y($y_offset),
+            $this->offsets->x($xoffset),
+            $this->offsets->y($yoffset),
             $size,
             $align,
             $style,
@@ -461,10 +477,10 @@ abstract class portfolio_output_base {
             $this->pdf,
             $this->certificate,
             CERT_IMAGE_BORDER,
-            $this->offsets->border_x,
-            $this->offsets->border_y,
-            $this->offsets->border_w,
-            $this->offsets->border_h
+            $this->offsets->borderx,
+            $this->offsets->bordery,
+            $this->offsets->borderw,
+            $this->offsets->borderh
         );
         certificate_draw_frame($this->pdf, $this->certificate);
     }
@@ -483,10 +499,10 @@ abstract class portfolio_output_base {
             $this->pdf,
             $this->certificate,
             CERT_IMAGE_WATERMARK,
-            $this->offsets->watermark_x,
-            $this->offsets->watermark_y,
-            $this->offsets->watermark_w,
-            $this->offsets->watermark_h
+            $this->offsets->watermarkx,
+            $this->offsets->watermarky,
+            $this->offsets->watermarkw,
+            $this->offsets->watermarkh
         );
         $this->pdf->SetAlpha();
 
@@ -495,8 +511,8 @@ abstract class portfolio_output_base {
             $this->pdf,
             $this->certificate,
             CERT_IMAGE_SEAL,
-            $this->offsets->seal_x,
-            $this->offsets->seal_y,
+            $this->offsets->sealx,
+            $this->offsets->sealy,
             '',
             ''
         );
@@ -504,8 +520,8 @@ abstract class portfolio_output_base {
             $this->pdf,
             $this->certificate,
             CERT_IMAGE_SIGNATURE,
-            $this->offsets->signature_x,
-            $this->offsets->signature_y,
+            $this->offsets->signaturex,
+            $this->offsets->signaturey,
             '',
             ''
         );
@@ -527,7 +543,7 @@ abstract class portfolio_output_base {
         $this->output_text_static(
             'Page ' . $this->pdf->getPage() . ' of ' . $this->pdf->getNumPages(),
             $this->offsets->x,
-            $this->offsets->page_num_y,
+            $this->offsets->pagenumy,
             10,
             'C'
         );
@@ -545,14 +561,14 @@ abstract class portfolio_output_base {
      * @return void
      */
     protected function output_page_numbers(): void {
-        $page_count = $this->pdf->getNumPages();
+        $pagecount = $this->pdf->getNumPages();
 
         // Don't print page count if we only have a single page.
-        if ($page_count == 1) {
+        if ($pagecount == 1) {
             return;
         }
 
-        for ($page = 1; $page <= $page_count; $page++) {
+        for ($page = 1; $page <= $pagecount; $page++) {
             $this->pdf->setPage($page);
 
             $this->output_page_number();
@@ -571,7 +587,7 @@ abstract class portfolio_output_base {
         $this->output_text_static(
             $this->get_string('printedon', date('j F Y')),
             $this->offsets->x,
-            $this->offsets->date_y,
+            $this->offsets->datey,
             10,
             'R'
         );
@@ -591,7 +607,7 @@ abstract class portfolio_output_base {
         $this->output_text_static(
             $this->get_string('siteservicelabel', '<strong>' . $this->get_string('siteservice') . '</strong>'),
             $this->offsets->x,
-            $this->offsets->site_service_y,
+            $this->offsets->siteservicey,
             14,
             'C'
         );
@@ -667,7 +683,7 @@ abstract class portfolio_output_base {
         $this->output_text_static(
             certificate_get_code($this->certificate, $this->record),
             $this->offsets->x,
-            $this->offsets->code_y,
+            $this->offsets->codey,
             10, 'C'
         );
 
@@ -739,13 +755,13 @@ abstract class portfolio_output_base {
      * @param stdClass[] $courses List of courses to output.
      * @param string $header Header string to output.
      * @param string $subheader Subheader conditionally output if not empty.
-     * @param bool $display_empty When true the header and a special output will be displayed for headers with no courses.
+     * @param bool $displayempty When true the header and a special output will be displayed for headers with no courses.
      * @return void
      */
-    public function output_courses(array $courses, string $header, string $subheader, bool $display_empty): void {
+    public function output_courses(array $courses, string $header, string $subheader, bool $displayempty): void {
         // Handle empty course list.
         if (empty($courses)) {
-            if ($display_empty) {
+            if ($displayempty) {
                 $this->output_empty_course($header, $subheader);
             }
 
@@ -753,19 +769,19 @@ abstract class portfolio_output_base {
         }
 
         // If output is close to the end of the page create a new page for the courses.
-        if (( $this->offsets->row_count + 5 ) >= $this->current_page_rows()) {
+        if (( $this->offsets->rowcount + 5 ) >= $this->current_page_rows()) {
             $this->add_page();
         }
 
         $this->output_course_header($header, $subheader);
 
-        $course_values = array_values($courses);
-        for ($index = 0; $index < count($course_values); $index++) {
-            $course = $course_values[$index];
-            $previous_course = $course_values[$index - 1] ?? null;
-            $next_course = $course_values[$index + 1] ?? null;
+        $coursevalues = array_values($courses);
+        for ($index = 0; $index < count($coursevalues); $index++) {
+            $course = $coursevalues[$index];
+            $previouscourse = $coursevalues[$index - 1] ?? null;
+            $nextcourse = $coursevalues[$index + 1] ?? null;
 
-            $this->output_course($course, $previous_course, $next_course, $header, $subheader);
+            $this->output_course($course, $previouscourse, $nextcourse, $header, $subheader);
         }
 
         $this->offsets->add_rows(3);
@@ -804,16 +820,16 @@ abstract class portfolio_output_base {
      * @return void
      */
     protected function output_course_header(string $header, string $subheader, bool $continued = false): void {
-        $course_header = $header;
+        $courseheader = $header;
         if ($continued) {
-            $course_header .= ' ' . $this->get_string('continued');
+            $courseheader .= ' ' . $this->get_string('continued');
         }
 
         $this->apply_primary_colour();
 
         // Shift the header up 2 units to account for the size.
         $this->output_text_static(
-            $course_header,
+            $courseheader,
             $this->offsets->x,
             $this->page_offset(-2),
             $this->line_font_size(4),
@@ -835,21 +851,26 @@ abstract class portfolio_output_base {
      * Output course completion date to the page.
      *
      * @param stdClass $course Course instance to output completion for.
-     * @param stdClass|null $previous_course Previous course instance that was output or null if this is the first course.
-     * @param stdClass|null $next_course Next course instance to be output or null if this is the last course.
+     * @param stdClass|null $previouscourse Previous course instance that was output or null if this is the first course.
+     * @param stdClass|null $nextcourse Next course instance to be output or null if this is the last course.
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
      */
-    protected function output_course_completion(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course, string $colour = portfolio_colour::BASE): void {
-        $completion_output = userdate($course->timecompleted, get_string('strftimedate'));
+    protected function output_course_completion(
+        stdClass $course,
+        ?stdClass $previouscourse,
+        ?stdClass $nextcourse,
+        string $colour = portfolio_colour::BASE
+    ): void {
+        $completionoutput = userdate($course->timecompleted, get_string('strftimedate'));
         if ($course->timecompleted == static::MAGIC_DATE) {
-            $completion_output = $this->get_string('magiccomplete');
+            $completionoutput = $this->get_string('magiccomplete');
         }
 
         $this->apply_colour($colour);
 
         $this->output_text_static(
-            $completion_output,
+            $completionoutput,
             static::right_offset(),
             $this->page_offset(),
             $this->line_font_size($this->course_font_scale())
@@ -862,38 +883,43 @@ abstract class portfolio_output_base {
      * Output course name to the page.
      *
      * @param stdClass $course Course instance to output the name for.
-     * @param stdClass|null $previous_course Previous course instance that was output or null if this is the first course.
-     * @param stdClass|null $next_course Next course instance to be output or null if this is the last course.
+     * @param stdClass|null $previouscourse Previous course instance that was output or null if this is the first course.
+     * @param stdClass|null $nextcourse Next course instance to be output or null if this is the last course.
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
      */
-    protected function output_course_name(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course, string $colour = portfolio_colour::BASE): void {
+    protected function output_course_name(
+        stdClass $course,
+        ?stdClass $previouscourse,
+        ?stdClass $nextcourse,
+        string $colour = portfolio_colour::BASE
+    ): void {
         if (
-            $previous_course !== null &&
-            $previous_course->id === $course->id
+            $previouscourse !== null &&
+            $previouscourse->id === $course->id
         ) {
             $this->offsets->add_row();
 
             return;
         }
 
-        // Automatically wrap the course name over as many lines as required as to not overlap the date
-        $break_string = '%break%';
-        $course_name_pieces = explode(
-            $break_string,
+        // Automatically wrap the course name over as many lines as required as to not overlap the date.
+        $breakstring = '%break%';
+        $coursenamepieces = explode(
+            $breakstring,
             wordwrap(
                 $course->fullname,
                 80,
-                $break_string
+                $breakstring
             )
         );
 
         $this->apply_colour($colour);
 
-        foreach ($course_name_pieces as $course_name_piece) {
+        foreach ($coursenamepieces as $coursenamepiece) {
             $this->output_text_static(
-                $course_name_piece,
-                $this->offsets->x($this->offsets->row_indent),
+                $coursenamepiece,
+                $this->offsets->x($this->offsets->rowindent),
                 $this->page_offset(),
                 $this->line_font_size($this->course_font_scale())
             );
@@ -908,17 +934,22 @@ abstract class portfolio_output_base {
      * Output course CPD to the page.
      *
      * @param stdClass $course Course instance to output CPD for.
-     * @param stdClass|null $previous_course Previous course instance that was output or null if this is the first course.
-     * @param stdClass|null $next_course Next course instance to be output or null if this is the last course.
+     * @param stdClass|null $previouscourse Previous course instance that was output or null if this is the first course.
+     * @param stdClass|null $nextcourse Next course instance to be output or null if this is the last course.
      * @param string $colour Optional text colour override from {@link portfolio_colour} class constants.
      * @return void
      */
-    protected function output_course_cpd(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course, string $colour = portfolio_colour::BASE): void {
+    protected function output_course_cpd(
+        stdClass $course,
+        ?stdClass $previouscourse,
+        ?stdClass $nextcourse,
+        string $colour = portfolio_colour::BASE
+    ): void {
         if (
             empty($course->cpd) ||
             (
-                $next_course !== null &&
-                $next_course->id === $course->id
+                $nextcourse !== null &&
+                $nextcourse->id === $course->id
             )
         ) {
             return;
@@ -942,14 +973,14 @@ abstract class portfolio_output_base {
      * Output course result row to the page.
      *
      * @param stdClass $course Course instance to output results for.
-     * @param stdClass|null $previous_course Previous course instance that was output or null if this is the first course.
-     * @param stdClass|null $next_course Next course instance to be output or null if this is the last course.
+     * @param stdClass|null $previouscourse Previous course instance that was output or null if this is the first course.
+     * @param stdClass|null $nextcourse Next course instance to be output or null if this is the last course.
      * @return void
      */
-    protected function output_course_result(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course): void {
-        $this->output_course_completion($course, $previous_course, $next_course);
-        $this->output_course_name($course, $previous_course, $next_course);
-        $this->output_course_cpd($course, $previous_course, $next_course);
+    protected function output_course_result(stdClass $course, ?stdClass $previouscourse, ?stdClass $nextcourse): void {
+        $this->output_course_completion($course, $previouscourse, $nextcourse);
+        $this->output_course_name($course, $previouscourse, $nextcourse);
+        $this->output_course_cpd($course, $previouscourse, $nextcourse);
     }
 
     /**
@@ -958,20 +989,26 @@ abstract class portfolio_output_base {
      * Dynamically adds pages as required depending on the number of rows.
      *
      * @param stdClass $course Course instance to output.
-     * @param stdClass|null $previous_course Previous course instance that was output or null if this is the first course.
-     * @param stdClass|null $next_course Next course instance to be output or null if this is the last course.
+     * @param stdClass|null $previouscourse Previous course instance that was output or null if this is the first course.
+     * @param stdClass|null $nextcourse Next course instance to be output or null if this is the last course.
      * @param string $header Header string passed to {@link output_course_header()}.
      * @param string $subheader Subheader string passed to {@link output_course_header()}.
      * @return void
      */
-    protected function output_course(stdClass $course, ?stdClass $previous_course, ?stdClass $next_course, string $header, string $subheader): void {
+    protected function output_course(
+        stdClass $course,
+        ?stdClass $previouscourse,
+        ?stdClass $nextcourse,
+        string $header,
+        string $subheader
+    ): void {
         if (!$course->timecompleted) {
             return;
         }
 
         // Simple result output on the current page.
-        if ($this->offsets->row_count <= $this->current_page_rows()) {
-            $this->output_course_result($course, $previous_course, $next_course);
+        if ($this->offsets->rowcount <= $this->current_page_rows()) {
+            $this->output_course_result($course, $previouscourse, $nextcourse);
 
             return;
         }
@@ -980,7 +1017,7 @@ abstract class portfolio_output_base {
         $this->add_page();
 
         $this->output_course_header($header, $subheader, true);
-        $this->output_course_result($course, $previous_course, $next_course);
+        $this->output_course_result($course, $previouscourse, $nextcourse);
     }
 
     //endregion Output

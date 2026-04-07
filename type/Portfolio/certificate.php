@@ -35,33 +35,33 @@ if ($certificate->orientation == 'L') {
     // Landscape
     $offsets->y = 30;
 
-    $offsets->code_y = 175;
-    $offsets->date_y = 200;
-    $offsets->page_num_y = 200;
-    $offsets->seal_x = 240;
-    $offsets->seal_y = 150;
-    $offsets->signature_x = 47;
-    $offsets->signature_y = 155;
-    $offsets->watermark_x = 40;
-    $offsets->watermark_y = 31;
-    $offsets->watermark_w = 212;
-    $offsets->watermark_h = 148;
+    $offsets->codey = 175;
+    $offsets->datey = 200;
+    $offsets->pagenumy = 200;
+    $offsets->sealx = 240;
+    $offsets->sealy = 150;
+    $offsets->signaturex = 47;
+    $offsets->signaturey = 155;
+    $offsets->watermarkx = 40;
+    $offsets->watermarky = 31;
+    $offsets->watermarkw = 212;
+    $offsets->watermarkh = 148;
 
 } else {
     // Portrait
     $offsets->y = 68;
 
-    $offsets->code_y = 250;
-    $offsets->date_y = 254;
-    $offsets->page_num_y = 254;
-    $offsets->seal_x = 160;
-    $offsets->seal_y = 78;
-    $offsets->signature_x = 140;
-    $offsets->signature_y = 239;
-    $offsets->watermark_x = 26;
-    $offsets->watermark_y = 58;
-    $offsets->watermark_w = 158;
-    $offsets->watermark_h = 170;
+    $offsets->codey = 250;
+    $offsets->datey = 254;
+    $offsets->pagenumy = 254;
+    $offsets->sealx = 160;
+    $offsets->sealy = 78;
+    $offsets->signaturex = 140;
+    $offsets->signaturey = 239;
+    $offsets->watermarkx = 26;
+    $offsets->watermarky = 58;
+    $offsets->watermarkw = 158;
+    $offsets->watermarkh = 170;
 }
 
 $cert_output = new portfolio_output(

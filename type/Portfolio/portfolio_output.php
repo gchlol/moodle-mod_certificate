@@ -67,7 +67,7 @@ class portfolio_output {
             $this->output_course($course, $identifier);
         }
 
-        $this->offsets->row_count += 2;
+        $this->offsets->rowcount += 2;
     }
 
     /**
@@ -79,16 +79,16 @@ class portfolio_output {
      */
     public function output_cover_page(stdClass $course): void {
         // Add images and lines
-        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_BORDER, $this->offsets->border_x, $this->offsets->border_y, $this->offsets->border_w, $this->offsets->border_h);
+        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_BORDER, $this->offsets->borderx, $this->offsets->bordery, $this->offsets->borderw, $this->offsets->borderh);
         certificate_draw_frame($this->pdf, $this->certificate);
 
         // Set alpha to semi-transparency
         $this->pdf->SetAlpha(0.2);
-        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_WATERMARK, $this->offsets->watermark_x, $this->offsets->watermark_y, $this->offsets->watermark_w, $this->offsets->watermark_h);
+        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_WATERMARK, $this->offsets->watermarkx, $this->offsets->watermarky, $this->offsets->watermarkw, $this->offsets->watermarkh);
 
         $this->pdf->SetAlpha();
-        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_SEAL, $this->offsets->seal_x, $this->offsets->seal_y, '', '');
-        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_SIGNATURE, $this->offsets->signature_x, $this->offsets->signature_y, '', '');
+        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_SEAL, $this->offsets->sealx, $this->offsets->sealy, '', '');
+        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_SIGNATURE, $this->offsets->signaturex, $this->offsets->signaturey, '', '');
 
         // Add text
         $this->pdf->SetTextColor(0, 60, 105);
@@ -115,7 +115,7 @@ class portfolio_output {
      * @return int Y offset.
      */
     private function row_offset(): int {
-        return $this->offsets->row_count * 4;
+        return $this->offsets->rowcount * 4;
     }
 
     /**
@@ -133,14 +133,14 @@ class portfolio_output {
 
         // Add page
         $this->offsets->page++;
-        $this->offsets->row_count = 0;
+        $this->offsets->rowcount = 0;
         $this->pdf->AddPage();
 
         // Output page count
         $this->print_page_number();
 
         // Draw new page elements
-        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_BORDER, $this->offsets->border_x, $this->offsets->border_y, $this->offsets->border_w, $this->offsets->border_h);
+        certificate_print_image($this->pdf, $this->certificate, CERT_IMAGE_BORDER, $this->offsets->borderx, $this->offsets->bordery, $this->offsets->borderw, $this->offsets->borderh);
         certificate_draw_frame($this->pdf, $this->certificate);
     }
 
@@ -154,7 +154,7 @@ class portfolio_output {
         certificate_print_text(
             $this->pdf,
             $this->offsets->x,
-            $this->offsets->page_num_y,
+            $this->offsets->pagenumy,
             'C', 'Helvetica', '', 10,
             'Page ' . $this->offsets->page . ' of ' . $this->pdf->getAliasNbPages()
         );
@@ -216,7 +216,7 @@ class portfolio_output {
     private function output_page_footer(): void {
         $this->pdf->SetTextColor(0, 0, 0);
         /** @noinspection PhpParamsInspection */
-        certificate_print_text($this->pdf, $this->offsets->x, $this->offsets->date_y, 'R', 'Helvetica', '', 10, get_string('portfolio_printedon', 'certificate', date('j F Y')));
+        certificate_print_text($this->pdf, $this->offsets->x, $this->offsets->datey, 'R', 'Helvetica', '', 10, get_string('portfolio_printedon', 'certificate', date('j F Y')));
 
         $this->pdf->SetTextColor(128, 128, 128);
         $this->print_text(get_string('portfolio_siteservicelabel', 'certificate'), 0, 190, 16, 'C');
@@ -247,7 +247,7 @@ class portfolio_output {
         }
 
         /** @noinspection PhpParamsInspection */
-        certificate_print_text($this->pdf, $this->offsets->x, $this->offsets->code_y, 'C', 'Times', '', 10, certificate_get_code($this->certificate, $this->record));
+        certificate_print_text($this->pdf, $this->offsets->x, $this->offsets->codey, 'C', 'Times', '', 10, certificate_get_code($this->certificate, $this->record));
 
         $this->pdf->SetTextColor(0, 0, 0);
     }
@@ -303,17 +303,17 @@ class portfolio_output {
             return;
         }
 
-        $this->offsets->row_count++;
+        $this->offsets->rowcount++;
 
         // Simple result output on the current page
         if (
             (
                 $this->offsets->page == 1 &&
-                $this->offsets->row_count < 16
+                $this->offsets->rowcount < 16
             ) ||
             (
                 $this->offsets->page > 1 &&
-                $this->offsets->row_count < 30
+                $this->offsets->rowcount < 30
             )
         ) {
             $this->output_course_result($course);
@@ -328,7 +328,7 @@ class portfolio_output {
         // Output course type header
         $this->output_course_header($identifier, true);
 
-        $this->offsets->row_count++;
+        $this->offsets->rowcount++;
 
         // Output results
         $this->output_course_result($course);

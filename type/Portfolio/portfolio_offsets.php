@@ -28,45 +28,125 @@ use TCPDF;
  */
 class portfolio_offsets {
     // Base.
+    /**
+     * @var int Baseline x offset.
+     */
     public int $x;
+
+    /**
+     * @var int Baseline y offset.
+     */
     public int $y;
 
     // Counters.
+    /**
+     * @var int Current page counter.
+     */
     public int $page;
-    public int $row_count;
+
+    /**
+     * @var int Current row counter.
+     */
+    public int $rowcount;
 
     // Options.
-    public int $row_indent;
+    /**
+     * @var int Indent to apply to non-header output rows.
+     */
+    public int $rowindent;
 
     // Offsets.
-    public int $border_x;
-    public int $border_y;
-    public int $border_w;
-    public int $border_h;
-    public int $code_y;
-    public int $date_y;
-    public int $page_num_y;
-    public int $seal_x;
-    public int $seal_y;
-    public int $signature_x;
-    public int $signature_y;
-    public int $site_service_y;
-    public int $watermark_x;
-    public int $watermark_y;
-    public int $watermark_w;
-    public int $watermark_h;
+    /**
+     * @var int Border x position.
+     */
+    public int $borderx;
+
+    /**
+     * @var int Border y position.
+     */
+    public int $bordery;
+
+    /**
+     * @var int Border width.
+     */
+    public int $borderw;
+
+    /**
+     * @var int Border height.
+     */
+    public int $borderh;
+
+    /**
+     * @var int Code y position.
+     */
+    public int $codey;
+
+    /**
+     * @var int Date y position.
+     */
+    public int $datey;
+
+    /**
+     * @var int Page number y position.
+     */
+    public int $pagenumy;
+
+    /**
+     * @var int Seal x position.
+     */
+    public int $sealx;
+
+    /**
+     * @var int Seal y position.
+     */
+    public int $sealy;
+
+    /**
+     * @var int Signature x position.
+     */
+    public int $signaturex;
+
+    /**
+     * @var int Signature y position.
+     */
+    public int $signaturey;
+
+    /**
+     * @var int Site service y position.
+     */
+    public int $siteservicey;
+
+    /**
+     * @var int Watermark x position.
+     */
+    public int $watermarkx;
+
+    /**
+     * @var int Watermark y position.
+     */
+    public int $watermarky;
+
+    /**
+     * @var int Watermark width.
+     */
+    public int $watermarkw;
+
+    /**
+     * @var int Watermark height.
+     */
+    public int $watermarkh;
 
     /**
      * Constructor
      */
     public function __construct() {
         $this->page = 1;
-        $this->row_count = 1;
+        $this->rowcount = 1;
 
-        $this->row_indent = 0;
+        $this->rowindent = 0;
 
-        $this->border_x = 0;
-        $this->border_y = 0;
+        $this->borderx = 0;
+        $this->bordery = 0;
     }
 
     /**
@@ -76,8 +156,8 @@ class portfolio_offsets {
      * @return void
      */
     public function load_pdf_dimensions(TCPDF $pdf): void {
-        $this->border_w = $pdf->getPageWidth();
-        $this->border_h = $pdf->getPageHeight();
+        $this->borderw = $pdf->getPageWidth();
+        $this->borderh = $pdf->getPageHeight();
     }
 
     /**
@@ -116,6 +196,6 @@ class portfolio_offsets {
      * @return void
      */
     public function add_rows(int $rows): void {
-        $this->row_count += $rows;
+        $this->rowcount += $rows;
     }
 }

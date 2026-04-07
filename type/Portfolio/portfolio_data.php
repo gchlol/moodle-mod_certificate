@@ -32,9 +32,16 @@ require_once(__DIR__ . '/../Portfolio/course_section.php');
  */
 class portfolio_data {
 
+    /** @var string CPD value custom field short name */
     protected const FIELD_CPD = 'chp_cpd';
+
+    /** @var string CPD show custom field short name */
     protected const FIELD_SHOW_CPD = 'showport_cpd';
+
+    /** @var string History show custom field short name */
     protected const FIELD_SHOW_HISTORY = 'showport_history';
+
+    /** @var string Word to indicate a required section in the custom field description */
     protected const REQUIRED_WORD = 'required';
 
     /**
@@ -45,15 +52,15 @@ class portfolio_data {
     /**
      * Gets the formatted course completion data for a given user.
      *
-     * @param int $user_id ID of the user to retrieve completion data for.
+     * @param int $userid ID of the user to retrieve completion data for.
      * @return course_section[] List of {@link course_section} data.
      */
-    public static function get_course_section_data(int $user_id, bool $debug = false): array {
-        $header_fields = self::get_header_custom_fields();
+    public static function get_course_section_data(int $userid, bool $debug = false): array {
+        $headerfields = self::get_header_custom_fields();
 
-        $course_data = [];
-        foreach ($header_fields as $header_field) {
-            $description = $header_field->description ?? '';
+        $coursedata = [];
+        foreach ($headerfields as $headerfield) {
+            $description = $headerfield->description ?? '';
             $required = false;
 
             if ($description) {
@@ -65,10 +72,10 @@ class portfolio_data {
                 }
             }
 
-            $course_data[] = new course_section(
-                $header_field->get('name'),
+            $coursedata[] = new course_section(
+                $headerfield->get('name'),
                 $description,
-                self::get_courses($header_field->get('id'), $user_id),
+                self::get_courses($headerfield->get('id'), $userid),
                 $required
             );
         }
@@ -77,20 +84,20 @@ class portfolio_data {
             $debug ||
             isset($_GET['debug'])
         ) {
-            $course_data = self::populate_debug_data($course_data);
+            $coursedata = self::populate_debug_data($coursedata);
         }
 
-        return $course_data;
+        return $coursedata;
     }
 
     /**
      * Get the courses identified by the given custom field id that have been completed by the given user.
      *
-     * @param int $custom_field_id Custom field ID that courses must have a value for.
-     * @param int $user_id ID of the user to retrieve completion data for.
+     * @param int $customfieldid Custom field ID that courses must have a value for.
+     * @param int $userid ID of the user to retrieve completion data for.
      * @return stdClass[] List of courses completed by the user within the custom field filtering.
      */
-    protected static function get_courses(int $custom_field_id, int $user_id): array {
+    protected static function get_courses(int $customfieldid, int $userid): array {
         global $DB;
 
         [
@@ -98,7 +105,7 @@ class portfolio_data {
             $completionjoins,
             $completiongroups,
             $completionparams
-        ] = self::get_completion_sql($user_id);
+        ] = self::get_completion_sql($userid);
         [
             $cpdselects,
             $cpdjoins,
@@ -124,7 +131,7 @@ class portfolio_data {
         ";
 
         $params = array_merge(
-            [ 'fieldtype' => $custom_field_id ],
+            [ 'fieldtype' => $customfieldid ],
             $completionparams,
             $cpdparams
         );
@@ -264,12 +271,22 @@ class portfolio_data {
         );
     }
 
+    /**
+     * Get a custom field instance by short name. Results are cached for performance.
+     *
+     * @param string $shortname Custom field short name.
+     * @return field|null Custom field instance if found, null otherwise.
+     */
     protected static function get_custom_field(string $shortname): ?field {
         if (isset(static::$fieldcache[$shortname])) {
             return static::$fieldcache[$shortname];
         }
 
         $field = field::get_record([ 'shortname' => $shortname ]);
+        if (!$field) {
+            return null;
+        }
+
         static::$fieldcache[$shortname] = $field;
 
         return $field;
@@ -282,7 +299,7 @@ class portfolio_data {
      * @return bool Whether the {@link REQUIRED_WORD} was found.
      */
     protected static function is_field_required(string $description): bool {
-        return substr($description, 0, strlen(self::REQUIRED_WORD)) === self::REQUIRED_WORD;
+        return str_starts_with($description, self::REQUIRED_WORD);
     }
 
     /**
@@ -308,32 +325,32 @@ class portfolio_data {
     /**
      * Generate debug data based on existing base course data.
      *
-     * @param course_section[] $base_course_data List of base course data.
+     * @param course_section[] $basecoursedata List of base course data.
      * @return course_section[] List of course data with debug courses added.
      */
-    protected static function populate_debug_data(array $base_course_data): array {
-        $course_data = [];
+    protected static function populate_debug_data(array $basecoursedata): array {
+        $coursedata = [];
 
-        foreach ($base_course_data as $index => $base_course_section) {
-            $course_section = clone $base_course_section;
+        foreach ($basecoursedata as $index => $basecoursesection) {
+            $coursesection = clone $basecoursesection;
 
-            // Skip empty required sections to debug required text output
+            // Skip empty required sections to debug required text output.
             if (
-                $course_section->required &&
-                empty($course_section->courses)
+                $coursesection->required &&
+                empty($coursesection->courses)
             ) {
-                $course_data[$index] = $course_section;
+                $coursedata[$index] = $coursesection;
 
                 continue;
             }
 
-            $course_count = count($course_section->courses);
-            $rand_limit = mt_rand(5, 50);
+            $coursecount = count($coursesection->courses);
+            $randlimit = mt_rand(5, 50);
 
-            for ($offset = max($course_count, 1); $offset <= $rand_limit ; $offset++) {
+            for ($offset = max($coursecount, 1); $offset <= $randlimit; $offset++) {
                 $fullname = "Example Course #$offset";
 
-                // Make every 1 in 10 courses have a long name to trigger wrapping
+                // Make every 1 in 10 courses have a long name to trigger wrapping.
                 if (mt_rand(0, 10) == 0) {
                     $fullname .= ' - Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua';
                 }
@@ -351,7 +368,7 @@ class portfolio_data {
                 }
 
                 for ($completionoffset = 0; $completionoffset < $completioncount; $completionoffset++) {
-                    $course_section->courses[] = (object)[
+                    $coursesection->courses[] = (object)[
                         'id' => $offset,
                         'fullname' => $fullname,
                         'timecompleted' => mt_rand(1, time()),
@@ -360,9 +377,9 @@ class portfolio_data {
                 }
             }
 
-            $course_data[$index] = $course_section;
+            $coursedata[$index] = $coursesection;
         }
 
-        return $course_data;
+        return $coursedata;
     }
 }

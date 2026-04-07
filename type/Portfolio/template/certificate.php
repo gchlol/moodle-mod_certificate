@@ -14,6 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Portfolio implementation.
+ *
+ * @package     mod_certificate
+ * @copyright   2022 Gold Coast Health
+ * @author      Nicholas Lambell
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 use mod_certificate\type\Portfolio\portfolio_data;
 use mod_certificate\type\Portfolio\portfolio_offsets;
 use mod_certificate\type\portfolio_temp\portfolio_output;
@@ -54,22 +63,22 @@ $offsets->load_pdf_dimensions($pdf);
 $offsets->x = 15;
 $offsets->y = 15;
 
-$offsets->row_indent = 1;
+$offsets->rowindent = 1;
 
-$offsets->code_y = 250;
-$offsets->date_y = 240;
-$offsets->page_num_y = 273;
-$offsets->seal_x = 160;
-$offsets->seal_y = 78;
-$offsets->signature_x = 140;
-$offsets->signature_y = 239;
-$offsets->site_service_y = 250;
-$offsets->watermark_x = 26;
-$offsets->watermark_y = 58;
-$offsets->watermark_w = 158;
-$offsets->watermark_h = 170;
+$offsets->codey = 250;
+$offsets->datey = 240;
+$offsets->pagenumy = 273;
+$offsets->sealx = 160;
+$offsets->sealy = 78;
+$offsets->signaturex = 140;
+$offsets->signaturey = 239;
+$offsets->siteservicey = 250;
+$offsets->watermarkx = 26;
+$offsets->watermarky = 58;
+$offsets->watermarkw = 158;
+$offsets->watermarkh = 170;
 
-$cert_output = new portfolio_output(
+$certoutput = new portfolio_output(
     $certificate,
     $certrecord,
     $user,
@@ -77,17 +86,17 @@ $cert_output = new portfolio_output(
     $offsets
 );
 
-$course_sections = portfolio_data::get_course_section_data($userid);
+$coursesections = portfolio_data::get_course_section_data($userid);
 
-$cert_output->output_cover_page($course);
+$certoutput->output_cover_page($course);
 
-foreach ($course_sections as $course_section) {
-    $cert_output->output_courses(
-        $course_section->courses,
-        $course_section->header,
-        $course_section->description,
-        $course_section->required
+foreach ($coursesections as $coursesection) {
+    $certoutput->output_courses(
+        $coursesection->courses,
+        $coursesection->header,
+        $coursesection->description,
+        $coursesection->required
     );
 }
 
-$cert_output->finalise();
+$certoutput->finalise();
