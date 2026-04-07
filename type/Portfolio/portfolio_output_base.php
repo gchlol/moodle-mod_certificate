@@ -51,6 +51,11 @@ abstract class portfolio_output_base {
     protected const ROOT_PATH = __DIR__;
 
     /**
+     * Additional right offset for CPD output.
+     */
+    protected const RIGHT_OFFSET_CPD = 2;
+
+    /**
      * Right offset padding to ensure text does not get too close to the right edge of the page.
      */
     protected const RIGHT_OFFSET_PADDING = 35;
@@ -923,7 +928,7 @@ abstract class portfolio_output_base {
 
         $this->output_text_static(
             $this->get_string('coursecpd', $course->cpd),
-            static::right_offset(),
+            static::right_offset(static::RIGHT_OFFSET_CPD),
             $this->page_offset(),
             $this->line_font_size($this->course_font_scale()),
         );
