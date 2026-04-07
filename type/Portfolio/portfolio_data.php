@@ -66,9 +66,9 @@ class portfolio_data {
             }
 
             $course_data[] = new course_section(
-                $header_field->name,
+                $header_field->get('name'),
                 $description,
-                self::get_courses($header_field->id, $user_id),
+                self::get_courses($header_field->get('id'), $user_id),
                 $required
             );
         }
@@ -253,17 +253,15 @@ class portfolio_data {
     /**
      * Get the list of custom fields identified by the `port_` prefix as portfolio headers.
      *
-     * @return stdClass[] A list of custom field values containing; `id`, `name`, and `description`.
+     * @return field[] A list of custom field instances.
      */
     protected static function get_header_custom_fields(): array {
         global $DB;
 
-        return $DB->get_records_select(
-            'customfield_field',
+        return field::get_records_select(
             $DB->sql_like('shortname', ':shortname'),
             [ 'shortname' => 'port\_%' ],
-            'sortorder',
-            'id, name, description'
+            'sortorder'
         );
     }
 
