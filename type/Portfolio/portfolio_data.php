@@ -108,7 +108,6 @@ class portfolio_data {
         $sql = "
             SELECT  cc.ident,
                     c.id,
-                    c.id,
                     c.fullname
                     $completionselects
                     $cpdselects
