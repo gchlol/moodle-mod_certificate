@@ -1333,3 +1333,53 @@ function certificate_get_certificate_filename($certificate, $cm, $course) {
 
     return $filename;
 }
+
+/**
+ * Resolve the target user for URL-param certificate issuance.
+ *
+ * Returns the target user when the viewer holds mod/certificate:manage and the
+ * userid URL parameter points at a different, enrolled user. Returns null when
+ * the request is a normal self-view and no on-behalf logic should run. Throws
+ * when the viewer lacks mod/certificate:manage, the requested user does not
+ * exist, or the requested user is not enrolled in the course.
+ *
+ * @param stdClass $course
+ * @param context_module $context
+ * @return stdClass|null target user record, or null when self-view
+ */
+function certificate_resolve_target_user($course, $context) {
+    global $USER;
+
+    $requesteduserid = optional_param('userid', 0, PARAM_INT);
+    if (
+        $requesteduserid <= 0 ||
+        $requesteduserid === $USER->id
+    ) {
+        return null;
+    }
+
+    require_capability('mod/certificate:manage', $context);
+    $targetuser = core_user::get_user($requesteduserid, '*', MUST_EXIST);
+    if (!is_enrolled(context_course::instance($course->id), $targetuser, '', true)) {
+        throw new moodle_exception('usernotenrolled', 'certificate');
+    }
+
+    return $targetuser;
+}
+
+/**
+ * Trigger the event that records a manager issuing a certificate for another user via URL.
+ *
+ * @param int $issuerid user id of the manager that performed the action
+ * @param int $studentid user id of the user the certificate was issued for
+ * @param int $certissueid certificate_issues record id
+ * @param context_module $context
+ */
+function certificate_trigger_issued_via_url($issuerid, $studentid, $certissueid, $context) {
+    \mod_certificate\event\certificate_issued_via_url::create(array(
+        'objectid' => $certissueid,
+        'relateduserid' => $studentid,
+        'userid' => $issuerid,
+        'context' => $context,
+    ))->trigger();
+}
