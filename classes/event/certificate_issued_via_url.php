@@ -26,27 +26,50 @@
 
 namespace mod_certificate\event;
 
+use core\event\base;
+use moodle_url;
+
 defined('MOODLE_INTERNAL') || die();
 
-class certificate_issued_via_url extends \core\event\base {
+/**
+ * Event fired when a manager issues a certificate for another user via a URL parameter.
+ */
+class certificate_issued_via_url extends base {
 
+    /**
+     * Initialise event data.
+     */
     protected function init() {
         $this->data['crud'] = 'c';
         $this->data['edulevel'] = self::LEVEL_TEACHING;
         $this->data['objecttable'] = 'certificate_issues';
     }
 
+    /**
+     * Localised event name.
+     *
+     * @return string
+     */
     public static function get_name() {
-        // Hardcoded to avoid touching upstream lang/en/certificate.php.
-        return 'Certificate issued via URL';
+        return get_string('eventcertificateissuedviaurl', 'certificate');
     }
 
+    /**
+     * Non-localised event description with id info for logs.
+     *
+     * @return string
+     */
     public function get_description() {
         return "The user with id '{$this->userid}' issued a certificate (issue id '{$this->objectid}')"
             . " for the user with id '{$this->relateduserid}' via a URL parameter.";
     }
 
+    /**
+     * URL to the certificate view page for this event.
+     *
+     * @return moodle_url
+     */
     public function get_url() {
-        return new \moodle_url('/mod/certificate/view.php', array('id' => $this->contextinstanceid));
+        return new moodle_url('/mod/certificate/view.php', array('id' => $this->contextinstanceid));
     }
 }

@@ -47,11 +47,15 @@ $context = context_module::instance($cm->id);
 require_capability('mod/certificate:view', $context);
 
 $targetuser = certificate_resolve_target_user($course, $context);
-$isonbehalf = ($targetuser !== null);
-if ($isonbehalf) {
-    $action = 'get';
-    $issuerid = $USER->id;
-    $USER = $targetuser;
+if ($targetuser !== null) {
+    $certrecord = certificate_get_issue($course, $targetuser, $certificate, $cm);
+    mod_certificate\event\certificate_issued_via_url::create(array(
+        'objectid' => $certrecord->id,
+        'relateduserid' => $targetuser->id,
+        'userid' => $USER->id,
+        'context' => $context,
+    ))->trigger();
+    redirect(new moodle_url('/mod/certificate/report.php', array('id' => $cm->id)));
 }
 
 $event = \mod_certificate\event\course_module_viewed::create(array(
@@ -85,7 +89,7 @@ if ($PAGE->user_allowed_editing()) {
 }
 
 // Check if the user can view the certificate
-if (!$isonbehalf && $certificate->requiredtime && !has_capability('mod/certificate:manage', $context)) {
+if ($certificate->requiredtime && !has_capability('mod/certificate:manage', $context)) {
     if (certificate_get_course_time($course->id) < ($certificate->requiredtime * 60)) {
         $a = new stdClass;
         $a->requiredtime = $certificate->requiredtime;
@@ -96,10 +100,6 @@ if (!$isonbehalf && $certificate->requiredtime && !has_capability('mod/certifica
 
 // Create new certificate record, or return existing record
 $certrecord = certificate_get_issue($course, $USER, $certificate, $cm);
-
-if ($isonbehalf) {
-    certificate_trigger_issued_via_url($issuerid, $USER->id, $certrecord->id, $context);
-}
 
 make_cache_directory('tcpdf');
 

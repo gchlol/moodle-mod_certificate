@@ -104,6 +104,7 @@ You can review it here:
 
     <a href="{$a->url}">Certificate Report</a>.';
 $string['entercode'] = 'Enter certificate code to verify:';
+$string['eventcertificateissuedviaurl'] = 'Certificate issued via URL';
 $string['fontsans'] = 'Sans-serif font family';
 $string['fontsans_desc'] = 'Sans-serif font family for certificates with embedded fonts';
 $string['fontserif'] = 'Serif font family';
@@ -203,6 +204,7 @@ $string['unsupportedfiletype'] = 'File must be a jpeg or png file';
 $string['uploadimage'] = 'Upload image';
 $string['uploadimagedesc'] = 'This button will take you to a new screen where you will be able to upload images.';
 $string['userdateformat'] = 'User\'s Language Date Format';
+$string['usernotenrolled'] = 'The requested user is not enrolled in this course.';
 $string['validate'] = 'Verify';
 $string['verifycertificate'] = 'Verify Certificate';
 $string['viewcertificateviews'] = 'View {$a} issued certificates';
