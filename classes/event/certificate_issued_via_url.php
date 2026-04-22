@@ -32,7 +32,7 @@ use moodle_url;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Event fired when a manager issues a certificate for another user via a URL parameter.
+ * Certificate issued-via-URL event class.
  */
 class certificate_issued_via_url extends base {
 
