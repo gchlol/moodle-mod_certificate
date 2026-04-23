@@ -36,7 +36,7 @@ $string['site'] = 'Gold Coast Health';
 $string['service'] = 'Learning On-Line';
 $string['siteservice'] = 'Gold Coast Health Learning On-Line';
 
-$string['coursecpd'] = '<strong>CPD</strong>: {$a} minutes';
+$string['coursecpd'] = '<strong>CPD</strong>: {$a} hours';
 $string['postuser'] = 'has completed the following';
 $string['preuser'] = 'This is to certify that';
 $string['printedon'] = 'Printed on {$a}';
