@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,15 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Event fired when a manager issues a certificate for another user via a URL parameter.
- *
- * @package     mod_certificate
- * @copyright   2026 Gold Coast Health
- * @author      Jonas Sajonas
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_certificate\event;
 
 use core\event\base;
@@ -32,16 +22,20 @@ use moodle_url;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Certificate issued-via-URL event class.
+ * Event fired when a manager issues a certificate for another user via a URL parameter.
+ *
+ * @package     mod_certificate
+ * @copyright   2026 Gold Coast Health
+ * @author      Jonas Sajonas
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class certificate_issued_via_url extends base {
-
     /**
      * Initialise event data.
      */
     protected function init() {
         $this->data['crud'] = 'c';
-        $this->data['edulevel'] = self::LEVEL_TEACHING;
+        $this->data['edulevel'] = static::LEVEL_TEACHING;
         $this->data['objecttable'] = 'certificate_issues';
     }
 

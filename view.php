@@ -50,7 +50,7 @@ require_capability('mod/certificate:view', $context);
 $targetuser = certificate_resolve_target_user($course, $context);
 if ($targetuser !== null) {
     $certrecord = certificate_get_issue($course, $targetuser, $certificate, $cm);
-    mod_certificate\event\certificate_issued_via_url::create(array(
+    \mod_certificate\event\certificate_issued_via_url::create(array(
         'objectid' => $certrecord->id,
         'relateduserid' => $targetuser->id,
         'userid' => $USER->id,
