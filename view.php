@@ -33,13 +33,13 @@ $action = optional_param('action', '', PARAM_ALPHA);
 $edit = optional_param('edit', -1, PARAM_BOOL);
 
 if (!$cm = get_coursemodule_from_id('certificate', $id)) {
-    throw new moodle_exception('Course Module ID was incorrect');
+    throw new moodle_exception('invalidcoursemodule', 'mod_certificate');
 }
 if (!$course = $DB->get_record('course', array('id'=> $cm->course))) {
-    throw new moodle_exception('course is misconfigured');
+    throw new moodle_exception('coursemisconfigured', 'mod_certificate');
 }
 if (!$certificate = $DB->get_record('certificate', array('id'=> $cm->instance))) {
-    throw new moodle_exception('course module is incorrect');
+    throw new moodle_exception('invalidcertificate', 'mod_certificate');
 }
 
 require_login($course, false, $cm);

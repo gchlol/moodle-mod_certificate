@@ -30,7 +30,7 @@ $id = required_param('id', PARAM_INT);           // Course Module ID
 
 // Ensure that the course specified is valid
 if (!$course = $DB->get_record('course', array('id'=> $id))) {
-    throw new moodle_exception('Course ID is incorrect');
+    throw new moodle_exception('invalidcourse', 'mod_certificate');
 }
 
 // Requires a login

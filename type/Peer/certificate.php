@@ -96,13 +96,17 @@ certificate_print_image($pdf, $certificate, CERT_IMAGE_SIGNATURE, $sigx, $sigy, 
 
 // Add text
 $pdf->SetTextColor(0, 60, 105);
-certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', '', 26, 'Peer review summary for');
+certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', '', 26,
+    get_string('peerreviewsummaryfor', 'mod_certificate'));
 $pdf->SetTextColor(0, 60, 105);
 certificate_print_text($pdf, $x, $y + 10, 'C', 'Helvetica', 'B', 26, fullname($USER));
 
-certificate_print_text($pdf, $x + 10, $y + 30, 'L', 'Helvetica', 'B', 10, "Peer no");
-certificate_print_text($pdf, $x + 30, $y + 30, 'L', 'Helvetica', 'B', 10, "Peer name");
-certificate_print_text($pdf, $x + 70, $y + 30, 'L', 'Helvetica', 'B', 10, "Peer email");
+certificate_print_text($pdf, $x + 10, $y + 30, 'L', 'Helvetica', 'B', 10,
+    get_string('peernumber', 'mod_certificate'));
+certificate_print_text($pdf, $x + 30, $y + 30, 'L', 'Helvetica', 'B', 10,
+    get_string('peername', 'mod_certificate'));
+certificate_print_text($pdf, $x + 70, $y + 30, 'L', 'Helvetica', 'B', 10,
+    get_string('peeremail', 'mod_certificate'));
 
 $where = "r.course = $course->id";
 $sql = "SELECT rr.*
@@ -130,11 +134,11 @@ $legend->attributes['cellspacing'] = '0';
 $legend->attributes['cellpadding'] = '1';
 $legend->attributes['align'] = 'center';
 $legend->attributes['style'] = 'width: 200px; margin: auto;';
-$legend->head = array('Rating');
+$legend->head = array(get_string('rating', 'mod_certificate'));
 $legend->data = array(
-    array('1 - Opportunity for Improvement'),
-    array('2 - Meets Expectations'),
-    array('3 - Exceeds Expectations')
+    array(get_string('ratingopportunityimprovement', 'mod_certificate')),
+    array(get_string('ratingmeetsexpectations', 'mod_certificate')),
+    array(get_string('ratingexceedsexpectations', 'mod_certificate')),
 );
 
 $pdf->SetFontSize(8);
@@ -151,7 +155,12 @@ $questions = $DB->get_records_sql($sqlquestions);
 
 $table = new html_table();
 
-$table->data[] = array('Question', 'Peer', 'Rating', 'Comments');
+$table->data[] = array(
+    get_string('question'),
+    get_string('peer', 'mod_certificate'),
+    get_string('rating', 'mod_certificate'),
+    get_string('comments'),
+);
 $table->attributes['border'] = '1';
 $table->attributes['cellspacing'] = '0';
 $table->attributes['cellpadding'] = '1';

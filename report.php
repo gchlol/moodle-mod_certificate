@@ -57,15 +57,15 @@ if ($action) {
 $PAGE->set_url($url);
 
 if (!$cm = get_coursemodule_from_id('certificate', $id)) {
-    throw new moodle_exception('Course Module ID was incorrect');
+    throw new moodle_exception('invalidcoursemodule', 'mod_certificate');
 }
 
 if (!$course = $DB->get_record('course', array('id'=> $cm->course))) {
-    throw new moodle_exception('Course is misconfigured');
+    throw new moodle_exception('coursemisconfigured', 'mod_certificate');
 }
 
 if (!$certificate = $DB->get_record('certificate', array('id'=> $cm->instance))) {
-    throw new moodle_exception('Certificate ID was incorrect');
+    throw new moodle_exception('invalidcertificate', 'mod_certificate');
 }
 
 // Requires a course login
@@ -86,7 +86,7 @@ $strreport= get_string('report', 'certificate');
 
 if (!$download) {
     $PAGE->navbar->add($strreport);
-    $PAGE->set_title(format_string($certificate->name).": $strreport");
+    $PAGE->set_title(get_string('reporttitle', 'mod_certificate', format_string($certificate->name)));
     $PAGE->set_heading($course->fullname);
     // Check to see if groups are being used in this choice
     if ($groupmode = groups_get_activity_groupmode($cm)) {

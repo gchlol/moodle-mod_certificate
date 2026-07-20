@@ -198,7 +198,7 @@ if(!empty($reports)){
                 $pdf->SetTextColor(21, 128, 188);
 
                 // Print the Page heading.
-                certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', 'B', 25, '2018 Going for Gold Staff Survey');
+                certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', 'B', 25, get_string('ciapsurveytitle', 'mod_certificate'));
                 
                 // Set the text color to black.
                 $pdf->SetTextColor(0, 0, 0);
@@ -213,21 +213,21 @@ if(!empty($reports)){
                 certificate_print_text($pdf, $x, $y + 28, 'C', 'Helvetica', 'B', 14, $division);
                 
                 // Print the Culture Champion.
-                certificate_print_text($pdf, $x, $y + 36, 'C', 'Helvetica', 'B', 14, '2018 GFG Survey Culture Champion: ' . $cultureChampion);
+                certificate_print_text($pdf, $x, $y + 36, 'C', 'Helvetica', 'B', 14, get_string('ciapculturechampion', 'mod_certificate', $cultureChampion));
 
                 // Set the text color back to blue.
                 $pdf->SetTextColor(21, 128, 188);
 
                 // Print the CIAP Heading.
-                certificate_print_text($pdf, $x, $y + 50, 'C', 'Helvetica', 'B', 18, 'Continuous Improvement Action Plan');
-                certificate_print_text($pdf, $x, $y + 60, 'C', 'Helvetica', 'B', 14, 'Quarterly Update 2 (1 October - 31 December)');
+                certificate_print_text($pdf, $x, $y + 50, 'C', 'Helvetica', 'B', 18, get_string('ciaptitle', 'mod_certificate'));
+                certificate_print_text($pdf, $x, $y + 60, 'C', 'Helvetica', 'B', 14, get_string('ciapquarterlyupdate2', 'mod_certificate'));
             
                 // Print some space.
                 $pdf->writeHTML('<br>');
                 $pdf->writeHTML('<br>');
 
                 // Print the Image.
-                $image = html_writer::img($CFG->wwwroot . '/mod/certificate/type/CIAP/BACS.jpg', 'Going for Gold', array('width' => 455, 'height' => 50));
+                $image = html_writer::img($CFG->wwwroot . '/mod/certificate/type/CIAP/BACS.jpg', get_string('goingforgold', 'mod_certificate'), array('width' => 455, 'height' => 50));
                 
                 // Center the Image.
                 $pdf->writeHTML(html_writer::tag('p', $image, array('style' => 'text-align: center;')));
@@ -287,12 +287,12 @@ if(!empty($reports)){
                 if($actionstatus == "Update not Provided"){
 
                     // Print the current Action Number and Action Status.
-                    $pdf->writeHTML('Action ' . $actionnum . " (<i>" . $actionstatus . "</i>)");
+                    $pdf->writeHTML(get_string('ciapactionstatus', 'mod_certificate', (object) ['action' => $actionnum, 'status' => html_writer::tag('i', mod_certificate_get_ciap_status_string($actionstatus))]));
                 }
                 else{
 
                     // Print the current Action Number.
-                    $pdf->writeHTML('Action ' . $actionnum);
+                    $pdf->writeHTML(get_string('ciapaction', 'mod_certificate', $actionnum));
                 }
 
                 // Set the Color to black.
@@ -327,7 +327,7 @@ if(!empty($reports)){
                 $pdf->SetFont('helvetica', 'B', '14');
 
                 // Print the question.
-                $pdf->writeHTML('What research program from the Staff Survey does this action link to?');
+                $pdf->writeHTML(get_string('ciapresearchprogram', 'mod_certificate'));
                 
                 // Set the font.
                 $pdf->SetFont('helvetica', 'I', '14');
@@ -342,7 +342,7 @@ if(!empty($reports)){
                 $pdf->SetFont('helvetica', 'B', '14');
 
                 // Print the question.
-                $pdf->writeHTML('What is the action in response to?');
+                $pdf->writeHTML(get_string('ciapactionresponse', 'mod_certificate'));
 
                 // Question 3
                 $question3 = $DB->get_record('questionnaire_question', array('surveyid' => $action->questionnaireid, 'name' => 'What is it in response to', 'deleted' => 'n'));
@@ -360,7 +360,7 @@ if(!empty($reports)){
                 
                 if ($answer4 = $DB->get_record('questionnaire_response_text', array('response_id' => $action->id, 'question_id' => $question4->id))) {
                     $pdf->SetFont('helvetica', '', '14');
-                    $pdf->writeHTML('<i>Survey Question: ' . $answer4->response . '</i>');
+                    $pdf->writeHTML('<i>' . get_string('ciapsurveyquestion', 'mod_certificate', $answer4->response) . '</i>');
                 } else if ($answer5 = $DB->get_record_sql($sql)) {
                     $pdf->SetFont('helvetica', 'I', '14');
                     $pdf->writeHTML($answer5->content);
@@ -371,7 +371,7 @@ if(!empty($reports)){
                 $question6 = $DB->get_record('questionnaire_question', array('surveyid' => $action->questionnaireid, 'name' => 'Describe Action', 'deleted' => 'n'));
                 $answer6 = $DB->get_record('questionnaire_response_text', array('response_id' => $action->id, 'question_id' => $question6->id));
                 $pdf->SetFont('helvetica', 'B', '14');
-                $pdf->writeHTML('What is the action your team has agreed to?');
+                $pdf->writeHTML(get_string('ciapagreedaction', 'mod_certificate'));
                 $pdf->SetFont('helvetica', 'I', '14');
                 $pdf->writeHTML(strip_tags($answer6->response, '<ul><li><ol>'));
                 $pdf->writeHTML('<br>');
@@ -390,7 +390,7 @@ if(!empty($reports)){
                         $answer7 = $DB->get_record('questionnaire_response_date', array('response_id' => $updateid, 'question_id' => $question7->id));
                         $date = new DateTime($answer7->response);
                         $pdf->SetFont('helvetica', '', '14');
-                        $pdf->writeHTML('<b>Implemented by:</b> <i>' . $date->format('d/m/Y') . '</i>');
+                        $pdf->writeHTML('<b>' . get_string('ciapimplementedby', 'mod_certificate', '<span style="font-weight: normal;"><i>' . userdate($date->getTimestamp(), get_string('strftimedatefullshort', 'langconfig')) . '</i></span>') . '</b>');
                         $pdf->writeHTML('<br>');
 
                     } else{
@@ -400,7 +400,7 @@ if(!empty($reports)){
                         $answer7 = $DB->get_record('questionnaire_response_date', array('response_id' => $action->id, 'question_id' => $question7->id));
                         $date = new DateTime($answer7->response);
                         $pdf->SetFont('helvetica', '', '14');
-                        $pdf->writeHTML('<b>Implemented by:</b> <i>' . $date->format('d/m/Y') . '</i>');
+                        $pdf->writeHTML('<b>' . get_string('ciapimplementedby', 'mod_certificate', '<span style="font-weight: normal;"><i>' . userdate($date->getTimestamp(), get_string('strftimedatefullshort', 'langconfig')) . '</i></span>') . '</b>');
                         $pdf->writeHTML('<br>');
                     }
 
@@ -414,7 +414,7 @@ if(!empty($reports)){
                         $question8 = $DB->get_record('questionnaire_question', array('surveyid' => $updatequestionnaireid, 'name' => 'Amended Person Progress', 'deleted' => 'n'));
                         $answer8 = $DB->get_record('questionnaire_response_text', array('response_id' => $updateid, 'question_id' => $question8->id));
                         $pdf->SetFont('helvetica', 'B', '14');
-                        $pdf->writeHTML('Who will be responsible for implementing the action? <span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>');
+                        $pdf->writeHTML('<b>' . get_string('ciapresponsible', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>') . '</b>');
                     }
                     else{
 
@@ -422,7 +422,7 @@ if(!empty($reports)){
                         $question8 = $DB->get_record('questionnaire_question', array('surveyid' => $action->questionnaireid, 'name' => 'Responsible Person', 'deleted' => 'n'));
                         $answer8 = $DB->get_record('questionnaire_response_text', array('response_id' => $action->id, 'question_id' => $question8->id));
                         $pdf->SetFont('helvetica', 'B', '14');
-                        $pdf->writeHTML('Who will be responsible for implementing the action? <span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>');
+                        $pdf->writeHTML('<b>' . get_string('ciapresponsible', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>') . '</b>');
                     } 
                 }
                 // If the action is in Not Yet Started.
@@ -439,7 +439,7 @@ if(!empty($reports)){
                         $answer7 = $DB->get_record('questionnaire_response_date', array('response_id' => $updateid, 'question_id' => $question7->id));
                         $date = new DateTime($answer7->response);
                         $pdf->SetFont('helvetica', '', '14');
-                        $pdf->writeHTML('<b>Implemented by:</b> <i>' . $date->format('d/m/Y') . '</i>');
+                        $pdf->writeHTML('<b>' . get_string('ciapimplementedby', 'mod_certificate', '<span style="font-weight: normal;"><i>' . userdate($date->getTimestamp(), get_string('strftimedatefullshort', 'langconfig')) . '</i></span>') . '</b>');
                         $pdf->writeHTML('<br>');
 
                     } else{
@@ -449,7 +449,7 @@ if(!empty($reports)){
                         $answer7 = $DB->get_record('questionnaire_response_date', array('response_id' => $action->id, 'question_id' => $question7->id));
                         $date = new DateTime($answer7->response);
                         $pdf->SetFont('helvetica', '', '14');
-                        $pdf->writeHTML('<b>Implemented by:</b> <i>' . $date->format('d/m/Y') . '</i>');
+                        $pdf->writeHTML('<b>' . get_string('ciapimplementedby', 'mod_certificate', '<span style="font-weight: normal;"><i>' . userdate($date->getTimestamp(), get_string('strftimedatefullshort', 'langconfig')) . '</i></span>') . '</b>');
                         $pdf->writeHTML('<br>');
                     }
 
@@ -463,7 +463,7 @@ if(!empty($reports)){
                         $question8 = $DB->get_record('questionnaire_question', array('surveyid' => $updatequestionnaireid, 'name' => 'Amended Person NotStarted', 'deleted' => 'n'));
                         $answer8 = $DB->get_record('questionnaire_response_text', array('response_id' => $updateid, 'question_id' => $question8->id));
                         $pdf->SetFont('helvetica', 'B', '14');
-                        $pdf->writeHTML('Who will be responsible for implementing the action? <span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>');
+                        $pdf->writeHTML('<b>' . get_string('ciapresponsible', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>') . '</b>');
                     }
                     else{
 
@@ -471,7 +471,7 @@ if(!empty($reports)){
                         $question8 = $DB->get_record('questionnaire_question', array('surveyid' => $action->questionnaireid, 'name' => 'Responsible Person', 'deleted' => 'n'));
                         $answer8 = $DB->get_record('questionnaire_response_text', array('response_id' => $action->id, 'question_id' => $question8->id));
                         $pdf->SetFont('helvetica', 'B', '14');
-                        $pdf->writeHTML('Who will be responsible for implementing the action? <span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>');
+                        $pdf->writeHTML('<b>' . get_string('ciapresponsible', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>') . '</b>');
                     } 
                 }
                 else{
@@ -481,14 +481,14 @@ if(!empty($reports)){
                     $answer7 = $DB->get_record('questionnaire_response_date', array('response_id' => $action->id, 'question_id' => $question7->id));
                     $date = new DateTime($answer7->response);
                     $pdf->SetFont('helvetica', '', '14');
-                    $pdf->writeHTML('<b>Implemented by:</b> <i>' . $date->format('d/m/Y') . '</i>');
+                    $pdf->writeHTML('<b>' . get_string('ciapimplementedby', 'mod_certificate', '<span style="font-weight: normal;"><i>' . userdate($date->getTimestamp(), get_string('strftimedatefullshort', 'langconfig')) . '</i></span>') . '</b>');
                     $pdf->writeHTML('<br>');
 
                     // Question 8.
                     $question8 = $DB->get_record('questionnaire_question', array('surveyid' => $action->questionnaireid, 'name' => 'Responsible Person', 'deleted' => 'n'));
                     $answer8 = $DB->get_record('questionnaire_response_text', array('response_id' => $action->id, 'question_id' => $question8->id));
                     $pdf->SetFont('helvetica', 'B', '14');
-                    $pdf->writeHTML('Who will be responsible for implementing the action? <span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>');
+                    $pdf->writeHTML('<b>' . get_string('ciapresponsible', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>') . '</b>');
                 }
                 // If the action has an update.
                 if($actionstatus != "Update not Provided"){
@@ -503,7 +503,7 @@ if(!empty($reports)){
                     $pdf->SetFont('helvetica', 'B', '16');
 
                     // Print the current Action Number.
-                    $pdf->writeHTML('Where are we at? <span style="font-weight: normal; color: #000;"><i>' . $actionstatus . '</i></span>');
+                    $pdf->writeHTML(get_string('ciapwherearewe', 'mod_certificate', '<span style="font-weight: normal; color: #000;"><i>' . mod_certificate_get_ciap_status_string($actionstatus) . '</i></span>'));
 
                     // Set the Color to black.
                     $pdf->SetTextColor(0, 0, 0);
@@ -524,7 +524,7 @@ if(!empty($reports)){
                         $pdf->writeHTML('<br>');
 
                         // Print Congradulations.
-                        $pdf->writeHTML('<p style="text-align: center;">Congratulations!!</p>');
+                        $pdf->writeHTML('<p style="text-align: center;">' . get_string('ciapcongratulations', 'mod_certificate') . '</p>');
 
                         // Set the text color to black.
                         $pdf->SetTextColor(0, 0, 0);
@@ -532,7 +532,7 @@ if(!empty($reports)){
                         // Set the Font.
                         $pdf->SetFont('helvetica', 'I', '14');
 
-                        $pdf->writeHTML('<p style="text-align: center;">Don’t forget to celebrate this success with your team.</p>');
+                        $pdf->writeHTML('<p style="text-align: center;">' . get_string('ciapcelebratesuccess', 'mod_certificate') . '</p>');
                     
                     }
                     // If the action is in progress.
@@ -543,14 +543,14 @@ if(!empty($reports)){
                         $answer9 = $DB->get_record('questionnaire_response_bool', array('response_id' => $updateid, 'question_id' => $question9->id));
                         
                         // Whether the action is on track.
-                        $ontrack;
+                        $ontrack = null;
 
                         // If the action is ontrack.
                         if($answer9->choice_id == 'y'){
-                            $ontrack  = "Yes";
+                            $ontrack = true;
                         }
                         else{
-                            $ontrack  = "No";
+                            $ontrack = false;
                         }
 
                         // Set the Font.
@@ -560,10 +560,10 @@ if(!empty($reports)){
                         $pdf->writeHTML('<br>');
 
                         // Print the question.
-                        $pdf->writeHTML('Are you on track to achieve this task by the due date? <span style="font-weight: normal;"><i>' . $ontrack . '</i></span>');
+                        $pdf->writeHTML(get_string('ciapontrackduedate', 'mod_certificate', '<span style="font-weight: normal;"><i>' . ($ontrack === null ? '' : ($ontrack ? get_string('yes') : get_string('no'))) . '</i></span>'));
                     
                         // If the current action isn't on track.
-                        if($ontrack == "No"){
+                        if ($ontrack === false) {
 
                             // Question 10.
                             $question10 = $DB->get_record('questionnaire_question', array('surveyid' => $updatequestionnaireid, 'name' => 'OnTrack Progress Why', 'deleted' => 'n'));
@@ -590,12 +590,12 @@ if(!empty($reports)){
                                 $answer11 = $DB->get_record('questionnaire_response_text', array('response_id' => $updateid, 'question_id' => $question11->id));
 
                                 // Print the question.
-                                $pdf->writeHTML('Why arent you on track? <span style="font-weight: normal;"><i>' . $answer11->response . '</i></span>');
+                                $pdf->writeHTML(get_string('ciapwhynotontrack', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answer11->response . '</i></span>'));
                             }
                             else{
 
                                 // Print the question.
-                                $pdf->writeHTML('Why arent you on track? <span style="font-weight: normal;"><i>' . $answer10->content . '</i></span>');
+                                $pdf->writeHTML(get_string('ciapwhynotontrack', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answer10->content . '</i></span>'));
                             }
                         }
                     }
@@ -607,14 +607,14 @@ if(!empty($reports)){
                         $answer12 = $DB->get_record('questionnaire_response_bool', array('response_id' => $updateid, 'question_id' => $question12->id));
                         
                         // Whether the action is on track.
-                        $ontrack;
+                        $ontrack = null;
 
                         // If the action is ontrack.
                         if($answer9->choice_id == 'y'){
-                            $ontrack  = "Yes";
+                            $ontrack = true;
                         }
                         else{
-                            $ontrack  = "No";
+                            $ontrack = false;
                         }
 
                         // Set the Font.
@@ -624,10 +624,10 @@ if(!empty($reports)){
                         $pdf->writeHTML('<br>');
 
                         // Print the question.
-                        $pdf->writeHTML('Are you on track to achieve this task by the due date? <span style="font-weight: normal;"><i>' . $ontrack . '</i></span>');
+                        $pdf->writeHTML(get_string('ciapontrackduedate', 'mod_certificate', '<span style="font-weight: normal;"><i>' . ($ontrack === null ? '' : ($ontrack ? get_string('yes') : get_string('no'))) . '</i></span>'));
                         
                         // If the current action isn't on track.
-                        if($ontrack == "No"){
+                        if ($ontrack === false) {
 
                             // Question 13.
                             $question13 = $DB->get_record('questionnaire_question', array('surveyid' => $updatequestionnaireid, 'name' => 'OnTrack NotStarted Why', 'deleted' => 'n'));
@@ -654,12 +654,12 @@ if(!empty($reports)){
                                 $answer14 = $DB->get_record('questionnaire_response_text', array('response_id' => $updateid, 'question_id' => $question14->id));
 
                                 // Print the question.
-                                $pdf->writeHTML('Why arent you on track? <span style="font-weight: normal;"><i>' . $answer14->response . '</i></span>');
+                                $pdf->writeHTML(get_string('ciapwhynotontrack', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answer14->response . '</i></span>'));
                             }
                             else{
 
                                 // Print the question.
-                                $pdf->writeHTML('Why arent you on track? <span style="font-weight: normal;"><i>' . $answer13->content . '</i></span>');
+                                $pdf->writeHTML(get_string('ciapwhynotontrack', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answer13->content . '</i></span>'));
                             }
                         }
 
@@ -678,7 +678,7 @@ if(!empty($reports)){
                         $pdf->writeHTML('<br>');
 
                         // Print the question.
-                        $pdf->writeHTML('Why is the action no longer required? <span style="font-weight: normal;"><i>' . $answer15->response . '</i></span>');
+                        $pdf->writeHTML(get_string('ciapwhynolongerrequired', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answer15->response . '</i></span>'));
                     }
                 }
 
@@ -724,7 +724,7 @@ if(!empty($reports)){
             $pdf->SetTextColor(21, 128, 188);
 
             // Print the Page heading.
-            certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', 'B', 25, '2018 Going for Gold Staff Survey');
+            certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', 'B', 25, get_string('ciapsurveytitle', 'mod_certificate'));
 
             // Set the text color to black.
             $pdf->SetTextColor(0, 0, 0);
@@ -739,21 +739,21 @@ if(!empty($reports)){
             certificate_print_text($pdf, $x, $y + 28, 'C', 'Helvetica', 'B', 14, $division);
 
             // Print the Culture Champion.
-            certificate_print_text($pdf, $x, $y + 36, 'C', 'Helvetica', 'B', 14, '2018 GFG Survey Culture Champion: ' . $cultureChampion);
+            certificate_print_text($pdf, $x, $y + 36, 'C', 'Helvetica', 'B', 14, get_string('ciapculturechampion', 'mod_certificate', $cultureChampion));
 
             // Set the text color back to blue.
             $pdf->SetTextColor(21, 128, 188);
 
             // Print the CIAP Heading.
-            certificate_print_text($pdf, $x, $y + 50, 'C', 'Helvetica', 'B', 18, 'Continuous Improvement Action Plan');
-            certificate_print_text($pdf, $x, $y + 60, 'C', 'Helvetica', 'B', 14, 'Quarterly Update 2 (1 October - 31 December)');
+            certificate_print_text($pdf, $x, $y + 50, 'C', 'Helvetica', 'B', 18, get_string('ciaptitle', 'mod_certificate'));
+            certificate_print_text($pdf, $x, $y + 60, 'C', 'Helvetica', 'B', 14, get_string('ciapquarterlyupdate2', 'mod_certificate'));
 
             // Print some space.
             $pdf->writeHTML('<br>');
             $pdf->writeHTML('<br>');
 
             // Print the Image.
-            $image = html_writer::img($CFG->wwwroot . '/mod/certificate/type/CIAP/BACS.jpg', 'Going for Gold', array('width' => 455, 'height' => 50));
+            $image = html_writer::img($CFG->wwwroot . '/mod/certificate/type/CIAP/BACS.jpg', get_string('goingforgold', 'mod_certificate'), array('width' => 455, 'height' => 50));
 
             // Center the Image.
             $pdf->writeHTML(html_writer::tag('p', $image, array('style' => 'text-align: center;')));
@@ -762,7 +762,7 @@ if(!empty($reports)){
             $pdf->SetFont('helvetica', 'B', '16');
 
             // Print the current Action Number.
-            $pdf->writeHTML('Action ' . $actionnum . " (<i>" . $actionstatus . "</i>)");
+            $pdf->writeHTML(get_string('ciapactionstatus', 'mod_certificate', (object) ['action' => $actionnum, 'status' => html_writer::tag('i', mod_certificate_get_ciap_status_string($actionstatus))]));
 
             // Set the Color to black.
             $pdf->SetTextColor(0, 0, 0);
@@ -793,13 +793,13 @@ if(!empty($reports)){
 
             // Question 2.
             $pdf->SetFont('helvetica', 'B', '14');
-            $pdf->writeHTML('What research program from the Staff Survey does this action link to?');
+            $pdf->writeHTML(get_string('ciapresearchprogram', 'mod_certificate'));
             $pdf->SetFont('helvetica', 'I', '14');
             $pdf->writeHTML($answer2->content);
             $pdf->writeHTML('<br>');
 
             $pdf->SetFont('helvetica', 'B', '14');
-            $pdf->writeHTML('What is the action in response to?');
+            $pdf->writeHTML(get_string('ciapactionresponse', 'mod_certificate'));
 
             $question3 = $DB->get_record('questionnaire_question', array('surveyid' => $newaction->questionnaireid, 'name' => 'Response to survey', 'deleted' => 'n'));
             
@@ -820,7 +820,7 @@ if(!empty($reports)){
                 $question4 = $DB->get_record('questionnaire_question', array('surveyid' => $newaction->questionnaireid, 'name' => 'Related Survey Question', 'deleted' => 'n'));
                 $answer4 = $DB->get_record('questionnaire_response_text', array('response_id' => $newaction->id, 'question_id' => $question4->id));
                 $pdf->SetFont('helvetica', 'I', '14');
-                $pdf->writeHTML('Survey Question: ' . $answer4->response);
+                $pdf->writeHTML(get_string('ciapsurveyquestion', 'mod_certificate', $answer4->response));
             }
             else{
                 // Get the action response question.
@@ -850,7 +850,7 @@ if(!empty($reports)){
             $question6 = $DB->get_record('questionnaire_question', array('surveyid' => $newaction->questionnaireid, 'name' => 'Action Description', 'deleted' => 'n'));
             $answer6 = $DB->get_record('questionnaire_response_text', array('response_id' => $newaction->id, 'question_id' => $question6->id));
             $pdf->SetFont('helvetica', 'B', '14');
-            $pdf->writeHTML('What is the action your team has agreed to?');
+            $pdf->writeHTML(get_string('ciapagreedaction', 'mod_certificate'));
             $pdf->SetFont('helvetica', 'I', '14');
             $pdf->writeHTML(strip_tags($answer6->response, '<ul><li><ol>'));
             $pdf->writeHTML('<br>');
@@ -860,14 +860,14 @@ if(!empty($reports)){
             $answer7 = $DB->get_record('questionnaire_response_date', array('response_id' => $newaction->id, 'question_id' => $question7->id));
             $date = new DateTime($answer7->response);
             $pdf->SetFont('helvetica', '', '14');
-            $pdf->writeHTML('<b>Implemented by:</b> <i>' . $date->format('d/m/Y') . '</i>');
+            $pdf->writeHTML('<b>' . get_string('ciapimplementedby', 'mod_certificate', '<span style="font-weight: normal;"><i>' . userdate($date->getTimestamp(), get_string('strftimedatefullshort', 'langconfig')) . '</i></span>') . '</b>');
             $pdf->writeHTML('<br>');
 
             // Question 8.
             $question8 = $DB->get_record('questionnaire_question', array('surveyid' => $newaction->questionnaireid, 'name' => 'Person Responsible', 'deleted' => 'n'));
             $answer8 = $DB->get_record('questionnaire_response_text', array('response_id' => $newaction->id, 'question_id' => $question8->id));
             $pdf->SetFont('helvetica', 'B', '14');
-            $pdf->writeHTML('Who will be responsible for implementing the action? <span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>');
+            $pdf->writeHTML('<b>' . get_string('ciapresponsible', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answer8->response . '</i></span>') . '</b>');
 
             // Add 1 to the action number.
             $actionnum++;
@@ -893,5 +893,5 @@ else{
     $pdf->SetTextColor(21, 128, 188);
 
     // Print the Page heading.
-    certificate_print_text($pdf, $x, $y + 100, 'C', 'Helvetica', 'B', 25, "You dont have access to any CIAP/s");
+    certificate_print_text($pdf, $x, $y + 100, 'C', 'Helvetica', 'B', 25, get_string('ciapnoaccess', 'mod_certificate'));
 }

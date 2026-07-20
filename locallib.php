@@ -739,8 +739,13 @@ function certificate_types() {
     $names = certificate_get_names();
     $sm = get_string_manager();
     foreach ($names as $name) {
-        if ($sm->string_exists('type'.$name, 'certificate')) {
-            $types[$name] = get_string('type'.$name, 'certificate');
+        $identifier = 'type' . strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $name));
+        $legacyidentifier = 'type' . $name;
+        if ($sm->string_exists($identifier, 'mod_certificate')) {
+            $types[$name] = get_string($identifier, 'mod_certificate');
+        } else if ($sm->string_exists($legacyidentifier, 'mod_certificate')) {
+            // Preserve support for existing external certificate repositories.
+            $types[$name] = get_string($legacyidentifier, 'mod_certificate');
         } else {
             $types[$name] = ucfirst($name);
         }
@@ -956,12 +961,12 @@ function certificate_get_ordinal_number_suffix($day) {
     if (!in_array(($day % 100), array(11, 12, 13))) {
         switch ($day % 10) {
             // Handle 1st, 2nd, 3rd
-            case 1: return 'st';
-            case 2: return 'nd';
-            case 3: return 'rd';
+            case 1: return get_string('ordinalst', 'mod_certificate');
+            case 2: return get_string('ordinalnd', 'mod_certificate');
+            case 3: return get_string('ordinalrd', 'mod_certificate');
         }
     }
-    return 'th';
+    return get_string('ordinalth', 'mod_certificate');
 }
 
 /**
@@ -983,12 +988,6 @@ function certificate_get_grade($certificate, $course, $userid = null, $valueonly
     if ($certificate->printgrade > 0) {
         if ($certificate->printgrade == 1) {
             if ($course_item = grade_item::fetch_course_item($course->id)) {
-                // Check we want to add a prefix to the grade.
-                $strprefix = '';
-                if (!$valueonly) {
-                    $strprefix = get_string('coursegrade', 'certificate') . ': ';
-                }
-
                 $grade = new grade_grade(array('itemid' => $course_item->id, 'userid' => $userid));
                 $course_item->gradetype = GRADE_TYPE_VALUE;
                 $coursegrade = new stdClass;
@@ -997,30 +996,35 @@ function certificate_get_grade($certificate, $course, $userid = null, $valueonly
                 $coursegrade->letter = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_LETTER, $decimals = 0);
 
                 if ($certificate->gradefmt == 1) {
-                    $grade = $strprefix . $coursegrade->percentage;
+                    $grade = $coursegrade->percentage;
                 } else if ($certificate->gradefmt == 2) {
-                    $grade = $strprefix . $coursegrade->points;
+                    $grade = $coursegrade->points;
                 } else if ($certificate->gradefmt == 3) {
-                    $grade = $strprefix . $coursegrade->letter;
+                    $grade = $coursegrade->letter;
                 }
 
+                if (!$valueonly) {
+                    $grade = get_string('coursegradevalue', 'mod_certificate', $grade);
+                }
                 return $grade;
             }
         } else { // Print the mod grade
             if ($modinfo = certificate_get_mod_grade($course, $certificate->printgrade, $userid)) {
-                // Check we want to add a prefix to the grade.
-                $strprefix = '';
-                if (!$valueonly) {
-                    $strprefix = $modinfo->name . ' ' . get_string('grade', 'certificate') . ': ';
-                }
                 if ($certificate->gradefmt == 1) {
-                    $grade = $strprefix . $modinfo->percentage;
+                    $grade = $modinfo->percentage;
                 } else if ($certificate->gradefmt == 2) {
-                    $grade = $strprefix . $modinfo->points;
+                    $grade = $modinfo->points;
                 } else if ($certificate->gradefmt == 3) {
-                    $grade = $strprefix . $modinfo->letter;
+                    $grade = $modinfo->letter;
                 }
 
+                if (!$valueonly) {
+                    $a = (object) [
+                        'grade' => $grade,
+                        'name' => $modinfo->name,
+                    ];
+                    $grade = get_string('modulegradevalue', 'mod_certificate', $a);
+                }
                 return $grade;
             }
         }
@@ -1067,7 +1071,7 @@ function certificate_get_outcome($certificate, $course) {
             $outcome = new grade_grade(array('itemid' => $grade_item->id, 'userid' => $USER->id));
             $outcomeinfo->grade = grade_format_gradevalue($outcome->finalgrade, $grade_item, true, GRADE_DISPLAY_TYPE_REAL);
 
-            return $outcomeinfo->name . ': ' . $outcomeinfo->grade;
+            return get_string('outcomevalue', 'mod_certificate', $outcomeinfo);
         }
     }
 

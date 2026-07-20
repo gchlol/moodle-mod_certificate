@@ -202,7 +202,7 @@ function certificate_user_complete($course, $user, $mod, $certificate) {
 
     if ($issue = $DB->get_record('certificate_issues', array('certificateid' => $certificate->id, 'userid' => $user->id))) {
         echo $OUTPUT->box_start();
-        echo get_string('issued', 'certificate') . ": ";
+        echo get_string('issuedcolon', 'mod_certificate') . ' ';
         echo userdate($issue->timecreated);
         $cm = get_coursemodule_from_instance('certificate', $certificate->id, $course->id);
         certificate_print_user_files($certificate, $user->id, context_module::instance($cm->id)->id);
