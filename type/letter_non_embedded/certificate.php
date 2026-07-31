@@ -96,7 +96,8 @@ certificate_print_text($pdf, $x, $y + 255, 'C', 'Helvetica', '', 14, certificate
 certificate_print_text($pdf, $x, $y + 283, 'C', 'Times', '', 10, certificate_get_grade($certificate, $course));
 certificate_print_text($pdf, $x, $y + 311, 'C', 'Times', '', 10, certificate_get_outcome($certificate, $course));
 if ($certificate->printhours) {
-    certificate_print_text($pdf, $x, $y + 339, 'C', 'Times', '', 10, get_string('credithours', 'certificate') . ': ' . $certificate->printhours);
+    certificate_print_text($pdf, $x, $y + 339, 'C', 'Times', '', 10,
+        get_string('credithoursvalue', 'mod_certificate', $certificate->printhours));
 }
 certificate_print_text($pdf, $x, $codey, 'C', 'Times', '', 10, certificate_get_code($certificate, $certrecord));
 $i = 0;

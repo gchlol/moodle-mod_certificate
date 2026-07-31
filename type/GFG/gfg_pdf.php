@@ -139,9 +139,22 @@ class gfg_pdf extends pdf {
         $this->SetTextColor(0, 0, 0);
         $this->setFont('Helvetica', 'B', 11);
 
-        $this->Text(0, $footer_start, $this->ciap->name . ' - Summary', 0 , false, true, 0, 0 , 'C');
-        $this->Text(0, $footer_start + 5, $page_number_padding . $this->plan->idnumber . ' ' . $this->plan->name . "  -  Page $page_number", 0 , false, true, 0, 0 , 'C');
-        $this->Text(0, $footer_start + 10, 'Printed on ' . date('j F Y', time()), 0 , false, true, 0, 0 , 'C');
+        $this->Text(0, $footer_start,
+            get_string('gfgsummarytitle', 'mod_certificate', $this->ciap->name),
+            0, false, true, 0, 0, 'C');
+
+        $a = (object) [
+            'id' => $this->plan->idnumber,
+            'name' => $this->plan->name,
+            'page' => $page_number,
+        ];
+        $this->Text(0, $footer_start + 5,
+            $page_number_padding . get_string('gfgplanpage', 'mod_certificate', $a),
+            0, false, true, 0, 0, 'C');
+        $this->Text(0, $footer_start + 10,
+            get_string('portfolio_printedon', 'mod_certificate',
+                userdate(time(), get_string('strftimedate', 'langconfig'))),
+            0, false, true, 0, 0, 'C');
     }
 
     /**
@@ -245,7 +258,7 @@ class gfg_pdf extends pdf {
         certificate_print_text($this,
             $this->lMargin + 95, 35,
             'l', 'Helvetica', 'B', 18,
-            $this->ciap->name . ' - Summary'
+            get_string('gfgsummarytitle', 'mod_certificate', $this->ciap->name)
         );
     }
 
@@ -256,20 +269,24 @@ class gfg_pdf extends pdf {
      */
     private function print_action_header(): void {
         $this->SetTextColor(16, 75, 118);
-        certificate_print_text($this, $this->lMargin + 10, 5, 'l', 'Helvetica', 'B', 37, "Action $this->action_number");
+        certificate_print_text($this, $this->lMargin + 10, 5, 'l', 'Helvetica', 'B', 37,
+            get_string('ciapaction', 'mod_certificate', $this->action_number));
 
         if ($this->action === $this->previous_action) {
             $this->SetTextColor(187, 111, 122);
-            certificate_print_text($this, $this->lMargin + 10, 20, 'l', 'Helvetica', 'B', 24, 'Appendix');
+            certificate_print_text($this, $this->lMargin + 10, 20, 'l', 'Helvetica', 'B', 24,
+                get_string('appendix', 'mod_certificate'));
         }
 
         if (isset($this->action->custom_fields->response)) {
             $this->setTextColor(0, 0, 0);
-            certificate_print_text($this, $this->lMargin, 23, 'C', 'Helvetica', '', 9, 'This action promotes the GCH value of');
-            certificate_print_text($this, $this->lMargin, 31, 'C', 'Helvetica', '', 9, 'within our work unit');
-
-            $this->SetTextColor(16, 75, 118);
-            certificate_print_text($this, $this->lMargin, 27, 'C', 'Helvetica', 'B', 9, $this->action->custom_fields->response);
+            $value = html_writer::empty_tag('br')
+                . html_writer::tag('span', $this->action->custom_fields->response,
+                    ['style' => 'color: #104b76; font-weight: bold;'])
+                . html_writer::empty_tag('br');
+            certificate_print_text($this, $this->lMargin, 23, 'C', 'Helvetica', '', 9,
+                get_string('gfgpromotesvalue', 'mod_certificate', $value),
+                $this->getPageWidth() - $this->lMargin - $this->rMargin);
 
             $this->print_action_value_logos($this->action->custom_fields->response);
         }

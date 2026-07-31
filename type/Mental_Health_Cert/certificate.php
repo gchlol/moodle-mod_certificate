@@ -119,24 +119,24 @@ if ($certificate->orientation == 'L') {
 
 					// Add text
 						$pdf->SetTextColor(0, 60, 105);
-						certificate_print_text($pdf, $x, $y + 15, 'C', 'Helvetica', '', 37.5, 'Gold Coast Health');
-						certificate_print_text($pdf, $x, $y + 29, 'C', 'Helvetica', '', 37.5, 'Mental Health');
+						certificate_print_text($pdf, $x, $y + 15, 'C', 'Helvetica', '', 37.5, get_string('portfolio_site', 'mod_certificate'));
+						certificate_print_text($pdf, $x, $y + 29, 'C', 'Helvetica', '', 37.5, get_string('mentalhealth', 'mod_certificate'));
 						$pdf->SetTextColor(128, 128, 128);
-						certificate_print_text($pdf, $x, $y + 60, 'C', 'Helvetica', '', 16, 'This is to certify that');
+						certificate_print_text($pdf, $x, $y + 60, 'C', 'Helvetica', '', 16, get_string('certify', 'mod_certificate'));
 						$pdf->SetTextColor(0, 60, 105);
 						certificate_print_text($pdf, $x, $y + 70, 'C', 'Helvetica', 'B', 32, fullname($USER));
 						$pdf->SetTextColor(128, 128, 128);
-						certificate_print_text($pdf, $x, $y + 90, 'C', 'Helvetica', '', 16, 'has completed the following');
+						certificate_print_text($pdf, $x, $y + 90, 'C', 'Helvetica', '', 16, get_string('portfolio_postuser', 'mod_certificate'));
 						$pdf->SetTextColor(0, 0, 0);
-						certificate_print_text($pdf, $datex, $datey, 'R', 'Helvetica', '', 10, 'Printed on ' . date('j F Y'));
+						certificate_print_text($pdf, $datex, $datey, 'R', 'Helvetica', '', 10, get_string('portfolio_printedon', 'mod_certificate', userdate(time(), get_string('strftimedate', 'langconfig'))));
 						$pdf->SetTextColor(128, 128, 128);
-						certificate_print_text($pdf, $x, $y + 190, 'C', 'Helvetica', '', 16, 'Presented by');
+						certificate_print_text($pdf, $x, $y + 190, 'C', 'Helvetica', '', 16, get_string('portfolio_siteservicelabel', 'mod_certificate'));
 						$pdf->SetTextColor(0, 60, 105);
-						certificate_print_text($pdf, $x, $y + 196, 'C', 'Helvetica', 'B', 16, 'Gold Coast Health Learning On-Line');
+						certificate_print_text($pdf, $x, $y + 196, 'C', 'Helvetica', 'B', 16, get_string('portfolio_siteservice', 'mod_certificate'));
 						certificate_print_text($pdf, $x, $y + 102, 'C', 'Times', '', 10, certificate_get_grade($certificate, $course));
 						certificate_print_text($pdf, $x, $y + 112, 'C', 'Times', '', 10, certificate_get_outcome($certificate, $course));
 						if ($certificate->printhours) {
-							certificate_print_text($pdf, $x, $y + 122, 'C', 'Times', '', 10, get_string('credithours', 'certificate') . ': ' . $certificate->printhours);
+							certificate_print_text($pdf, $x, $y + 122, 'C', 'Times', '', 10, get_string('credithoursvalue', 'mod_certificate', $certificate->printhours));
 						}
 						certificate_print_text($pdf, $x, $codey, 'C', 'Times', '', 10, certificate_get_code($certificate, $certrecord));
 						$pdf->SetTextColor(0, 0, 0);
@@ -154,35 +154,35 @@ if ($certificate->orientation == 'L') {
 					if ($page<2) {
 						if ($k<16) {
 							// Just print results
-							$comtim2 = userdate($comtime, get_string('strftimedate'));
+							$comtim2 = userdate($comtime, get_string('strftimedate', 'langconfig'));
 							certificate_print_text($pdf, $x+10, $y + 100 + ($k * 4), 'L', 'Helvetica', '', 10, $class); 
 							certificate_print_text($pdf, $x+145, $y + 100 + ($k * 4), 'R', 'Helvetica', '', 10, $comtim2); 
 							}
 						else {
 							// Create new page and print results
-							certificate_print_text($pdf, $x, $datey, 'C', 'Helvetica', '', 10, 'Page '.$page.' of '.$pageno);
+							certificate_print_text($pdf, $x, $datey, 'C', 'Helvetica', '', 10, get_string('pagexofy', 'mod_certificate', (object) ['page' => $page, 'pages' => $pageno]));
 							$page++;
 							$k=0;
 							$pdf->AddPage();
 							// Add images and lines
 							certificate_print_image($pdf, $certificate, CERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
 							certificate_draw_frame($pdf, $certificate);
-							$comtim2 = userdate($comtime, get_string('strftimedate'));
+							$comtim2 = userdate($comtime, get_string('strftimedate', 'langconfig'));
 							$pdf->SetTextColor(0, 60, 105);
-							certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', 'B', 16, 'Gold Coast Health Mental Health');
-							certificate_print_text($pdf, $x, $y+6, 'C', 'Helvetica', 'B', 12, 'Agreements (cont) for '.fullname($USER));
+							certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', 'B', 16, get_string('mentalhealthtitle', 'mod_certificate'));
+							certificate_print_text($pdf, $x, $y+6, 'C', 'Helvetica', 'B', 12, get_string('agreementscontinuedfor', 'mod_certificate', fullname($USER)));
 							$pdf->SetTextColor(0, 0, 0);
 							certificate_print_text($pdf, $x+10, $y  + 20 + ($k * 4), 'L', 'Helvetica', '', 10, $class); 
 							certificate_print_text($pdf, $x+145, $y + 20 + ($k * 4), 'R', 'Helvetica', '', 10, $comtim2); 
-							certificate_print_text($pdf, $datex, $datey, 'R', 'Helvetica', '', 10, 'Printed on ' . date('j F Y'));
+							certificate_print_text($pdf, $datex, $datey, 'R', 'Helvetica', '', 10, get_string('portfolio_printedon', 'mod_certificate', userdate(time(), get_string('strftimedate', 'langconfig'))));
 							$pdf->SetTextColor(128, 128, 128);
-							certificate_print_text($pdf, $x, $y + 190, 'C', 'Helvetica', '', 16, 'Presented by');
+							certificate_print_text($pdf, $x, $y + 190, 'C', 'Helvetica', '', 16, get_string('portfolio_siteservicelabel', 'mod_certificate'));
 							$pdf->SetTextColor(0, 60, 105);
-							certificate_print_text($pdf, $x, $y + 196, 'C', 'Helvetica', 'B', 16, 'Gold Coast Health Learning On-Line');
+							certificate_print_text($pdf, $x, $y + 196, 'C', 'Helvetica', 'B', 16, get_string('portfolio_siteservice', 'mod_certificate'));
 							certificate_print_text($pdf, $x, $y + 102, 'C', 'Times', '', 10, certificate_get_grade($certificate, $course));
 							certificate_print_text($pdf, $x, $y + 112, 'C', 'Times', '', 10, certificate_get_outcome($certificate, $course));
 							if ($certificate->printhours) {
-								certificate_print_text($pdf, $x, $y + 122, 'C', 'Times', '', 10, get_string('credithours', 'certificate') . ': ' . $certificate->printhours);
+								certificate_print_text($pdf, $x, $y + 122, 'C', 'Times', '', 10, get_string('credithoursvalue', 'mod_certificate', $certificate->printhours));
 							}
 							certificate_print_text($pdf, $x, $codey, 'C', 'Times', '', 10, certificate_get_code($certificate, $certrecord));
 							$pdf->SetTextColor(0, 0, 0);
@@ -191,35 +191,35 @@ if ($certificate->orientation == 'L') {
 					else {
 						if($k<30){
 							// Just print results
-							$comtim2 = userdate($comtime, get_string('strftimedate'));
+							$comtim2 = userdate($comtime, get_string('strftimedate', 'langconfig'));
 							certificate_print_text($pdf, $x+10, $y  + 20 + ($k * 4), 'L', 'Helvetica', '', 10, $class); 
 							certificate_print_text($pdf, $x+145, $y + 20 + ($k * 4), 'R', 'Helvetica', '', 10, $comtim2); 
 							}
 						else {
 							// Create new page and print results
-							certificate_print_text($pdf, $x, $datey, 'C', 'Helvetica', '', 10, 'Page '.$page.' of '.$pageno);
+							certificate_print_text($pdf, $x, $datey, 'C', 'Helvetica', '', 10, get_string('pagexofy', 'mod_certificate', (object) ['page' => $page, 'pages' => $pageno]));
 							$page++;
 							$k=0;
 							$pdf->AddPage();
 							// Add images and lines
 							certificate_print_image($pdf, $certificate, CERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
 							certificate_draw_frame($pdf, $certificate);
-							$comtim2 = userdate($comtime, get_string('strftimedate'));
+							$comtim2 = userdate($comtime, get_string('strftimedate', 'langconfig'));
 							$pdf->SetTextColor(0, 60, 105);
-							certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', 'B', 16, 'Gold Coast Health Mental Health');
-							certificate_print_text($pdf, $x, $y+6, 'C', 'Helvetica', 'B', 12, 'Agreements (cont) for '.fullname($USER));
+							certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', 'B', 16, get_string('mentalhealthtitle', 'mod_certificate'));
+							certificate_print_text($pdf, $x, $y+6, 'C', 'Helvetica', 'B', 12, get_string('agreementscontinuedfor', 'mod_certificate', fullname($USER)));
 							$pdf->SetTextColor(0, 0, 0);
 							certificate_print_text($pdf, $x+10, $y  + 20 + ($k * 4), 'L', 'Helvetica', '', 10, $class); 
 							certificate_print_text($pdf, $x+145, $y + 20 + ($k * 4), 'R', 'Helvetica', '', 10, $comtim2); 
-							certificate_print_text($pdf, $datex, $datey, 'R', 'Helvetica', '', 10, 'Printed on ' . date('j F Y'));
+							certificate_print_text($pdf, $datex, $datey, 'R', 'Helvetica', '', 10, get_string('portfolio_printedon', 'mod_certificate', userdate(time(), get_string('strftimedate', 'langconfig'))));
 							$pdf->SetTextColor(128, 128, 128);
-							certificate_print_text($pdf, $x, $y + 190, 'C', 'Helvetica', '', 16, 'Presented by');
+							certificate_print_text($pdf, $x, $y + 190, 'C', 'Helvetica', '', 16, get_string('portfolio_siteservicelabel', 'mod_certificate'));
 							$pdf->SetTextColor(0, 60, 105);
-							certificate_print_text($pdf, $x, $y + 196, 'C', 'Helvetica', 'B', 16, 'Gold Coast Health Learning On-Line');
+							certificate_print_text($pdf, $x, $y + 196, 'C', 'Helvetica', 'B', 16, get_string('portfolio_siteservice', 'mod_certificate'));
 							certificate_print_text($pdf, $x, $y + 102, 'C', 'Times', '', 10, certificate_get_grade($certificate, $course));
 							certificate_print_text($pdf, $x, $y + 112, 'C', 'Times', '', 10, certificate_get_outcome($certificate, $course));
 							if ($certificate->printhours) {
-								certificate_print_text($pdf, $x, $y + 122, 'C', 'Times', '', 10, get_string('credithours', 'certificate') . ': ' . $certificate->printhours);
+								certificate_print_text($pdf, $x, $y + 122, 'C', 'Times', '', 10, get_string('credithoursvalue', 'mod_certificate', $certificate->printhours));
 							}
 							certificate_print_text($pdf, $x, $codey, 'C', 'Times', '', 10, certificate_get_code($certificate, $certrecord));
 							$pdf->SetTextColor(0, 0, 0);
@@ -232,7 +232,7 @@ if ($certificate->orientation == 'L') {
 
 
 					if ($page>1) {
-					certificate_print_text($pdf, $x, $datey, 'C', 'Helvetica', '', 10, 'Page '.$page.' of '.$pageno);
+					certificate_print_text($pdf, $x, $datey, 'C', 'Helvetica', '', 10, get_string('pagexofy', 'mod_certificate', (object) ['page' => $page, 'pages' => $pageno]));
 					}
 
 					

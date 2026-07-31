@@ -145,7 +145,7 @@ foreach ($responses as $response) {
 
         $completedactions[] = $action->id;
         $pdf->SetTextColor(21, 128, 188);
-        certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', 'B', 25, '2018 Going for Gold Staff Survey');
+        certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', 'B', 25, get_string('ciapsurveytitle', 'mod_certificate'));
         $pdf->SetTextColor(0, 0, 0);
 
         certificate_print_text($pdf, $x, $y + 12, 'C', 'Helvetica', 'B', 14, $reportname->content);
@@ -172,19 +172,19 @@ foreach ($responses as $response) {
         certificate_print_text($pdf, $x, $y + 28, 'C', 'Helvetica', 'B', 14, $division->content);
 
         $champname = $DB->get_record('questionnaire_response_text', array('response_id' => $response->id, 'question_id' => 34573));
-        certificate_print_text($pdf, $x, $y + 36, 'C', 'Helvetica', 'B', 14, '2018 GFG Survey Culture Champion: ' . $champname->response);
+        certificate_print_text($pdf, $x, $y + 36, 'C', 'Helvetica', 'B', 14, get_string('ciapculturechampion', 'mod_certificate', $champname->response));
 
         $pdf->SetTextColor(21, 128, 188);
-        certificate_print_text($pdf, $x, $y + 50, 'C', 'Helvetica', 'B', 18, 'Continuous Improvement Action Plan');
+        certificate_print_text($pdf, $x, $y + 50, 'C', 'Helvetica', 'B', 18, get_string('ciaptitle', 'mod_certificate'));
 
         $pdf->writeHTML('<br>');
         $pdf->writeHTML('<br>');
 
-        $image = html_writer::img($CFG->wwwroot . '/mod/certificate/type/CIAP/BACS.jpg', 'Going for Gold', array('width' => 455, 'height' => 50));
+        $image = html_writer::img($CFG->wwwroot . '/mod/certificate/type/CIAP/BACS.jpg', get_string('goingforgold', 'mod_certificate'), array('width' => 455, 'height' => 50));
         $pdf->writeHTML(html_writer::tag('p', $image, array('style' => 'text-align: center;')));
 
         $pdf->SetFont('helvetica', 'B', '16');
-        $pdf->writeHTML('Action ' . $actionnum);
+        $pdf->writeHTML(get_string('ciapaction', 'mod_certificate', $actionnum));
         $pdf->SetTextColor(0, 0, 0);
 
         // Answer 1.
@@ -205,13 +205,13 @@ foreach ($responses as $response) {
 
         // Question 2.
         $pdf->SetFont('helvetica', 'B', '14');
-        $pdf->writeHTML('What research program from the Staff Survey does this action link to?');
+        $pdf->writeHTML(get_string('ciapresearchprogram', 'mod_certificate'));
         $pdf->SetFont('helvetica', 'I', '14');
         $pdf->writeHTML($answertwo ->content);
         $pdf->writeHTML('<br>');
 
         $pdf->SetFont('helvetica', 'B', '14');
-        $pdf->writeHTML('What is the action in response to?');
+        $pdf->writeHTML(get_string('ciapactionresponse', 'mod_certificate'));
 
         $q17 = $DB->get_record('questionnaire_question', array('surveyid' => $action->questionnaireid, 'name' => 'What is it in response to', 'deleted' => 'n'));
         $query = "SELECT qqc.*
@@ -224,7 +224,7 @@ foreach ($responses as $response) {
         $q18 = $DB->get_record('questionnaire_question', array('surveyid' => $action->questionnaireid, 'name' => 'Survey Q it relates to', 'deleted' => 'n'));
         if ($a18 = $DB->get_record('questionnaire_response_text', array('response_id' => $action->id, 'question_id' => $q18->id))) {
             $pdf->SetFont('helvetica', '', '14');
-            $pdf->writeHTML('<i>Survey Question: ' . $a18->response . '</i>');
+            $pdf->writeHTML('<i>' . get_string('ciapsurveyquestion', 'mod_certificate', $a18->response) . '</i>');
         } else if ($a19 = $DB->get_record_sql($query)) {
             $pdf->SetFont('helvetica', 'I', '14');
             $pdf->writeHTML($a19->content);
@@ -235,7 +235,7 @@ foreach ($responses as $response) {
         $fifthquestion = $DB->get_record('questionnaire_question', array('surveyid' => $action->questionnaireid, 'name' => 'Describe Action', 'deleted' => 'n'));
         $answerfive = $DB->get_record('questionnaire_response_text', array('response_id' => $action->id, 'question_id' => $fifthquestion->id));
         $pdf->SetFont('helvetica', 'B', '14');
-        $pdf->writeHTML('What is the action your team has agreed to?');
+        $pdf->writeHTML(get_string('ciapagreedaction', 'mod_certificate'));
         $pdf->SetFont('helvetica', 'I', '14');
         $pdf->writeHTML(strip_tags($answerfive->response, '<ul><li><ol>'));
         $pdf->writeHTML('<br>');
@@ -246,14 +246,14 @@ foreach ($responses as $response) {
         $date = new DateTime($answersix->response);
         // $pdf->writeHTML('Implemented by: ' . html_writer::tag('i', $date->format('d/m/Y')));
         $pdf->SetFont('helvetica', '', '14');
-        $pdf->writeHTML('<b>Implemented by:</b> <i>' . $date->format('d/m/Y') . '</i>');
+        $pdf->writeHTML('<b>' . get_string('ciapimplementedby', 'mod_certificate', '<span style="font-weight: normal;"><i>' . userdate($date->getTimestamp(), get_string('strftimedatefullshort', 'langconfig')) . '</i></span>') . '</b>');
         $pdf->writeHTML('<br>');
 
         // Question 7.
         $seventhquestion = $DB->get_record('questionnaire_question', array('surveyid' => $action->questionnaireid, 'name' => 'Responsible Person', 'deleted' => 'n'));
         $answerseven = $DB->get_record('questionnaire_response_text', array('response_id' => $action->id, 'question_id' => $seventhquestion->id));
         $pdf->SetFont('helvetica', 'B', '14');
-        $pdf->writeHTML('Who will be responsible for implementing the action? <span style="font-weight: normal;"><i>' . $answerseven->response . '</i></span>');
+        $pdf->writeHTML('<b>' . get_string('ciapresponsible', 'mod_certificate', '<span style="font-weight: normal;"><i>' . $answerseven->response . '</i></span>') . '</b>');
 
         if ($actionnum < count($actions)) {
             // $pdf->AddPage();

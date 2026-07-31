@@ -90,16 +90,20 @@ certificate_print_image($pdf, $certificate, CERT_IMAGE_SIGNATURE, $sigx, $sigy, 
 
 // Add text
 $pdf->SetTextColor(204, 102, 0);
-certificate_print_text($pdf, $x, $y + 20, 'C', 'Helvetica', 'B', 44, 'Certificate of Attendance');
+certificate_print_text($pdf, $x, $y + 20, 'C', 'Helvetica', 'B', 44,
+    get_string('certificateofattendance', 'mod_certificate'));
 $pdf->SetTextColor(128, 128, 128);
-certificate_print_text($pdf, $x, $y + 48, 'C', 'Helvetica', '', 16, 'This is to certify that');
+certificate_print_text($pdf, $x, $y + 48, 'C', 'Helvetica', '', 16, get_string('certify', 'mod_certificate'));
 $pdf->SetTextColor(0, 0, 0);
 certificate_print_text($pdf, $x, $y + 56, 'C', 'Helvetica', 'B', 24, fullname($USER));
 $pdf->SetTextColor(128, 128, 128);
-certificate_print_text($pdf, $x, $y + 67, 'C', 'Helvetica', '', 16, 'has attended the session');
+certificate_print_text($pdf, $x, $y + 67, 'C', 'Helvetica', '', 16,
+    get_string('attendedsession', 'mod_certificate'));
 $pdf->SetTextColor(138, 0, 0);
-certificate_print_text($pdf, $x, $y + 80, 'C', 'Helvetica', 'B', 24, 'Aboriginal & Torres Strait Islander');
-certificate_print_text($pdf, $x, $y + 90, 'C', 'Helvetica', 'B', 24, 'Cultural Practice Program');
+certificate_print_text($pdf, $x, $y + 80, 'C', 'Helvetica', 'B', 24,
+    get_string('atsiprogramname', 'mod_certificate'));
+certificate_print_text($pdf, $x, $y + 90, 'C', 'Helvetica', 'B', 24,
+    get_string('atsiprogramsubtitle', 'mod_certificate'));
 
 
 // certificate_print_text($pdf, $x, $y+105, 'C', 'Helvetica', '', 16, certificate_get_date($certificate, $certrecord, $course));
@@ -153,7 +157,8 @@ if ($certificate->printteacher) {
             certificate_print_text($pdf, $sigx, $sigy + ($i * 5), 'R', 'Helvetica', '', 12, fullname($teacher));
         }
 		$i++;
-        certificate_print_text($pdf, $sigx, $sigy + ($i * 5), 'R', 'Helvetica', '', 12, 'Course Facilitator');
+        certificate_print_text($pdf, $sigx, $sigy + ($i * 5), 'R', 'Helvetica', '', 12,
+            get_string('coursefacilitator', 'mod_certificate'));
         }
 }
 

@@ -28,4 +28,4 @@ defined('MOODLE_INTERNAL') || die();
 
 // IMPORTANT: If you are here, please do not attempt to directly use or modify this file to work in your implementation.
 // Instead, refer to the 'template' directory for implementation instructions.
-throw new moodle_exception('This Portfolio certificate is no longer available.');
+throw new moodle_exception('portfoliounavailable', 'mod_certificate');

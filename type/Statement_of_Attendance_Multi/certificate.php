@@ -96,27 +96,31 @@ certificate_print_image($pdf, $certificate, CERT_IMAGE_SIGNATURE, $sigx, $sigy, 
 $pdf->SetTextColor(0, 60, 105);
 
 
-certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', '', 37.5, 'Statement of Attendance');
+certificate_print_text($pdf, $x, $y, 'C', 'Helvetica', '', 37.5,
+    get_string('statementofattendance', 'mod_certificate'));
 $pdf->SetTextColor(128, 128, 128);
-certificate_print_text($pdf, $x, $y + 32, 'C', 'Helvetica', '', 16, 'This is to certify that');
+certificate_print_text($pdf, $x, $y + 32, 'C', 'Helvetica', '', 16, get_string('certify', 'mod_certificate'));
 $pdf->SetTextColor(0, 60, 105);
 certificate_print_text($pdf, $x, $y + 55, 'C', 'Helvetica', 'B', 32, fullname($USER));
 $pdf->SetTextColor(128, 128, 128);
-certificate_print_text($pdf, $x, $y + 85, 'C', 'Helvetica', '', 16, 'has attended the following');
+certificate_print_text($pdf, $x, $y + 85, 'C', 'Helvetica', '', 16,
+    get_string('attendedfollowing', 'mod_certificate'));
 $pdf->SetTextColor(0, 60, 105);
 certificate_print_text($pdf, $x, $y + 110, 'C', 'Helvetica', 'B', 16, $course->fullname);
 $pdf->SetTextColor(0, 0, 0);
 
 certificate_print_text($pdf, $datex, $datey, 'L', 'Helvetica', '', 12, certificate_get_date($certificate, $certrecord, $course));
 $pdf->SetTextColor(128, 128, 128);
-certificate_print_text($pdf, $x, $y + 172, 'C', 'Helvetica', '', 16, 'Presented by');
+certificate_print_text($pdf, $x, $y + 172, 'C', 'Helvetica', '', 16, get_string('presentedby', 'mod_certificate'));
 $pdf->SetTextColor(0, 60, 105);
-certificate_print_text($pdf, $x, $y + 180, 'C', 'Helvetica', 'B', 16, 'Gold Coast Health Learning On-Line');
+certificate_print_text($pdf, $x, $y + 180, 'C', 'Helvetica', 'B', 16,
+    get_string('gchlearningonline', 'mod_certificate'));
 
 certificate_print_text($pdf, $x, $y + 102, 'C', 'Times', '', 10, certificate_get_grade($certificate, $course));
 certificate_print_text($pdf, $x, $y + 112, 'C', 'Times', '', 10, certificate_get_outcome($certificate, $course));
 if ($certificate->printhours) {
-    certificate_print_text($pdf, $x, $y + 112, 'C', 'Times', '', 10, get_string('credithours', 'certificate') . ': ' . $certificate->printhours);
+    certificate_print_text($pdf, $x, $y + 112, 'C', 'Times', '', 10,
+        get_string('credithoursvalue', 'mod_certificate', $certificate->printhours));
 }
 certificate_print_text($pdf, $x, $codey, 'C', 'Times', '', 10, certificate_get_code($certificate, $certrecord));
 $pdf->SetTextColor(0, 0, 0);
@@ -149,7 +153,8 @@ if (!$completions) {
         if ($comtime) {
             $comtim2 = userdate($comtime, get_string('strftimedate'));
             certificate_print_text($pdf, $x + 10, $y + 115 + ($k * 4), 'L', 'Helvetica', '', 10, $class);
-            certificate_print_text($pdf, $x + 125, $y + 115 + ($k * 4), 'L', 'Helvetica', '', 10, '(' . $duration2 . ' hours)');
+            certificate_print_text($pdf, $x + 125, $y + 115 + ($k * 4), 'L', 'Helvetica', '', 10,
+                get_string('durationhours', 'mod_certificate', $duration2));
             certificate_print_text($pdf, $x + 145, $y + 115 + ($k * 4), 'R', 'Helvetica', '', 10, $comtim2);
         }
     }
@@ -164,7 +169,8 @@ if ($certificate->printteacher) {
             certificate_print_text($pdf, $sigx, $sigy + ($i * 5), 'R', 'Helvetica', '', 12, fullname($teacher));
         }
         $i++;
-        certificate_print_text($pdf, $sigx, $sigy + ($i * 5), 'R', 'Helvetica', '', 12, 'Course Facilitator');
+        certificate_print_text($pdf, $sigx, $sigy + ($i * 5), 'R', 'Helvetica', '', 12,
+            get_string('coursefacilitator', 'mod_certificate'));
     }
 }
 

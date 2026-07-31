@@ -89,8 +89,13 @@ class mod_certificate_mod_form extends moodleform_mod {
         $mform->setDefault('printdate', 'N');
         $mform->addHelpButton('printdate', 'printdate', 'certificate');
 
-        $dateformatoptions = array( 1 => 'January 1, 2000', 2 => 'January 1st, 2000', 3 => '1 January 2000',
-            4 => 'January 2000', 5 => get_string('userdateformat', 'certificate'));
+        $dateformatoptions = array(
+            1 => get_string('dateformatmonthdayyear', 'mod_certificate'),
+            2 => get_string('dateformatmonthdayordinalyear', 'mod_certificate'),
+            3 => get_string('dateformatdaymonthyear', 'mod_certificate'),
+            4 => get_string('dateformatmonthyear', 'mod_certificate'),
+            5 => get_string('userdateformat', 'certificate'),
+        );
         $mform->addElement('select', 'datefmt', get_string('datefmt', 'certificate'), $dateformatoptions);
         $mform->setDefault('datefmt', 5);
         $mform->addHelpButton('datefmt', 'datefmt', 'certificate');

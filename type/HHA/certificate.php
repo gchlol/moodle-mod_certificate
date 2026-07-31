@@ -44,16 +44,25 @@ $pdf->SetMargins(10, 20, 10, true);
 $pdf->AddPage();
 
 // Reference to the images we are using.
-$image = html_writer::img($CFG->wwwroot . '/mod/certificate/type/HHA/image.jpg', 'HHA', array('width' => 500, 'height' => 150));
-$image1 = html_writer::img($CFG->wwwroot . '/mod/certificate/type/HHA/hand.jpg', 'HHA', array('width' => 175, 'height' => 175));
-$image2 = html_writer::img($CFG->wwwroot . '/mod/certificate/type/HHA/signature.png', 'HHA', array('width' => 100, 'height' => 100));
+$imagealt = get_string('hha', 'mod_certificate');
+$image = html_writer::img($CFG->wwwroot . '/mod/certificate/type/HHA/image.jpg', $imagealt,
+    array('width' => 500, 'height' => 150));
+$image1 = html_writer::img($CFG->wwwroot . '/mod/certificate/type/HHA/hand.jpg', $imagealt,
+    array('width' => 175, 'height' => 175));
+$image2 = html_writer::img($CFG->wwwroot . '/mod/certificate/type/HHA/signature.png', $imagealt,
+    array('width' => 100, 'height' => 100));
 
 // Get the name of the staff member.
-$name = $USER->firstname . " " . $USER->lastname;
+$name = fullname($USER);
 
 //Get the completion Date.
 $completion = $DB->get_record("course_completions", array('userid' => $USER->id, 'course' => $COURSE->id));
-$date = date("d/m/Y", $completion->timecompleted);
+$date = userdate($completion->timecompleted, get_string('strftimedate', 'langconfig'));
+
+$certificatetitle = get_string('certificateofattendance', 'mod_certificate');
+$certify = get_string('certify', 'mod_certificate');
+$workshopcompletion = get_string('hhaworkshopcompletion', 'mod_certificate');
+$projectmanager = get_string('hhaprojectmanager', 'mod_certificate');
 
 $pdf->writeHTML('
     <table>
@@ -61,18 +70,18 @@ $pdf->writeHTML('
             <td colspan="3">'. html_writer::tag('p', $image, array('style' => 'text-align: center;')) .'</td>
         </tr>
         <tr>
-            <td colspan="3" style="border-top: 1px solid #000;border-bottom: 1px solid #000; text-align: center;"><p style="font-size: 25px; line-hieght: 25px;">CERTIFICATE OF ATTENDANCE</p></td>
+            <td colspan="3" style="border-top: 1px solid #000;border-bottom: 1px solid #000; text-align: center;"><p style="font-size: 25px; line-hieght: 25px;">' . $certificatetitle . '</p></td>
         </tr>
         <tr>
-            <td colspan="3" style="text-align: center;"><br><p>This is to  certify that<br>
+            <td colspan="3" style="text-align: center;"><br><p>' . $certify . '<br>
                 <span style="font-size: 30px; line-hieght: 30px;">' . $name . '</span><br><br>
-                Has successfully completed a 5 hour HHA workshop<br> and is now a recognised HHA Compliance Auditor & Assessor.</p>
+                ' . $workshopcompletion . '</p>
             </td>
         </tr>
         <tr>
             <td><br><br><br><br><br><br><br><br><br><br><h2 style="text-align: center;">' . $date . '</h2></td>
             <td>'. html_writer::tag('p', $image1, array('style' => 'text-align: center;')) .'</td>
-            <td><br><br><br>'. html_writer::tag('p', $image2, array('style' => 'text-align: center;')) .' <h2 style="text-align: center">HHA Project Manager</h2></td>
+            <td><br><br><br>'. html_writer::tag('p', $image2, array('style' => 'text-align: center;')) .' <h2 style="text-align: center">' . $projectmanager . '</h2></td>
         </tr>
     </table>
 ');

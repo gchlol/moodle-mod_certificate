@@ -42,7 +42,7 @@ $responsedate=$response->submitted;
 $quiz = $DB->get_record('questionnaire', array('id' => $questid));
 $pdf = new TCPDF($certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
 
-$pdf->SetTitle('TNA Results - '.$user->firstname.$user->lastname);
+$pdf->SetTitle(get_string('tnaresultstitle', 'mod_certificate', fullname($user)));
 $pdf->setPrintHeader(false);
 $pdf->setPrintFooter(false);
 $pdf->SetAutoPageBreak(false, 0);
@@ -101,11 +101,15 @@ switch ($level) {
 $pdf->Image($uploadpath, $sealx, $sealy, $sealw, $sealh);
 
 $pdf->SetTextColor(256, 256, 256);
-certificate_print_text($pdf, $x, 4, 'L', 'Helvetica', '' ,20, 'Core Capability Profile: '.$user->firstname.' '.$user->lastname);
-certificate_print_text($pdf, $x, 15, 'L', 'Helvetica', '' ,12, date('j F Y',$responsedate));
+certificate_print_text($pdf, $x, 4, 'L', 'Helvetica', '' ,20,
+        get_string('tnacorecapabilityprofile', 'mod_certificate', fullname($user)));
+certificate_print_text($pdf, $x, 15, 'L', 'Helvetica', '' ,12,
+        userdate($responsedate, get_string('strftimedate', 'langconfig')));
 certificate_print_text($pdf, $x+74, 15, 'L', 'Helvetica', '' ,12, $roletitle);
-certificate_print_text($pdf, $x, 24, 'L', 'Helvetica', '' ,9, 'Below are your Training Needs Analysis results, capturing which capabilities from the Core Capability Framework are important in your role and any opportunities for development.', 145);
-certificate_print_text($pdf, $x+29, 281, 'L', 'Helvetica', '' ,8, '> indicates the most critical capability for your role as identified by yourself');
+certificate_print_text($pdf, $x, 24, 'L', 'Helvetica', '' ,9,
+        get_string('tnaresultsintro', 'mod_certificate'), 145);
+certificate_print_text($pdf, $x+29, 281, 'L', 'Helvetica', '' ,8,
+        get_string('tnacriticalmarker', 'mod_certificate'));
 
 $pdf->SetTextColor(0, 0, 0);
 
@@ -128,7 +132,8 @@ FOREACH ($questions AS $question) {
 		numbox($box1, $response->id, $question->id);
 		}
 	if ($question->position==4) {
-		printresp($box1, "Personal Attributes", "Individual behaviours influenced by our values and ethical compass.", $response->id, $question->id);
+		printresp($box1, get_string('tnapersonalattributes', 'mod_certificate'),
+				get_string('tnapersonalattributesdescription', 'mod_certificate'), $response->id, $question->id);
 		}
 
 	if ($question->position==6) {
@@ -136,7 +141,8 @@ FOREACH ($questions AS $question) {
 		}
 
 	if ($question->position==7) {
-		printresp($box2, "Build Relationships", "Shape and maximise relationships with colleagues, patients and the community.", $response->id, $question->id);
+		printresp($box2, get_string('tnabuildrelationships', 'mod_certificate'),
+				get_string('tnabuildrelationshipsdescription', 'mod_certificate'), $response->id, $question->id);
 		}
 
 	if ($question->position==9) {
@@ -144,7 +150,8 @@ FOREACH ($questions AS $question) {
 		}
 
 	if ($question->position==10) {
-		printresp($box3, "Results Focused", "Drive and influence successful organisational outcomes.", $response->id, $question->id);
+		printresp($box3, get_string('tnaresultsfocused', 'mod_certificate'),
+				get_string('tnaresultsfocuseddescription', 'mod_certificate'), $response->id, $question->id);
 		}
 
 	if ($question->position==12) {
@@ -152,7 +159,8 @@ FOREACH ($questions AS $question) {
 		}
 
 	if ($question->position==13) {
-		printresp($box4, "Business Enablers", "Boost effective service delivery and champion change management.", $response->id, $question->id);
+		printresp($box4, get_string('tnabusinessenablers', 'mod_certificate'),
+				get_string('tnabusinessenablersdescription', 'mod_certificate'), $response->id, $question->id);
 		}
 
 	if ($question->position==15) {
@@ -160,7 +168,8 @@ FOREACH ($questions AS $question) {
 		}
 
 	if ($question->position==16) {
-		printresp($box5, "Leadership and People Management", "Inspire, engage and develop our people.", $response->id, $question->id);
+		printresp($box5, get_string('tnaleadershippeoplemanagement', 'mod_certificate'),
+				get_string('tnaleadershippeoplemanagementdescription', 'mod_certificate'), $response->id, $question->id);
 		}
 
 
@@ -169,14 +178,18 @@ FOREACH ($questions AS $question) {
 $pdf->AddPage();
 $pdf->Image("$CFG->dirroot/mod/certificate/type/TNA/TNA certificate.jpg", $brdrx, $brdry, $brdrw, $brdrh);
 $pdf->SetTextColor(256, 256, 256);
-certificate_print_text($pdf, $x, 6, 'L', 'Helvetica', '' ,20, 'My development opportunities: '.$user->firstname.' '.$user->lastname);
-certificate_print_text($pdf, $x, $y+9, 'l', 'Helvetica', '' ,12, "Capture any development opportunities");
-certificate_print_text($pdf, $x, $y+15, 'l', 'Helvetica', '' ,12, "below, using the 70-20-10 model.");
+certificate_print_text($pdf, $x, 6, 'L', 'Helvetica', '' ,20,
+        get_string('tnadevelopmentopportunities', 'mod_certificate', fullname($user)));
+certificate_print_text($pdf, $x, $y+9, 'l', 'Helvetica', '' ,12,
+        get_string('tnadevelopmentprompt', 'mod_certificate'), 95);
 
 
-certificate_print_text($pdf, $x+110, $y+9, 'l', 'Helvetica', 'i' ,9, "70% - Job related experiences");
-certificate_print_text($pdf, $x+110, $y+14, 'l', 'Helvetica', 'i' ,9, "20% - Collaborative learning and learning from others");
-certificate_print_text($pdf, $x+110, $y+19, 'l', 'Helvetica', 'i' ,9, "10% - Formal educational programs or courses");
+certificate_print_text($pdf, $x+110, $y+9, 'l', 'Helvetica', 'i' ,9,
+        get_string('tnamodel70', 'mod_certificate'));
+certificate_print_text($pdf, $x+110, $y+14, 'l', 'Helvetica', 'i' ,9,
+        get_string('tnamodel20', 'mod_certificate'));
+certificate_print_text($pdf, $x+110, $y+19, 'l', 'Helvetica', 'i' ,9,
+        get_string('tnamodel10', 'mod_certificate'));
 
 $pdf->SetTextColor(0, 0, 0);
 
@@ -184,23 +197,23 @@ $pdf->SetTextColor(0, 0, 0);
 FOREACH ($questions AS $question) {
 //For each of the CCF Questions
 	if ($question->position==2) {
-		printblank($box1, "Personal Attributes");
+		printblank($box1, get_string('tnapersonalattributes', 'mod_certificate'));
 		}
 
 	if ($question->position==5) {
-		printblank($box2, "Build Relationships");
+		printblank($box2, get_string('tnabuildrelationships', 'mod_certificate'));
 		}
 
 	if ($question->position==8) {
-		printblank($box3, "Results Focused");
+		printblank($box3, get_string('tnaresultsfocused', 'mod_certificate'));
 		}
 
 	if ($question->position==11) {
-		printblank($box4, "Business Enablers");
+		printblank($box4, get_string('tnabusinessenablers', 'mod_certificate'));
 		}
 
 	if ($question->position==14) {
-		printblank($box5, "Leadership and People Management");
+		printblank($box5, get_string('tnaleadershippeoplemanagement', 'mod_certificate'));
 		}
 
 
@@ -219,19 +232,19 @@ function printresp($box, $title, $desc, $respid, $questid) {
 	FOREACH ($responses AS $resp) {
 		switch ($resp->rankvalue) {
 			case "1":
-				$ans='I could do with development and support in this concept';
+				$ans = get_string('tnaratingneedsdevelopment', 'mod_certificate');
 				$pdf->SetTextColor(0, 0, 200);
 				break;
 			case "2":
-				$ans='I am almost there, I need a little more practice or support';
+				$ans = get_string('tnaratingalmostthere', 'mod_certificate');
 				$pdf->SetTextColor(0, 0, 0);
 				break;
 			case "3":
-				$ans='I understand and can apply this concept';
+				$ans = get_string('tnaratingcanapply', 'mod_certificate');
 				$pdf->SetTextColor(0, 0, 0);
 				break;
 			case "4":
-				$ans='I understand and am able to coach others in this concept';
+				$ans = get_string('tnaratingcancoach', 'mod_certificate');
 				$pdf->SetTextColor(0, 0, 0);
 				break;
 			}
@@ -279,14 +292,16 @@ function printblank($box, $title) {
 	GLOBAL $DB, $pdf, $x, $y, $certificate, $brdrx, $brdry, $brdrw, $brdrh;
 
 	certificate_print_text($pdf, $x+32, $box, 'C', 'Helvetica', 'B' ,16, $title);
-	certificate_print_text($pdf, $x+32, $box+9, 'l', 'Helvetica', '' ,9, "My 70% activities: ________________________________________________________________");
+	certificate_print_text($pdf, $x+32, $box+9, 'l', 'Helvetica', '' ,9,
+			get_string('tnaactivities70', 'mod_certificate') . ' ________________________________________________________________');
 	certificate_print_text($pdf, $x+32, $box+15, 'l', 'Helvetica', '' ,9, "_______________________________________________________________________________");
-	certificate_print_text($pdf, $x+32, $box+21, 'l', 'Helvetica', '' ,9, "My 20% activities: ________________________________________________________________");
+	certificate_print_text($pdf, $x+32, $box+21, 'l', 'Helvetica', '' ,9,
+			get_string('tnaactivities20', 'mod_certificate') . ' ________________________________________________________________');
 	certificate_print_text($pdf, $x+32, $box+27, 'l', 'Helvetica', '' ,9, "_______________________________________________________________________________");
-	certificate_print_text($pdf, $x+32, $box+33, 'l', 'Helvetica', '' ,9, "My 10% activities: ________________________________________________________________");
+	certificate_print_text($pdf, $x+32, $box+33, 'l', 'Helvetica', '' ,9,
+			get_string('tnaactivities10', 'mod_certificate') . ' ________________________________________________________________');
 	certificate_print_text($pdf, $x+32, $box+39, 'l', 'Helvetica', '' ,9, "_______________________________________________________________________________");
 		
 		
 
 }
-
