@@ -540,8 +540,12 @@ abstract class portfolio_output_base {
     protected function output_page_number(string $colour = portfolio_colour::MINOR): void {
         $this->apply_colour($colour);
 
+        $a = (object) [
+            'page' => $this->pdf->getPage(),
+            'pages' => $this->pdf->getNumPages(),
+        ];
         $this->output_text_static(
-            'Page ' . $this->pdf->getPage() . ' of ' . $this->pdf->getNumPages(),
+            $this->get_other_string('pagexofy', 'mod_certificate', $a),
             $this->offsets->x,
             $this->offsets->pagenumy,
             10,
@@ -585,7 +589,7 @@ abstract class portfolio_output_base {
         $this->apply_colour($colour);
 
         $this->output_text_static(
-            $this->get_string('printedon', date('j F Y')),
+            $this->get_string('printedon', userdate(time(), get_string('strftimedate', 'langconfig'))),
             $this->offsets->x,
             $this->offsets->datey,
             10,
@@ -663,7 +667,7 @@ abstract class portfolio_output_base {
         $this->apply_colour($colour);
 
         $this->output_text(
-            get_string('credithours', 'certificate') . ': ' . $this->certificate->printhours,
+            $this->get_other_string('credithoursvalue', 'mod_certificate', $this->certificate->printhours),
             0, 122,
             10, 'C'
         );

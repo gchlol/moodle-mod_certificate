@@ -49,7 +49,6 @@ $x = 10;
 $y = 10;
 
 $pdf = new gfg_pdf($ciap, $plan, $certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
-$pdf->SetTitle("$plan->name - Summary");
 $pdf->SetAutoPageBreak(true, 25);
 $pdf->setMargins($y, $x + 25);
 $pdf->setFooterMargin(25);
@@ -61,6 +60,7 @@ $action_logo_size = 20;
 $action_logo_spacing = 5;
 $page_center = $pdf->getPageWidth() / 2;
 
+$pdf->SetTitle(get_string('gfgsummarytitle', 'mod_certificate', $plan->name));
 
 $actionno = 1;
 $action_offset = 0;
@@ -74,9 +74,12 @@ foreach ($actions as $action) {
     if ($action_offset == 0) {
         $pdf->SetTextColor(16, 75, 118);
 
-        certificate_print_text($pdf, $x + 5, $y + 50, 'l', 'Helvetica', 'B', 14, 'What is the action we have committed to?');
-        certificate_print_text($pdf, $x + 180, $y + 50, 'l', 'Helvetica', 'B', 14, 'Value:');
-        certificate_print_text($pdf, $x + 230, $y + 50, 'l', 'Helvetica', 'B', 14, 'Action status:');
+        certificate_print_text($pdf, $x + 5, $y + 50, 'l', 'Helvetica', 'B', 14,
+            get_string('gfgactioncommitted', 'mod_certificate'));
+        certificate_print_text($pdf, $x + 180, $y + 50, 'l', 'Helvetica', 'B', 14,
+            get_string('valuecolon', 'mod_certificate'));
+        certificate_print_text($pdf, $x + 230, $y + 50, 'l', 'Helvetica', 'B', 14,
+            get_string('actionstatuscolon', 'mod_certificate'));
     }
 
     [
@@ -97,7 +100,8 @@ foreach ($actions as $action) {
     $action_number_width = $pdf->GetStringWidth($actionno, 'Helvetica', '', 14);
     $action_number_offset = round($action_number_width / 2);
 
-    certificate_print_text($pdf, $x - $action_number_offset, $x_offset, 'l', 'Helvetica', '', 14, "$actionno.");
+    certificate_print_text($pdf, $x - $action_number_offset, $x_offset, 'l', 'Helvetica', '', 14,
+        get_string('gfgactionnumber', 'mod_certificate', $actionno));
     certificate_print_text($pdf, $x + 5, $x_offset, 'l', 'Helvetica', '', 14, $actionhead, 160);
 
     if (isset($action->custom_fields->response)) {
@@ -116,29 +120,29 @@ foreach ($actions as $action) {
         [ 'action' => $actionid ]
     );
 
-    $status = 'No update provided';
+    $status = get_string('gfgstatusnoupdate', 'mod_certificate');
     $due = '';
     foreach ($updates as $update) {
         $perioddate = $DB->get_record('ciap_periods', [ 'id' => $update->periodid ]);
         switch ($update->status) {
             case '0':
-                $status = 'Not yet started';
-                $due_date = date('d/m/y', $action->duedate);
-                $due = "(due $due_date)";
+                $status = get_string('gfgstatusnotstarted', 'mod_certificate');
+                $duedate = userdate($action->duedate, get_string('strftimedatefullshort', 'langconfig'));
+                $due = get_string('gfgdue', 'mod_certificate', $duedate);
 
                 break;
             case '1':
-                $status = 'In progress';
-                $due_date = date('d/m/y', $action->duedate);
-                $due = "(due $due_date)";
+                $status = get_string('gfgstatusinprogress', 'mod_certificate');
+                $duedate = userdate($action->duedate, get_string('strftimedatefullshort', 'langconfig'));
+                $due = get_string('gfgdue', 'mod_certificate', $duedate);
 
                 break;
             case '2':
-                $status = 'Complete';
+                $status = get_string('gfgstatuscomplete', 'mod_certificate');
 
                 break;
             case '3':
-                $status = 'No longer required';
+                $status = get_string('gfgstatusnotrequired', 'mod_certificate');
 
                 break;
         }
@@ -171,7 +175,8 @@ foreach ($actions as $action) {
     );
 
     if (!$updates) {
-        certificate_print_text($pdf, $x + 10, $y + 70, 'l', 'Helvetica', 'B', 16, 'An update has not been provided for this action');
+        certificate_print_text($pdf, $x + 10, $y + 70, 'l', 'Helvetica', 'B', 16,
+            get_string('gfgactionupdatenotprovided', 'mod_certificate'));
     }
 
     [
@@ -192,7 +197,8 @@ foreach ($actions as $action) {
         certificate_print_text($pdf, $x + 10, $y + 37, 'l', 'Helvetica', 'i', 12, "$description_output...", 240);
 
         $pdf->SetTextColor(187, 111, 122);
-        certificate_print_text($pdf, $x + 170, $y + 53, 'l', 'Helvetica', 'B', 12, 'Further details available over the page', 240);
+        certificate_print_text($pdf, $x + 170, $y + 53, 'l', 'Helvetica', 'B', 12,
+            get_string('gfgfurtherdetails', 'mod_certificate'), 240);
 
     } else {
         certificate_print_text($pdf, $x + 10, $y + 37, 'l', 'Helvetica', 'i', 12, $actionbody, 240);
@@ -200,15 +206,18 @@ foreach ($actions as $action) {
 
     if (isset($action->custom_fields->owner)) {
         $pdf->SetTextColor(16, 75, 118);
-        certificate_print_text($pdf, $x + 10, $y + 60, 'l', 'Helvetica', 'B', 12, 'Who is responsible for this action?');
+        certificate_print_text($pdf, $x + 10, $y + 60, 'l', 'Helvetica', 'B', 12,
+            get_string('gfgactionresponsible', 'mod_certificate'));
         $pdf->SetTextColor(0, 0, 0);
         certificate_print_text($pdf, $x + 83, $y + 60, 'l', 'Helvetica', '', 12, $action->custom_fields->owner, 75);
     }
 
     $pdf->SetTextColor(16, 75, 118);
-    certificate_print_text($pdf, $x + 160, $y + 60, 'l', 'Helvetica', 'B', 12, 'When is this action due?');
+    certificate_print_text($pdf, $x + 160, $y + 60, 'l', 'Helvetica', 'B', 12,
+        get_string('gfgactiondue', 'mod_certificate'));
     $pdf->SetTextColor(0, 0, 0);
-    certificate_print_text($pdf, $x + 212, $y + 60, 'l', 'Helvetica', '', 12, date('j F Y', $action->duedate));
+    certificate_print_text($pdf, $x + 212, $y + 60, 'l', 'Helvetica', '', 12,
+        userdate($action->duedate, get_string('strftimedate', 'langconfig')));
 
     $update_offset = 0;
     $complete = false;
@@ -216,35 +225,46 @@ foreach ($actions as $action) {
         $perioddate = $DB->get_record('ciap_periods', [ 'id' => $update->periodid ]);
         switch ($update->status) {
             case '0':
-                $ans = 'Not yet started';
+                $ans = get_string('gfgstatusnotstarted', 'mod_certificate');
 
                 break;
             case '1':
-                $ans = 'In progress';
+                $ans = get_string('gfgstatusinprogress', 'mod_certificate');
 
                 break;
             case '2':
-                $ans = 'Complete';
+                $ans = get_string('gfgstatuscomplete', 'mod_certificate');
                 $complete = true;
 
                 break;
             case '3':
-                $ans = 'No longer required';
+                $ans = get_string('gfgstatusnotrequired', 'mod_certificate');
 
                 break;
         }
 
         if ($update->duedate) {
-            $due_date = date('j F Y', $update->duedate);
-            $ans .= " ($due_date)";
+            $a = (object) [
+                'date' => userdate($update->duedate, get_string('strftimedate', 'langconfig')),
+                'status' => $ans,
+            ];
+            $ans = get_string('gfgstatusdate', 'mod_certificate', $a);
         }
 
         $x_offset = $y + 70 + ($update_offset * 30);
         $update_number = $update_offset + 1;
-        $end_date = date('F Y', $perioddate->enddate);
+        $enddate = userdate($perioddate->enddate, get_string('strftimemonthyear', 'langconfig'));
 
-        certificate_print_text($pdf, $x + 10, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Update $update_number</strong> ($end_date)");
-        certificate_print_text($pdf, $x + 160, $x_offset, 'l', 'Helvetica', '', 12, "<strong>Status:</strong> $ans");
+        $a = (object) [
+            'date' => $enddate,
+            'update' => html_writer::tag('strong',
+                get_string('gfgupdatenumber', 'mod_certificate', $update_number)),
+        ];
+        $updatelabel = get_string('gfgupdatenumberdate', 'mod_certificate', $a);
+        certificate_print_text($pdf, $x + 10, $x_offset, 'l', 'Helvetica', '', 12, $updatelabel);
+        certificate_print_text($pdf, $x + 160, $x_offset, 'l', 'Helvetica', '', 12,
+            html_writer::tag('strong', get_string('gfgstatusvalue', 'mod_certificate',
+                html_writer::tag('span', $ans, ['style' => 'font-weight: normal;']))));
         certificate_print_text($pdf, $x + 10, $x_offset + 10, 'l', 'Helvetica', '', 12, $update->description);
 
         $update_offset++;
@@ -252,7 +272,8 @@ foreach ($actions as $action) {
 
     if ($complete) {
         $pdf->SetTextColor(187, 111, 122);
-        certificate_print_text($pdf, $x + 10, $y + 160, 'l', 'Helvetica', 'B', 16, 'Congratulations on completing this action - make sure you celebrate this win with your team!');
+        certificate_print_text($pdf, $x + 10, $y + 160, 'l', 'Helvetica', 'B', 16,
+            get_string('gfgactioncongratulations', 'mod_certificate'));
         $pdf->SetTextColor(0, 0, 0);
     }
 

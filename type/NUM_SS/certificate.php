@@ -102,7 +102,7 @@ $cell = new html_table_cell();
 $cell->style = 'font-weight: bold; color: white; padding: 10px; font-size: 14; text-align: center;';
 $cell->attributes = array('bgcolor' => 'rgb(192, 192, 192)');
 $cell->colspan = 2;
-$cell->text = 'System Support';
+$cell->text = get_string('numsystemsupport', 'mod_certificate');
 
 $table->head = array($cell);
 
@@ -111,11 +111,15 @@ $current = 0;
 
 $used = array();
 
-$timeframes = array('1-3 months', '4-11 months', '12 months or more');
-foreach ($timeframes as $key => $timeframe) {
+$timeframes = array(
+    '1-3 months' => get_string('numtimeframe1to3', 'mod_certificate'),
+    '4-11 months' => get_string('numtimeframe4to11', 'mod_certificate'),
+    '12 months or more' => get_string('numtimeframe12plus', 'mod_certificate'),
+);
+foreach ($timeframes as $timeframe => $timeframelabel) {
     $cell2 = new html_table_cell();
     $cell2->colspan = 2;
-    $cell2->text = $timeframe;
+    $cell2->text = $timeframelabel;
 
     $row = new html_table_row(array($cell2));
     $current++;
@@ -142,7 +146,7 @@ foreach ($timeframes as $key => $timeframe) {
     if (empty($actions)) {
         $cell3 = new html_table_cell();
         $cell3->colspan = 2;
-        $cell3->text = 'You have not selected any actions for this timeframe.';
+        $cell3->text = get_string('numnoactions', 'mod_certificate');
 
         $row = new html_table_row();
         $row->style = 'font-size: 11; background-color: white;';
@@ -181,11 +185,8 @@ foreach ($timeframes as $key => $timeframe) {
         unset($actions[$action->id]);
     }
 
-    unset($timeframes[$key]);
+    unset($timeframes[$timeframe]);
 }
-
-$date = new DateTime();
-$date->setTimestamp($response->submitted);
 
 $pdf->SetFont('helvetica');
 $pdf->writeHTML(html_writer::empty_tag('br'));
@@ -203,11 +204,15 @@ $pdf->writeHTML(html_writer::tag('h1', format_string($questionnaire->name), arra
 $pdf->writeHTML(html_writer::empty_tag('br'));
 $pdf->writeHTML(html_writer::tag('h2', fullname($USER), array('style' => 'text-align: center;')));
 $pdf->writeHTML(html_writer::empty_tag('br'));
-$pdf->writeHTML(html_writer::tag('h3', $date->format('jS F Y'), array('style' => 'text-align: center;')));
+$pdf->writeHTML(html_writer::tag(
+    'h3',
+    userdate($response->submitted, get_string('strftimedate', 'langconfig')),
+    array('style' => 'text-align: center;')
+));
 $pdf->writeHTML(html_writer::empty_tag('br'));
 $pdf->writeHTML(html_writer::tag(
     'p',
-    'This learning plan is a point in time reflection of your own identified learning needs. As you progress and gain more experience your learning needs will change. You may go back and redo the orientation/onboarding gap analysis tool for a revised learning plan.',
+    get_string('numlearningplanintro', 'mod_certificate'),
     array('style' => 'text-align: center;')));
 $pdf->writeHTML(html_writer::empty_tag('br'));
 $pdf->writeHTML(html_writer::table($table));
@@ -220,11 +225,11 @@ if (!empty($timeframes)) {
     $cell->style = 'font-weight: bold; color: white; padding: 10px; font-size: 14; text-align: center;';
     $cell->attributes = array('bgcolor' => 'rgb(192, 192, 192)');
     $cell->colspan = 2;
-    $cell->text = 'Direct Care';
+    $cell->text = get_string('numsystemsupport', 'mod_certificate');
 
     $table->head = array($cell);
 
-    foreach ($timeframes as $key => $timeframe) {
+    foreach ($timeframes as $timeframe => $timeframelabel) {
         $sql = "SELECT qqp.*
                   FROM {questionnaire_resp_single} qrs
                   JOIN {questionnaire_quest_choice} qqc ON qrs.choice_id = qqc.id
@@ -244,7 +249,7 @@ if (!empty($timeframes)) {
         if (!empty($actions)) {
             $cell2 = new html_table_cell();
             $cell2->colspan = 2;
-            $cell2->text = $timeframe;
+            $cell2->text = $timeframelabel;
 
             $row = new html_table_row(array($cell2));
             $current++;

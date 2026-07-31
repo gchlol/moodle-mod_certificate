@@ -137,13 +137,20 @@ if ($result) {
           ORDER BY bd.date";
     $dates = $DB->get_records_sql($sql);
 
-    certificate_print_text($pdf, $x, $y + 14, 'L', 'Helvetica', '', 12, 'Name: ' . fullname($USER));
-    certificate_print_text($pdf, $x, $y + 20, 'L', 'Helvetica', '', 12, 'Payroll number: ' . format_string($USER->username));
-    certificate_print_text($pdf, $x, $y + 26, 'L', 'Helvetica', '', 12, 'Position description: ' . format_string($posds->data));
-    certificate_print_text($pdf, $x, $y + 32, 'L', 'Helvetica', '', 12, 'Employee level: ' . format_string($empsubgroup->data));
-    certificate_print_text($pdf, $x, $y + 38, 'L', 'Helvetica', '', 12, 'Org unit number: ' . format_string($orgno->data));
-    certificate_print_text($pdf, $x, $y + 44, 'L', 'Helvetica', '', 12, 'Org unit name: ' . format_string($unit->data));
-    certificate_print_text($pdf, $x, $y + 52, 'C', 'Helvetica', '', 14, fullname($USER) . ' has been approved leave for the following days: ');
+    certificate_print_text($pdf, $x, $y + 14, 'L', 'Helvetica', '', 12,
+        get_string('namevalue', 'mod_certificate', fullname($USER)));
+    certificate_print_text($pdf, $x, $y + 20, 'L', 'Helvetica', '', 12,
+        get_string('payrollnumbervalue', 'mod_certificate', format_string($USER->username)));
+    certificate_print_text($pdf, $x, $y + 26, 'L', 'Helvetica', '', 12,
+        get_string('positiondescriptionvalue', 'mod_certificate', format_string($posds->data)));
+    certificate_print_text($pdf, $x, $y + 32, 'L', 'Helvetica', '', 12,
+        get_string('employeelevelvalue', 'mod_certificate', format_string($empsubgroup->data)));
+    certificate_print_text($pdf, $x, $y + 38, 'L', 'Helvetica', '', 12,
+        get_string('orgunitnumbervalue', 'mod_certificate', format_string($orgno->data)));
+    certificate_print_text($pdf, $x, $y + 44, 'L', 'Helvetica', '', 12,
+        get_string('orgunitnamevalue', 'mod_certificate', format_string($unit->data)));
+    certificate_print_text($pdf, $x, $y + 52, 'C', 'Helvetica', '', 14,
+        get_string('approvedleavefor', 'mod_certificate', fullname($USER)));
 
     $list = '<ul>';
 
@@ -154,10 +161,7 @@ if ($result) {
 
     foreach ($dates as $key => $date) {
         if ($numdates < 26) {
-            $signupdate = new DateTime();
-            $signupdate->setTimestamp($date->date);
-
-            $list .= '<li>' . $signupdate->format('l, dS F Y') . '</li>';
+            $list .= '<li>' . userdate($date->date, get_string('strftimedaydate', 'langconfig')) . '</li>';
             unset($dates[$key]);
             $numdates++;
             $printlist = true;
@@ -183,7 +187,9 @@ if ($result) {
     $pagenum = 1;
 
     certificate_print_text($pdf, $x, $codey, 'C', 'Times', '', 10, certificate_get_code($certificate, $certrecord));
-    certificate_print_text($pdf, $x, $y + 200, 'C', 'Times', '', 10, 'Page ' . $pagenum . ' of ' . $totalpages);
+    $a = (object) ['page' => $pagenum, 'pages' => $totalpages];
+    certificate_print_text($pdf, $x, $y + 200, 'C', 'Times', '', 10,
+        get_string('pagexofy', 'mod_certificate', $a));
 
     if (!empty($dates)) {
         $pdf->AddPage();
@@ -204,10 +210,7 @@ if ($result) {
 
         $list = '<ul>';
         foreach ($dates as $key => $date) {
-            $signupdate = new DateTime();
-            $signupdate->setTimestamp($date->date);
-
-            $list .= '<li>' . $signupdate->format('l, dS F Y') . '</li>';
+            $list .= '<li>' . userdate($date->date, get_string('strftimedaydate', 'langconfig')) . '</li>';
             $printlist = true;
         }
         $list .= '</ul>';
@@ -220,7 +223,9 @@ if ($result) {
             $pdf->writeHTML($list);
         }
 
-        certificate_print_text($pdf, $x, $y + 200, 'C', 'Times', '', 10, 'Page ' . $pagenum . ' of ' . $totalpages);
+        $a = (object) ['page' => $pagenum, 'pages' => $totalpages];
+        certificate_print_text($pdf, $x, $y + 200, 'C', 'Times', '', 10,
+            get_string('pagexofy', 'mod_certificate', $a));
     }
 }
 
@@ -229,7 +234,8 @@ certificate_print_text($pdf, $x, $y + 100, 'C', 'Times', '', 10, certificate_get
 certificate_print_text($pdf, $x, $y + 110, 'C', 'Times', '', 10, certificate_get_outcome($certificate, $course));
 
 if ($certificate->printhours) {
-    certificate_print_text($pdf, $x, $y + 122, 'C', 'Times', '', 6, get_string('credithours', 'certificate') . ': ' . $certificate->printhours);
+    certificate_print_text($pdf, $x, $y + 122, 'C', 'Times', '', 6,
+        get_string('credithoursvalue', 'mod_certificate', $certificate->printhours));
 }
 certificate_print_text($pdf, $x, $codey, 'C', 'Times', '', 10, certificate_get_code($certificate, $certrecord));
 $i = 0;

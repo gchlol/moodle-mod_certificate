@@ -171,12 +171,40 @@ function mod_certificate_get_culture_champion($reportName){
         else{
 
             // Return that there is no Culture Champion.
-            return "No Culture Champion";
+            return get_string('noculturechampion', 'mod_certificate');
         }
     }
     else {
         // Return that there is no Culture Champion.
-        return "No Culture Champion";
+        return get_string('noculturechampion', 'mod_certificate');
+    }
+}
+
+/**
+ * Return the translated label for a CIAP action status.
+ *
+ * The questionnaire values are persisted in English and must remain unchanged
+ * for comparisons. This helper is only used when a status is displayed.
+ *
+ * @param string $status Raw questionnaire status.
+ * @return string Translated status label.
+ */
+function mod_certificate_get_ciap_status_string($status) {
+    switch ($status) {
+        case 'Complete':
+            return get_string('ciapstatuscomplete', 'mod_certificate');
+        case 'In Progress':
+            return get_string('ciapstatusinprogress', 'mod_certificate');
+        case 'Not yet Started':
+            return get_string('ciapstatusnotyetstarted', 'mod_certificate');
+        case 'No Longer Required':
+            return get_string('ciapstatusnolongerrequired', 'mod_certificate');
+        case 'Update not Provided':
+            return get_string('ciapupdatenotprovided', 'mod_certificate');
+        case 'New Action Added':
+            return get_string('ciapnewactionadded', 'mod_certificate');
+        default:
+            return $status;
     }
 }
 

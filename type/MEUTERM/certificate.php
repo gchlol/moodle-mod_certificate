@@ -38,7 +38,7 @@ $responsedate=$response->submitted;
 
 $pdf = new TCPDF($certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
 
-$pdf->SetTitle('Intern Assessment - '.$user->fullname);
+$pdf->SetTitle(get_string('meutermtitle', 'mod_certificate', fullname($user)));
 $pdf->setPrintHeader(false);
 $pdf->setPrintFooter(false);
 $pdf->SetAutoPageBreak(false, 0);
@@ -144,13 +144,15 @@ FOREACH ($questions AS $question) {
 
 	if (strpos($question->content, 'Comments on Domain 1') !== false) {
 		$DOM1=$DB->get_record(questionnaire_response_text, array('response_id' => $responseid, 'question_id' => $question->id));
-		certificate_print_text($pdf, $x+2, $head1y, 'l', 'Helvetica', 'B', 12, 'Domain 1: Science and scholarship - The '.$level->content.' as scientist and scholar' );
+		certificate_print_text($pdf, $x+2, $head1y, 'l', 'Helvetica', 'B', 12,
+				get_string('meutermdomain1', 'mod_certificate', $level->content));
 		printcommentbox($question->content, $DOM1->response, $box2x, $box1y);
 
 		}
 //Domain 2:
 		if (strpos($question->content, '2.1') !== false) {
-		certificate_print_text($pdf, $x+2, $head2y, 'l', 'Helvetica', 'B', 12, 'Domain 2: Clinical practice - The '.$level->content.' as practitioner' );
+		certificate_print_text($pdf, $x+2, $head2y, 'l', 'Helvetica', 'B', 12,
+				get_string('meutermdomain2', 'mod_certificate', $level->content));
 		printbox ($question->id, $question->content, $box1x, $box2y);
 	}
 
@@ -167,7 +169,8 @@ FOREACH ($questions AS $question) {
 		$pdf->AddPage();
 		certificate_print_image($pdf, $certificate, CERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
 		printhead(fullname($user), $level->content, $AHPRA->response, $term->content, $responsedate, $comp->content, $team->content);
-		certificate_print_text($pdf, $x+2, $head1y, 'l', 'Helvetica', 'B', 12, 'Domain 2: Clinical practice - The '.$level->content.' as practitioner' );
+		certificate_print_text($pdf, $x+2, $head1y, 'l', 'Helvetica', 'B', 12,
+				get_string('meutermdomain2', 'mod_certificate', $level->content));
 		printbox ($question->id, $question->content, $box1x, $box1y);
 	}
 		if (strpos($question->content, '2.6') !== false) {
@@ -191,7 +194,8 @@ FOREACH ($questions AS $question) {
 		$pdf->AddPage();
 		certificate_print_image($pdf, $certificate, CERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
 		printhead(fullname($user), $level->content, $AHPRA->response, $term->content, $responsedate, $comp->content, $team->content);
-		certificate_print_text($pdf, $x+2, $head1y, 'l', 'Helvetica', 'B', 12, 'Domain 3: Health and society - The '.$level->content.' as a health advocate' );
+		certificate_print_text($pdf, $x+2, $head1y, 'l', 'Helvetica', 'B', 12,
+				get_string('meutermdomain3', 'mod_certificate', $level->content));
 		printbox ($question->id, $question->content, $box1x, $box1y);
 	}
 		if (strpos($question->content, '3.2') !== false) {
@@ -212,7 +216,8 @@ FOREACH ($questions AS $question) {
 		$pdf->AddPage();
 		certificate_print_image($pdf, $certificate, CERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
 		printhead(fullname($user), $level->content, $AHPRA->response, $term->content, $responsedate, $comp->content, $team->content);
-		certificate_print_text($pdf, $x+2, $head1y, 'l', 'Helvetica', 'B', 12, 'Domain 4: Professionalism and leadership - The '.$level->content.' as a professional and leader' );
+		certificate_print_text($pdf, $x+2, $head1y, 'l', 'Helvetica', 'B', 12,
+				get_string('meutermdomain4', 'mod_certificate', $level->content));
 		printbox ($question->id, $question->content, $box1x, $box1y);
 	}
 		if (strpos($question->content, '4.2') !== false) {
@@ -235,7 +240,8 @@ FOREACH ($questions AS $question) {
 		$pdf->AddPage();
 		certificate_print_image($pdf, $certificate, CERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
 		printhead(fullname($user), $level->content, $AHPRA->response, $term->content, $responsedate, $comp->content, $team->content);
-		certificate_print_text($pdf, $x+2, $head1y, 'l', 'Helvetica', 'B', 12, 'Domain 4: Professionalism and leadership - The '.$level->content.' as a professional and leader' );
+		certificate_print_text($pdf, $x+2, $head1y, 'l', 'Helvetica', 'B', 12,
+				get_string('meutermdomain4', 'mod_certificate', $level->content));
 		printcommentbox($question->content, $DOM1->response, $box1x, $box1y);
 		}
 	
@@ -245,12 +251,14 @@ FOREACH ($questions AS $question) {
 		if ($IPAPq->choice_id=="y" || $IPAP>0) {
 		certificate_print_text($pdf, $box2x-5, $box1y, 'l', 'Helvetica', 'B', 10, substr($question->content,0,90), 85);
 		$pdf->SetTextColor(256, 0, 0);
-		certificate_print_text($pdf, $box2x, $box1y+10, 'l', 'Helvetica', 'B', 10, 'IPAP is required for '.fullname($user));
+		certificate_print_text($pdf, $box2x, $box1y+10, 'l', 'Helvetica', 'B', 10,
+				get_string('meutermipaprequired', 'mod_certificate', fullname($user)));
 		$pdf->SetTextColor(0, 0, 0);
 		
 		} ELSE {
 		certificate_print_text($pdf, $box2x-5, $box1y, 'l', 'Helvetica', 'B', 10, substr($question->content,0,90), 85);
-		certificate_print_text($pdf, $box2x, $box1y+10, 'l', 'Helvetica', '', 10, 'No IPAP required');
+		certificate_print_text($pdf, $box2x, $box1y+10, 'l', 'Helvetica', '', 10,
+				get_string('meutermnoipaprequired', 'mod_certificate'));
 		}
 	}
 //Global rating
@@ -283,38 +291,52 @@ FOREACH ($questions AS $question) {
 	SWITCH ($share->content) {
 		CASE NULL:
 			$pdf->SetTextColor(256, 0, 0);
-			certificate_print_text($pdf, $box2x, $box2y+48, 'l', 'Helvetica', 'i' ,10, 'Sharing of this term assessment has not been completed by the '.$level->content.'.');
+			certificate_print_text($pdf, $box2x, $box2y+48, 'l', 'Helvetica', 'i' ,10,
+					get_string('meutermsharingnotcompleted', 'mod_certificate', $level->content));
 			$pdf->SetTextColor(0, 0, 0);
 			break;
 		CASE "I give permission":
-			certificate_print_text($pdf, $box2x, $box2y+48, 'l', 'Helvetica', 'i' ,10, 'Sharing of this term assessment has been authorised by the '.$level->content.'.');
+			certificate_print_text($pdf, $box2x, $box2y+48, 'l', 'Helvetica', 'i' ,10,
+					get_string('meutermsharingauthorised', 'mod_certificate', $level->content));
 			break;
 		CASE "I do not give permission":
 			$pdf->SetTextColor(256, 0, 0);
-			certificate_print_text($pdf, $box2x, $box2y+48, 'l', 'Helvetica', 'i' ,10, 'Sharing of this term assessment has not been authorised by the '.$level->content.'.');
+			certificate_print_text($pdf, $box2x, $box2y+48, 'l', 'Helvetica', 'i' ,10,
+					get_string('meutermsharingnotauthorised', 'mod_certificate', $level->content));
 			$pdf->SetTextColor(0, 0, 0);
 			break;
 		}
 	}
 }
 //Signature box for Student and Supervisor
-	certificate_print_text($pdf, $box2x-5, $box2y, 'l', 'Helvetica', 'B' ,12, 'Supervisor');
-	certificate_print_text($pdf, $box2x, $box2y+5, 'l', 'Helvetica', '' ,10, 'Name: '.$AssessName->response);
-	certificate_print_text($pdf, $box2x, $box2y+10, 'l', 'Helvetica', '' ,10, 'Position: '.$Assessrole->content);
+	certificate_print_text($pdf, $box2x-5, $box2y, 'l', 'Helvetica', 'B' ,12,
+			get_string('supervisor', 'mod_certificate'));
+	certificate_print_text($pdf, $box2x, $box2y+5, 'l', 'Helvetica', '' ,10,
+			get_string('namevalue', 'mod_certificate', $AssessName->response));
+	certificate_print_text($pdf, $box2x, $box2y+10, 'l', 'Helvetica', '' ,10,
+			get_string('positionvalue', 'mod_certificate', $Assessrole->content));
 	
 	certificate_print_text($pdf, $box2x-5, $box2y+20, 'l', 'Helvetica', 'B' ,12, $level->content);
-	certificate_print_text($pdf, $box2x, $box2y+25, 'l', 'Helvetica', '' ,10, 'Name: '.fullname($user));
-	certificate_print_text($pdf, $box2x, $box2y+35, 'l', 'Helvetica', 'i' ,10, 'This document was electronically agreed to by the above named Supervisor on the '.date('j F Y',$responsedate).'.', 90);
+	certificate_print_text($pdf, $box2x, $box2y+25, 'l', 'Helvetica', '' ,10,
+			get_string('namevalue', 'mod_certificate', fullname($user)));
+	$agreement = new stdClass();
+	$agreement->supervisor = get_string('supervisor', 'mod_certificate');
+	$agreement->date = userdate($responsedate, get_string('strftimedate', 'langconfig'));
+	certificate_print_text($pdf, $box2x, $box2y+35, 'l', 'Helvetica', 'i' ,10,
+			get_string('meutermelectronicagreement', 'mod_certificate', $agreement), 90);
 
 
 //Signature and comment box for DCT
 
-	certificate_print_text($pdf, $box1x-5, $box3y, 'l', 'Helvetica', 'B' ,12, 'Director of Clinical Training');
-	certificate_print_text($pdf, $box1x, $box3y+10, 'l', 'Helvetica', '' ,10, 'Name');
-	certificate_print_text($pdf, $box1x, $box3y+30, 'l', 'Helvetica', '' ,10, 'Signature');
-	certificate_print_text($pdf, $box1x, $box3y+50, 'l', 'Helvetica', '' ,10, 'Date');
+	certificate_print_text($pdf, $box1x-5, $box3y, 'l', 'Helvetica', 'B' ,12,
+			get_string('meutermdirectorclinicaltraining', 'mod_certificate'));
+	certificate_print_text($pdf, $box1x, $box3y+10, 'l', 'Helvetica', '' ,10, get_string('name'));
+	certificate_print_text($pdf, $box1x, $box3y+30, 'l', 'Helvetica', '' ,10,
+			get_string('signature', 'mod_certificate'));
+	certificate_print_text($pdf, $box1x, $box3y+50, 'l', 'Helvetica', '' ,10,
+			get_string('date'));
 
-	printcommentbox('Director of Clinical Training comments:','', $box2x, $box3y);
+	printcommentbox(get_string('meutermdirectorcomments', 'mod_certificate'), '', $box2x, $box3y);
 
 
 
@@ -324,14 +346,16 @@ FOREACH ($questions AS $question) {
 		$appendix++;
 		$pdf->AddPage();
 		printhead(fullname($user), $level->content, $AHPRA->response, $term->content, $responsedate, $comp->content, $team->content);
-		certificate_print_text($pdf, $box1x, $box1y, 'l', 'Helvetica', 'B' ,16, 'Appendix '.$appendix.' - Strengths');
+		certificate_print_text($pdf, $box1x, $box1y, 'l', 'Helvetica', 'B' ,16,
+				get_string('meutermappendixstrengths', 'mod_certificate', $appendix));
 		certificate_print_text($pdf, $box1x, $box1y+20, 'l', 'Helvetica', 'I' ,10, $strengths->response,180);
 	}
 	if (strlen($weakness->response)>190) {
 		$appendix++;
 		$pdf->AddPage();
 		printhead(fullname($user), $level->content, $AHPRA->response, $term->content, $responsedate, $comp->content, $team->content);
-		certificate_print_text($pdf, $box1x, $box1y, 'l', 'Helvetica', 'B' ,16, 'Appendix '.$appendix.' - Areas for improvement');
+		certificate_print_text($pdf, $box1x, $box1y, 'l', 'Helvetica', 'B' ,16,
+				get_string('meutermappendiximprovement', 'mod_certificate', $appendix));
 		certificate_print_text($pdf, $box1x, $box1y+20, 'l', 'Helvetica', 'I' ,10, $weakness->response,180);
 	}
 
@@ -340,20 +364,35 @@ $pdf->Output(fullname($user).'-'.$team->content.'-'.date('Y',$responsedate).'-'.
 //Functions
 function printhead($name, $level, $regno, $tnum, $subdate, $term, $org) {
 	GLOBAL $pdf, $x, $y, $certificate, $brdrx, $brdry, $brdrw, $brdrh;
-	certificate_print_text($pdf, $x, $y+20, 'l', 'Helvetica', 'B' ,16, $level.' training - term assessment form');
-	certificate_print_text($pdf, $x+2, $y+28, 'l', 'Helvetica', 'B', 12, $level.' details' );
-	certificate_print_text($pdf, $x+107, $y+28, 'l', 'Helvetica', 'B', 12, 'Term details' );
-	certificate_print_text($pdf, $x+5, $y+35, 'l', 'Helvetica', '', 10, $level.' name' );
+	certificate_print_text($pdf, $x, $y+20, 'l', 'Helvetica', 'B' ,16,
+			get_string('meutermtrainingassessmentform', 'mod_certificate', $level));
+	certificate_print_text($pdf, $x+2, $y+28, 'l', 'Helvetica', 'B', 12,
+			get_string('meutermleveldetails', 'mod_certificate', $level));
+	certificate_print_text($pdf, $x+107, $y+28, 'l', 'Helvetica', 'B', 12,
+			get_string('meutermtermdetails', 'mod_certificate'));
+	certificate_print_text($pdf, $x+5, $y+35, 'l', 'Helvetica', '', 10,
+			get_string('meutermlevelname', 'mod_certificate', $level));
 	certificate_print_text($pdf, $x+35, $y+35, 'l', 'Helvetica', '', 10, $name);
-	certificate_print_text($pdf, $x+110, $y+35, 'l', 'Helvetica', '' ,10, 'Term name:');
-	certificate_print_text($pdf, $x+140, $y+35, 'l', 'Helvetica', '' ,10, $tnum.' - '.date('Y',$subdate));
-	certificate_print_text($pdf, $x+5, $y+40, 'l', 'Helvetica', '', 10, 'AHPRA reg no:' );
+	certificate_print_text($pdf, $x+110, $y+35, 'l', 'Helvetica', '' ,10,
+			get_string('meutermtermname', 'mod_certificate'));
+	$termyear = (object) [
+		'term' => $tnum,
+		'year' => userdate($subdate, '%Y'),
+	];
+	certificate_print_text($pdf, $x+140, $y+35, 'l', 'Helvetica', '' ,10,
+			get_string('meutermtermyear', 'mod_certificate', $termyear));
+	certificate_print_text($pdf, $x+5, $y+40, 'l', 'Helvetica', '', 10,
+			get_string('meutermregistrationnumber', 'mod_certificate'));
 	certificate_print_text($pdf, $x+35, $y+40, 'l', 'Helvetica', '' ,10, $regno);
-	certificate_print_text($pdf, $x+110, $y+40, 'l', 'Helvetica', '' ,10, 'Assessment date:');
-	certificate_print_text($pdf, $x+140, $y+40, 'l', 'Helvetica', '' ,10, date('j F Y',$subdate));
-	certificate_print_text($pdf, $x+2, $y+48, 'l', 'Helvetica', 'B', 12, 'This form is being completed for:' );
+	certificate_print_text($pdf, $x+110, $y+40, 'l', 'Helvetica', '' ,10,
+			get_string('meutermassessmentdate', 'mod_certificate'));
+	certificate_print_text($pdf, $x+140, $y+40, 'l', 'Helvetica', '' ,10,
+			userdate($subdate, get_string('strftimedate', 'langconfig')));
+	certificate_print_text($pdf, $x+2, $y+48, 'l', 'Helvetica', 'B', 12,
+			get_string('meutermassessmentfor', 'mod_certificate'));
 	certificate_print_text($pdf, $x+70, $y+48, 'l', 'Helvetica', 'B' ,12, $term);
-	certificate_print_text($pdf, $x+110, $y+45, 'l', 'Helvetica', '' ,10, 'Unit of term:');
+	certificate_print_text($pdf, $x+110, $y+45, 'l', 'Helvetica', '' ,10,
+			get_string('meutermunitofterm', 'mod_certificate'));
 	certificate_print_text($pdf, $x+140, $y+45, 'l', 'Helvetica', '' ,10, $org);
 }
 
@@ -437,8 +476,9 @@ function printbox($qid, $qcontent, $boxx, $boxy) {
 
 
 	certificate_print_text($pdf, $boxx-3, $boxy+1, 'l', 'Helvetica', 'I', 7, $qcontent,88);
-	certificate_print_text($pdf, $boxx-5, $boxy+15, 'l', 'Helvetica', 'B', 9, 'Rating');
-	certificate_print_text($pdf, $boxx+8, $boxy+15, 'l', 'Helvetica', 'B', 9, 'Description');
+	certificate_print_text($pdf, $boxx-5, $boxy+15, 'l', 'Helvetica', 'B', 9,
+			get_string('rating', 'mod_certificate'));
+	certificate_print_text($pdf, $boxx+8, $boxy+15, 'l', 'Helvetica', 'B', 9, get_string('description'));
 
 }
 
@@ -460,7 +500,7 @@ function printglobalbox($heading, $descr1, $boxx, $boxy,$num) {
 			break;
 	}
 	if (strlen($descr1)>190) {
-		$descr1="See appendix attached";
+		$descr1 = get_string('meutermseeappendix', 'mod_certificate');
 	}
 	certificate_print_text($pdf, $boxx, $boxy+$offset, 'l', 'Helvetica', 'b' ,10, $heading, 80);
 	certificate_print_text($pdf, $boxx, $boxy+5+$offset, 'l', 'Helvetica', '' ,10, $descr1, 80);
