@@ -303,8 +303,6 @@ $string['supervisor'] = 'Supervisor';
 $string['valuecolon'] = 'Value:';
 
 // Certificate type names.
-$string['typea4_embedded'] = 'A4 embedded';
-$string['typea4_non_embedded'] = 'A4 non-embedded';
 $string['typeadvlifesupp'] = 'Advanced life support';
 $string['typeatsi'] = 'ATSI';
 $string['typeballot'] = 'Ballot';
