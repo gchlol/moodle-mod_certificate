@@ -46,6 +46,9 @@ require_login($course, false, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/certificate:view', $context);
 
+$userid = optional_param('userid', $USER->id, PARAM_INT);
+certificate_require_user_certificate_access($userid, $context);
+
 $event = \mod_certificate\event\course_module_viewed::create(array(
     'objectid' => $certificate->id,
     'context' => $context,

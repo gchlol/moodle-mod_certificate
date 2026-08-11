@@ -26,6 +26,27 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
+ * Require access to generate a certificate for a user.
+ *
+ * The view capability permits access to the certificate activity, but it
+ * does not permit changing the target user in the request.
+ *
+ * @param int $userid user id the certificate will be generated for
+ * @param context $context certificate activity context
+ * @return void
+ */
+function certificate_require_user_certificate_access($userid, $context) {
+    global $USER;
+
+    require_capability('mod/certificate:view', $context);
+
+    if ((int) $userid !== (int) $USER->id) {
+        throw new moodle_exception('nopermissions', 'error', '',
+            get_string('certificate:view', 'certificate'));
+    }
+}
+
+/**
  * Add certificate instance.
  *
  * @param stdClass $certificate
@@ -303,6 +324,9 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
     } else if ($filearea === 'onthefly') {
         require_once($CFG->dirroot.'/mod/certificate/locallib.php');
         require_once("$CFG->libdir/pdflib.php");
+
+        $userid = optional_param('userid', $USER->id, PARAM_INT);
+        certificate_require_user_certificate_access($userid, $context);
 
         if (!$certificate = $DB->get_record('certificate', array('id' => $certrecord->certificateid))) {
             return false;
