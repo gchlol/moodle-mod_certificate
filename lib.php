@@ -26,24 +26,17 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Require access to generate a certificate for a user.
+ * Require access to view or generate a certificate for a user.
  *
- * The view capability permits access to the certificate activity, but it
- * does not permit changing the target user in the request.
+ * The view capability permits access to the certificate activity. The
+ * target-user policy determines whose certificate may be requested.
  *
  * @param int $userid user id the certificate will be generated for
  * @param context $context certificate activity context
  * @return void
  */
 function certificate_require_user_certificate_access($userid, $context) {
-    global $USER;
-
-    require_capability('mod/certificate:view', $context);
-
-    if ((int) $userid !== (int) $USER->id) {
-        throw new moodle_exception('nopermissions', 'error', '',
-            get_string('certificate:view', 'certificate'));
-    }
+    \mod_certificate\permission::require_view_user_certificate($context, (int) $userid);
 }
 
 /**
@@ -306,11 +299,12 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
     if (!$certrecord = $DB->get_record('certificate_issues', array('id' => $certrecord))) {
         return false;
     }
-
-    $canmanagecertificate = has_capability('mod/certificate:manage', $context);
-    if ($USER->id != $certrecord->userid and !$canmanagecertificate) {
+    if ($certrecord->certificateid != $certificate->id) {
         return false;
     }
+
+    certificate_require_user_certificate_access($certrecord->userid, $context);
+    $canmanagecertificate = has_capability('mod/certificate:manage', $context);
 
     if ($filearea === 'issue') {
         $relativepath = implode('/', $args);
@@ -325,21 +319,31 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
         require_once($CFG->dirroot.'/mod/certificate/locallib.php');
         require_once("$CFG->libdir/pdflib.php");
 
-        $userid = optional_param('userid', $USER->id, PARAM_INT);
+        $userid = optional_param('userid', $certrecord->userid, PARAM_INT);
+        if ((int) $userid !== (int) $certrecord->userid) {
+            throw new moodle_exception('nopermissions', 'error', '',
+                get_string('certificate:view', 'certificate'));
+        }
         certificate_require_user_certificate_access($userid, $context);
 
         if (!$certificate = $DB->get_record('certificate', array('id' => $certrecord->certificateid))) {
             return false;
         }
 
-        if ($certificate->requiredtime && !$canmanagecertificate) {
+        if ($userid == $USER->id && $certificate->requiredtime && !$canmanagecertificate) {
             if (certificate_get_course_time($course->id) < ($certificate->requiredtime * 60)) {
                 return false;
             }
         }
 
-        // Load the specific certificate type. It will fill the $pdf var.
-        require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
+        // Load the specific certificate type as the certificate owner. It will fill the $pdf var.
+        $requestinguser = $USER;
+        $USER = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
+        try {
+            require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
+        } finally {
+            $USER = $requestinguser;
+        }
         $filename = certificate_get_certificate_filename($certificate, $cm, $course) . '.pdf';
         $filecontents = $pdf->Output('', 'S');
         send_file($filecontents, $filename, 0, 0, true, true, 'application/pdf');

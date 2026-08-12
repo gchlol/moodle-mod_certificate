@@ -24,6 +24,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_certificate\permission;
 use mod_certificate\util\user_field_util;
 
 defined('MOODLE_INTERNAL') || die();
@@ -398,14 +399,16 @@ function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 
     $conditionssql = '';
     $conditionsparams = array();
 
-    // Get all users that can manage this certificate to exclude them from the report.
-    $certmanagers = array_keys(get_users_by_capability($context, 'mod/certificate:manage', 'u.id'));
-    $certmanagers = array_merge($certmanagers, array_keys(get_admins()));
-    list($sql, $params) = $DB->get_in_or_equal($certmanagers, SQL_PARAMS_NAMED, 'cert');
-    $conditionssql .= "AND NOT u.id $sql \n";
-    $conditionsparams += $params;
+    $visibility = permission::get_viewable_users_sql($context, 'u.id');
+    if ($visibility['where'] !== '') {
+        $conditionssql .= "AND ({$visibility['where']}) ";
+        $conditionsparams += $visibility['params'];
+    }
 
-    if ($groupmode) {
+    // Organisation managers, facilitators, and admins use the target-user policy
+    // across groups. Group filtering remains an additional restriction for users
+    // whose scope is limited to themselves.
+    if ($groupmode && !permission::can_view_other_users($context)) {
         $canaccessallgroups = has_capability('moodle/site:accessallgroups', $context);
         $currentgroup = groups_get_activity_group($cm);
 
@@ -451,13 +454,15 @@ function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 
 
     // The picture fields also include the name fields for the user.
     $picturefields = user_field_util::user_pic_select('u', user_field_util::get_extra_fields($context));
+    $limitfrom = $perpage > 0 ? $page * $perpage : 0;
+    $limitnum = $perpage > 0 ? $perpage : 0;
     $users = $DB->get_records_sql("SELECT $picturefields, u.idnumber, ci.code, ci.timecreated
                                      FROM {user} u
                                INNER JOIN {certificate_issues} ci
                                        ON u.id = ci.userid
                                     WHERE u.deleted = 0
                                       AND ci.certificateid = :certificateid $conditionssql
-                                 ORDER BY {$sort}", $allparams, $page * $perpage, $perpage);
+                                 ORDER BY {$sort}", $allparams, $limitfrom, $limitnum);
 
     return $users;
 }
@@ -466,16 +471,21 @@ function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 
  * Returns a list of previously issued certificates--used for reissue.
  *
  * @param int $certificateid
+ * @param int|null $userid user ID, defaults to the current user
  * @return stdClass the attempts else false if none found
  */
-function certificate_get_attempts($certificateid) {
+function certificate_get_attempts($certificateid, $userid = null) {
     global $DB, $USER;
+
+    if ($userid === null) {
+        $userid = $USER->id;
+    }
 
     $sql = "SELECT *
               FROM {certificate_issues} i
              WHERE certificateid = :certificateid
                AND userid = :userid";
-    if ($issues = $DB->get_records_sql($sql, array('certificateid' => $certificateid, 'userid' => $USER->id))) {
+    if ($issues = $DB->get_records_sql($sql, array('certificateid' => $certificateid, 'userid' => $userid))) {
         return $issues;
     }
 
@@ -516,7 +526,7 @@ function certificate_print_attempts($course, $certificate, $attempts) {
         $row[] = $datecompleted;
 
         if ($gradecolumn) {
-            $attemptgrade = certificate_get_grade($certificate, $course);
+            $attemptgrade = certificate_get_grade($certificate, $course, $attempt->userid);
             $row[] = $attemptgrade;
         }
 

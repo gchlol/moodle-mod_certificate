@@ -33,11 +33,27 @@ require_once(__DIR__ . '/gfg_pdf.php');
 
 $plan_id = required_param('ciap', PARAM_INT);
 if ($plan_id == '999999') {
-    output_data();
+    $viewerid = isset($requestinguser) ? (int) $requestinguser->id : 0;
+    output_data($viewerid);
 }
 
-$plan = $DB->get_record('ciap_plans', [ 'id' => $plan_id ]);
-$ciap = $DB->get_record('ciap', [ 'id' => $plan->ciapid ]);
+$planaccess = new \mod_ciap\plan($plan_id);
+$plan = $DB->get_record('ciap_plans', [ 'id' => $plan_id ], '*', MUST_EXIST);
+$ciap = $DB->get_record('ciap', [
+    'id' => $plan->ciapid,
+    'course' => $course->id,
+    'linked_certificate' => $cm->id,
+], '*', MUST_EXIST);
+$ciapcm = get_coursemodule_from_instance('ciap', $ciap->id, $course->id, false, MUST_EXIST);
+$ciapcontext = context_module::instance($ciapcm->id);
+$viewerid = isset($requestinguser) ? (int) $requestinguser->id : (int) $USER->id;
+$targetuserid = (int) $USER->id;
+if (
+    !has_capability('mod/ciap:view', $ciapcontext, $viewerid) ||
+    (!is_siteadmin($viewerid) && !$planaccess->is_owner($targetuserid))
+) {
+    throw new moodle_exception('nopermissions', 'error', '', get_string('view'));
+}
 $actions = $DB->get_records('ciap_actions', [ 'planid' => $plan->id ]);
 
 $plan->custom_fields = get_custom_field_values('plans', $ciap->id, $plan->id);
@@ -339,11 +355,16 @@ function get_action_content(stdClass $action): array {
 /**
  * Directly output all CIAP action data.
  *
+ * @param int $viewerid ID of the user requesting the data.
  * @return void
  * @throws dml_exception
  */
-function output_data(): void {
+function output_data(int $viewerid): void {
     global $DB;
+
+    if (!is_siteadmin($viewerid)) {
+        throw new moodle_exception('nopermissions', 'error', '', get_string('view'));
+    }
 
     $actions = $DB->get_records('ciap_actions');
     foreach ($actions as $action) {

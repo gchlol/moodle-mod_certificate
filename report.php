@@ -71,9 +71,10 @@ if (!$certificate = $DB->get_record('certificate', array('id'=> $cm->instance)))
 // Requires a course login
 require_login($course, false, $cm);
 
-// Check capabilities
+// Check capabilities.
 $context = context_module::instance($cm->id);
-require_capability('mod/certificate:manage', $context);
+require_capability('mod/certificate:view', $context);
+$canviewotherusers = \mod_certificate\permission::can_view_other_users($context);
 
 // Declare some variables
 $strcertificates = get_string('modulenameplural', 'certificate');
@@ -101,7 +102,9 @@ if (!$download) {
 // Ensure there are issues to display, if not display notice
 if (!$users = certificate_get_issues($certificate->id, $DB->sql_fullname(), $groupmode, $cm, $page, $perpage)) {
     echo $OUTPUT->header();
-    groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/certificate/report.php?id='.$id);
+    if (!$canviewotherusers) {
+        groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/certificate/report.php?id='.$id);
+    }
     echo $OUTPUT->notification(get_string('nocertificatesissued', 'certificate'));
     echo $OUTPUT->footer($course);
     exit();
@@ -301,7 +304,9 @@ $btndownloadtxt = $OUTPUT->single_button(new moodle_url("report.php", array('id'
 $tablebutton->data[] = array($btndownloadods, $btndownloadxls, $btndownloadtxt);
 
 echo $OUTPUT->header();
-groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/certificate/report.php?id='.$id);
+if (!$canviewotherusers) {
+    groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/certificate/report.php?id='.$id);
+}
 echo $OUTPUT->heading(get_string('modulenameplural', 'certificate'));
 echo $OUTPUT->paging_bar($usercount, $page, $perpage, $url);
 echo '<br />';

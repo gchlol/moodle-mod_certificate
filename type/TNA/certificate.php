@@ -30,16 +30,20 @@ if (!defined('MOODLE_INTERNAL')) {
 require_once($CFG->libdir . '/filelib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
-$userid = optional_param('userid', $USER->id, PARAM_INT);
+$userid = (int) $USER->id;
 $questid = optional_param('questid', 0, PARAM_INT);
 $level = optional_param('level', 'self', PARAM_TEXT);
+if (!in_array($level, array('self', 'others', 'leaders', 'org'), true)) {
+    throw new invalid_parameter_exception('Invalid certificate level.');
+}
 
-$user = $DB->get_record('user', array('id' => $userid));
+$user = $USER;
 $role = $DB->get_record('user_info_data', array('userid' => $userid, 'fieldid' => '9')); 
 $roletitle = ucwords(strtolower($role->data));
-$response = $DB->get_record_sql('SELECT * FROM {questionnaire_response} WHERE userid=? AND questionnaireid=?', [$userid, $questid]);
+$quiz = $DB->get_record('questionnaire', array('id' => $questid, 'course' => $course->id), '*', MUST_EXIST);
+$response = $DB->get_record('questionnaire_response',
+    array('userid' => $userid, 'questionnaireid' => $questid), '*', MUST_EXIST);
 $responsedate=$response->submitted;
-$quiz = $DB->get_record('questionnaire', array('id' => $questid));
 $pdf = new TCPDF($certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
 
 $pdf->SetTitle(get_string('tnaresultstitle', 'mod_certificate', fullname($user)));
