@@ -1337,3 +1337,29 @@ function certificate_get_certificate_filename($certificate, $cm, $course) {
 
     return $filename;
 }
+
+/**
+ * GCHLOL:GS-725 - Resolve the URL-param target user for on-behalf certificate issuance, or null for self-view.
+ *
+ * @param stdClass $course
+ * @param context_module $context
+ * @return stdClass|null
+ */
+function certificate_resolve_target_user($course, $context) {
+    global $USER;
+
+    // No userid or acting as self: caller handles the normal self-view path.
+    $requesteduserid = optional_param('userid', 0, PARAM_INT);
+    if ($requesteduserid <= 0 || $requesteduserid == $USER->id) {
+        return null;
+    }
+
+    require_capability('mod/certificate:manage', $context);
+    // Target must exist and be actively enrolled before we issue on their behalf.
+    $targetuser = core_user::get_user($requesteduserid, '*', MUST_EXIST);
+    if (!is_enrolled(context_course::instance($course->id), $targetuser, '', true)) {
+        throw new moodle_exception('usernotenrolled', 'certificate');
+    }
+
+    return $targetuser;
+}

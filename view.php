@@ -46,6 +46,20 @@ require_login($course, false, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/certificate:view', $context);
 
+// GCHLOL:GS-725 - If target user is specified via URL, issue certificate for user and redirect to report page.
+$targetuser = certificate_resolve_target_user($course, $context);
+if ($targetuser !== null) {
+    $certrecord = certificate_get_issue($course, $targetuser, $certificate, $cm);
+    \mod_certificate\event\certificate_issued_via_url::create(array(
+        'objectid' => $certrecord->id,
+        'relateduserid' => $targetuser->id,
+        'userid' => $USER->id,
+        'context' => $context,
+    ))->trigger();
+    // Redirect so we don't fall through and issue a self-view certificate for the manager.
+    redirect(new moodle_url('/mod/certificate/report.php', array('id' => $cm->id)));
+}
+
 $event = \mod_certificate\event\course_module_viewed::create(array(
     'objectid' => $certificate->id,
     'context' => $context,
