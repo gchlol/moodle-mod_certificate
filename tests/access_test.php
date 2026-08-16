@@ -78,6 +78,38 @@ class mod_certificate_access_testcase extends advanced_testcase {
     }
 
     /**
+     * Assert that both the permission policy and its enforcement wrapper allow a target user.
+     *
+     * @param context_module $context certificate activity context
+     * @param int $userid target user ID
+     * @return void
+     */
+    private function assert_can_view_certificate($context, $userid) {
+        $this->assertTrue(has_capability('mod/certificate:view', $context));
+        $this->assertTrue(\mod_certificate\permission::can_view_user_certificate($context, $userid));
+        certificate_require_user_certificate_access($userid, $context);
+    }
+
+    /**
+     * Assert that both the permission policy and its enforcement wrapper deny a target user.
+     *
+     * @param context_module $context certificate activity context
+     * @param int $userid target user ID
+     * @return void
+     */
+    private function assert_cannot_view_certificate($context, $userid) {
+        $this->assertTrue(has_capability('mod/certificate:view', $context));
+        $this->assertFalse(\mod_certificate\permission::can_view_user_certificate($context, $userid));
+
+        try {
+            certificate_require_user_certificate_access($userid, $context);
+            $this->fail('Expected certificate access to be denied.');
+        } catch (moodle_exception $exception) {
+            $this->assertSame('nopermissions', $exception->errorcode);
+        }
+    }
+
+    /**
      * Assign a user to an organisation level.
      *
      * @param stdClass $user user to assign
@@ -217,7 +249,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->getDataGenerator()->enrol_user($staff->id, $course->id, 'student');
         $this->setUser($staff);
 
-        $this->assertNull(certificate_require_user_certificate_access($staff->id, $context));
+        $this->assert_can_view_certificate($context, $staff->id);
+        $this->assertFalse(\mod_certificate\permission::can_view_other_users($context));
     }
 
     /**
@@ -231,8 +264,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->getDataGenerator()->enrol_user($staff->id, $course->id, 'student');
         $this->setUser($staff);
 
-        $this->expectException(moodle_exception::class);
-        certificate_require_user_certificate_access($otheruser->id, $context);
+        $this->assert_cannot_view_certificate($context, $otheruser->id);
     }
 
     /**
@@ -244,6 +276,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
 
+        $this->assertFalse(\mod_certificate\permission::can_view_user_certificate($context, $user->id));
         $this->expectException(required_capability_exception::class);
         certificate_require_user_certificate_access($user->id, $context);
     }
@@ -262,6 +295,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->setUser($facilitator);
 
         $this->assertTrue(has_capability('mod/certificate:viewallnonadmincertificates', $context));
+        $this->assertFalse(\mod_certificate\permission::can_view_user_certificate($context, $facilitator->id));
         $this->expectException(required_capability_exception::class);
         certificate_require_user_certificate_access($facilitator->id, $context);
     }
@@ -280,12 +314,11 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->create_manager_hierarchy($manager, $directreport, $indirectreport, $unrelateduser);
         $this->setUser($manager);
 
-        $this->assertNull(certificate_require_user_certificate_access($manager->id, $context));
-        $this->assertNull(certificate_require_user_certificate_access($directreport->id, $context));
-        $this->assertNull(certificate_require_user_certificate_access($indirectreport->id, $context));
-
-        $this->expectException(moodle_exception::class);
-        certificate_require_user_certificate_access($unrelateduser->id, $context);
+        $this->assert_can_view_certificate($context, $manager->id);
+        $this->assert_can_view_certificate($context, $directreport->id);
+        $this->assert_can_view_certificate($context, $indirectreport->id);
+        $this->assert_cannot_view_certificate($context, $unrelateduser->id);
+        $this->assertTrue(\mod_certificate\permission::can_view_other_users($context));
     }
 
     /**
@@ -303,8 +336,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->make_site_admin($directreport);
         $this->setUser($manager);
 
-        $this->expectException(moodle_exception::class);
-        certificate_require_user_certificate_access($directreport->id, $context);
+        $this->assert_cannot_view_certificate($context, $directreport->id);
     }
 
     /**
@@ -320,7 +352,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->setUser($facilitator);
 
         $this->assertTrue(has_capability('mod/certificate:viewallnonadmincertificates', $context));
-        $this->assertNull(certificate_require_user_certificate_access($staff->id, $context));
+        $this->assert_can_view_certificate($context, $staff->id);
+        $this->assertTrue(\mod_certificate\permission::can_view_other_users($context));
     }
 
     /**
@@ -336,8 +369,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->make_site_admin($admin);
         $this->setUser($facilitator);
 
-        $this->expectException(moodle_exception::class);
-        certificate_require_user_certificate_access($admin->id, $context);
+        $this->assert_cannot_view_certificate($context, $admin->id);
     }
 
     /**
@@ -354,8 +386,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $this->assertTrue(has_capability('mod/certificate:manage', $context));
         $this->assertFalse(has_capability('mod/certificate:viewallnonadmincertificates', $context));
-        $this->expectException(moodle_exception::class);
-        certificate_require_user_certificate_access($staff->id, $context);
+        $this->assert_cannot_view_certificate($context, $staff->id);
     }
 
     /**
@@ -374,8 +405,9 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $this->assertFalse(has_capability('mod/certificate:viewallnonadmincertificates', $context));
         $this->assertFalse(\mod_certificate\permission::can_view_user_certificate($context, $otheruser->id));
+        $this->assertFalse(\mod_certificate\permission::can_view_other_users($context));
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
-        $this->assertSame(array($teacher->id), array_keys($users));
+        $this->assertSame(array((int) $teacher->id), array_keys($users));
     }
 
     /**
@@ -389,8 +421,9 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->make_site_admin($otheradmin);
         $this->setAdminUser();
 
-        $this->assertNull(certificate_require_user_certificate_access($staff->id, $context));
-        $this->assertNull(certificate_require_user_certificate_access($otheradmin->id, $context));
+        $this->assert_can_view_certificate($context, $staff->id);
+        $this->assert_can_view_certificate($context, $otheradmin->id);
+        $this->assertTrue(\mod_certificate\permission::can_view_other_users($context));
     }
 
     /**
@@ -414,8 +447,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $firstpage = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm, 0, 2);
         $secondpage = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm, 1, 2);
 
-        $this->assertSame(array($manager->id, $directreport->id), array_keys($firstpage));
-        $this->assertSame(array($indirectreport->id), array_keys($secondpage));
+        $this->assertSame(array((int) $manager->id, (int) $directreport->id), array_keys($firstpage));
+        $this->assertSame(array((int) $indirectreport->id), array_keys($secondpage));
     }
 
     /**
@@ -437,7 +470,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', SEPARATEGROUPS, $cm);
 
-        $this->assertSame(array($facilitator->id, $staff->id), array_keys($users));
+        $this->assertSame(array((int) $facilitator->id, (int) $staff->id), array_keys($users));
     }
 
     /**
@@ -455,7 +488,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
 
-        $this->assertSame(array($staff->id), array_keys($users));
+        $this->assertSame(array((int) $staff->id), array_keys($users));
     }
 
     /**
@@ -473,6 +506,6 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
 
-        $this->assertSame(array($staff->id, $otheradmin->id), array_keys($users));
+        $this->assertSame(array((int) $staff->id, (int) $otheradmin->id), array_keys($users));
     }
 }

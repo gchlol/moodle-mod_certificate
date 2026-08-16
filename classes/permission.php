@@ -234,9 +234,9 @@ class permission {
         $params = $sqlparts['params'];
 
         $sql = "
-            SELECT DISTINCT user.id
+            SELECT DISTINCT u.id
 
-            FROM {user} user
+            FROM {user} u
                 $joins
 
             WHERE $where

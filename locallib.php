@@ -220,7 +220,12 @@ function certificate_email_teachers_html($info) {
  * @return bool Returns true if mail was sent OK and false if there was an error.
  */
 function certificate_email_student($course, $certificate, $certrecord, $context, $filecontents, $filename) {
-    global $USER;
+    global $DB;
+
+    $student = $DB->get_record('user', array(
+        'id' => $certrecord->userid,
+        'deleted' => 0,
+    ), '*', MUST_EXIST);
 
     // Get teachers
     if ($users = get_users_by_capability($context, 'mod/certificate:printteacher', 'u.*', 'u.id ASC',
@@ -242,7 +247,7 @@ function certificate_email_student($course, $certificate, $certrecord, $context,
     }
 
     $info = new stdClass;
-    $info->username = fullname($USER);
+    $info->username = fullname($student);
     $info->certificate = format_string($certificate->name, true);
     $info->course = format_string($course->fullname, true);
     $from = fullname($teacher);
@@ -257,13 +262,13 @@ function certificate_email_student($course, $certificate, $certrecord, $context,
         return false;
     }
 
-    $tempfile = $tempdir.'/'.md5(sesskey().microtime().$USER->id.'.pdf');
+    $tempfile = $tempdir.'/'.md5(sesskey().microtime().$student->id.'.pdf');
     $fp = fopen($tempfile, 'w+');
     fputs($fp, $filecontents);
     fclose($fp);
 
     $prevabort = ignore_user_abort(true);
-    $result = email_to_user($USER, $from, $subject, $message, $messagehtml, $tempfile, $filename);
+    $result = email_to_user($student, $from, $subject, $message, $messagehtml, $tempfile, $filename);
     @unlink($tempfile);
     ignore_user_abort($prevabort);
 

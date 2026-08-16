@@ -75,6 +75,9 @@ require_login($course, false, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/certificate:view', $context);
 $canviewotherusers = \mod_certificate\permission::can_view_other_users($context);
+if (!$canviewotherusers) {
+    throw new moodle_exception('nopermissions', 'error', '', get_string('report', 'certificate'));
+}
 
 // Declare some variables
 $strcertificates = get_string('modulenameplural', 'certificate');
