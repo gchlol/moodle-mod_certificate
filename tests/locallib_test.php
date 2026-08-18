@@ -166,6 +166,26 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
     }
 
     /**
+     * A self-service GFG request continues to create the requesting user's issue record.
+     */
+    public function test_self_service_gfg_issue_is_owned_by_requester() {
+        global $DB;
+
+        $this->resetAfterTest(true);
+        list($course, $certificate, $cm) = $this->create_certificate('GFG');
+        $requester = $this->getDataGenerator()->create_user();
+        $this->setUser($requester);
+
+        $issue = certificate_get_issue_for_view($course, $requester, $certificate, $cm);
+
+        $this->assertSame((int) $requester->id, (int) $issue->userid);
+        $this->assertSame(1, $DB->count_records('certificate_issues', array(
+            'certificateid' => $certificate->id,
+            'userid' => $requester->id,
+        )));
+    }
+
+    /**
      * Certificate email delivery uses the issue owner, not the logged-in delegate.
      */
     public function test_email_student_uses_issue_owner() {

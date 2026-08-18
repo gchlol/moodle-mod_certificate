@@ -29,6 +29,7 @@ if (!defined('MOODLE_INTERNAL')) {
 }
 require_once("$CFG->libdir/filelib.php");
 require_once("$CFG->libdir/completionlib.php");
+require_once("$CFG->dirroot/mod/ciap/locallib.php");
 require_once(__DIR__ . '/gfg_pdf.php');
 
 $plan_id = required_param('ciap', PARAM_INT);
@@ -49,8 +50,9 @@ $ciapcontext = context_module::instance($ciapcm->id);
 $viewerid = isset($requestinguser) ? (int) $requestinguser->id : (int) $USER->id;
 $targetuserid = (int) $USER->id;
 if (
-    !has_capability('mod/ciap:view', $ciapcontext, $viewerid) ||
-    (!is_siteadmin($viewerid) && !$planaccess->is_owner($targetuserid))
+    !is_siteadmin($viewerid) &&
+    !has_capability('mod/ciap:viewplans', $ciapcontext, $targetuserid) &&
+    !$planaccess->can_view($targetuserid)
 ) {
     throw new moodle_exception('nopermissions', 'error', '', get_string('view'));
 }
