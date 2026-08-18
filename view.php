@@ -173,8 +173,10 @@ if (empty($action)) { // Not displaying PDF
         // Force download.
         send_file($filecontents, $filename, 0, 0, true, true, 'application/pdf');
     } elseif ($certificate->delivery == 2) {
-        certificate_email_student($course, $certificate, $certrecord, $context, $filecontents, $filename);
-        // Open in browser after sending email.
+        if ($userid == $USER->id) {
+            certificate_email_student($course, $certificate, $certrecord, $context, $filecontents, $filename);
+        }
+        // Open in browser for the requester.
         send_file($filecontents, $filename, 0, 0, true, false, 'application/pdf');
     }
 }
