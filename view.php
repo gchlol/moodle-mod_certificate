@@ -119,11 +119,6 @@ if (empty($action)) { // Not displaying PDF
     echo $OUTPUT->header();
 
     $canviewotherusers = permission::can_view_other_users($context);
-    if (!$canviewotherusers) {
-        $viewurl = new moodle_url('/mod/certificate/view.php', array('id' => $cm->id, 'userid' => $userid));
-        groups_print_activity_menu($cm, $viewurl);
-    }
-
     if ($canviewotherusers) {
         $numusers = certificate_count_issues($certificate->id, $cm);
         $url = html_writer::tag('a', get_string('viewcertificateviews', 'certificate', $numusers),

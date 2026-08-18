@@ -312,11 +312,6 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
             throw new moodle_exception('nopermissions', 'error', '',
                 get_string('certificate:view', 'certificate'));
         }
-        certificate_require_user_certificate_access($userid, $context);
-
-        if (!$certificate = $DB->get_record('certificate', array('id' => $certrecord->certificateid))) {
-            return false;
-        }
 
         if ($userid == $USER->id && $certificate->requiredtime && !$canmanagecertificate) {
             if (certificate_get_course_time($course->id) < ($certificate->requiredtime * 60)) {

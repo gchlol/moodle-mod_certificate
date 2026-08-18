@@ -88,11 +88,6 @@ if ($action) {
 echo $OUTPUT->header();
 
 $canviewotherusers = permission::can_view_other_users($context);
-if (!$canviewotherusers) {
-    $reviewurl = new moodle_url('/mod/certificate/review.php', array('id' => $cm->id, 'userid' => $userid));
-    groups_print_activity_menu($cm, $reviewurl);
-}
-
 if ($canviewotherusers) {
     $numusers = certificate_count_issues($certificate->id, $cm);
     $url = html_writer::tag('a', get_string('viewcertificateviews', 'certificate', $numusers),
