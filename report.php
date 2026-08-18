@@ -74,8 +74,7 @@ require_login($course, false, $cm);
 // Check capabilities.
 $context = context_module::instance($cm->id);
 require_capability('mod/certificate:view', $context);
-$canviewotherusers = \mod_certificate\permission::can_view_other_users($context);
-if (!$canviewotherusers) {
+if (!\mod_certificate\permission::can_view_other_users($context)) {
     throw new moodle_exception('nopermissions', 'error', '', get_string('report', 'certificate'));
 }
 
@@ -105,9 +104,6 @@ if (!$download) {
 // Ensure there are issues to display, if not display notice
 if (!$users = certificate_get_issues($certificate->id, $DB->sql_fullname(), $groupmode, $cm, $page, $perpage)) {
     echo $OUTPUT->header();
-    if (!$canviewotherusers) {
-        groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/certificate/report.php?id='.$id);
-    }
     echo $OUTPUT->notification(get_string('nocertificatesissued', 'certificate'));
     echo $OUTPUT->footer($course);
     exit();

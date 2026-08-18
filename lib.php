@@ -26,20 +26,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Require access to view or generate a certificate for a user.
- *
- * The view capability permits access to the certificate activity. The
- * target-user policy determines whose certificate may be requested.
- *
- * @param int $userid user id the certificate will be generated for
- * @param context $context certificate activity context
- * @return void
- */
-function certificate_require_user_certificate_access($userid, $context) {
-    \mod_certificate\permission::require_view_user_certificate($context, (int) $userid);
-}
-
-/**
  * Add certificate instance.
  *
  * @param stdClass $certificate
@@ -293,6 +279,7 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
     require_login($course, false, $cm);
 
     require_once($CFG->libdir.'/filelib.php');
+    require_once($CFG->dirroot.'/mod/certificate/locallib.php');
 
     $certrecord = (int)array_shift($args);
 
@@ -316,7 +303,6 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
         }
         send_stored_file($file, 0, 0, true); // download MUST be forced - security!
     } else if ($filearea === 'onthefly') {
-        require_once($CFG->dirroot.'/mod/certificate/locallib.php');
         require_once("$CFG->libdir/pdflib.php");
 
         $userid = optional_param('userid', $certrecord->userid, PARAM_INT);

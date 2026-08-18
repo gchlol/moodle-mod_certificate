@@ -48,6 +48,36 @@ define('CERT_PER_PAGE', 30);
 
 define('CERT_MAX_PER_PAGE', 200);
 
+/**
+ * Require access to view or generate a certificate for a user.
+ *
+ * The view capability permits access to the certificate activity. The
+ * target-user policy determines whose certificate may be requested.
+ *
+ * @param int $userid certificate owner ID
+ * @param context $context certificate activity context
+ * @return void
+ */
+function certificate_require_user_certificate_access($userid, $context) {
+    permission::require_view_user_certificate($context, (int) $userid);
+}
+
+/**
+ * Get the requested certificate owner for the current request.
+ *
+ * @param context_module $context certificate activity context
+ * @return array requested user ID and user record
+ */
+function certificate_get_requested_user($context) {
+    global $DB, $USER;
+
+    $userid = optional_param('userid', $USER->id, PARAM_INT);
+    certificate_require_user_certificate_access($userid, $context);
+    $user = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
+
+    return array($userid, $user);
+}
+
 
 /**
  * Returns a list of teachers by group
@@ -447,26 +477,23 @@ function certificate_get_issue_for_view($course, $user, $certificate, $cm) {
 }
 
 /**
- * Returns a list of issued certificates - sorted for report.
+ * Get the SQL conditions that restrict the issue report to visible users.
  *
- * @param int $certificateid
- * @param string $sort the sort order
- * @param bool $groupmode are we in group mode ?
  * @param stdClass $cm the course module
- * @param int $page offset
- * @param int $perpage total per page
- * @return stdClass the users
+ * @param bool $groupmode are we in group mode?
+ * @param string $useridfield SQL field containing the user ID
+ * @return array SQL fragment, params, and whether the result set is empty
  */
-function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 0, $perpage = 0) {
+function certificate_get_visible_issue_report_conditions($cm, $groupmode, $useridfield) {
     global $DB, $USER;
 
     $context = context_module::instance($cm->id);
     $conditionssql = '';
     $conditionsparams = array();
 
-    $visibility = permission::get_viewable_users_sql($context, 'u.id');
+    $visibility = permission::get_viewable_users_sql($context, $useridfield);
     if ($visibility['where'] !== '') {
-        $conditionssql .= "AND ({$visibility['where']}) ";
+        $conditionssql .= " AND ({$visibility['where']})";
         $conditionsparams += $visibility['params'];
     }
 
@@ -479,43 +506,70 @@ function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 
 
         // If we are viewing all participants and the user does not have access to all groups then return nothing.
         if (!$currentgroup && !$canaccessallgroups) {
-            return array();
+            return array('conditionssql' => '', 'params' => array(), 'isempty' => true);
         }
 
         if ($currentgroup) {
             if (!$canaccessallgroups) {
                 // Guest users do not belong to any groups.
                 if (isguestuser()) {
-                    return array();
+                    return array('conditionssql' => '', 'params' => array(), 'isempty' => true);
                 }
 
                 // Check that the user belongs to the group we are viewing.
                 $usersgroups = groups_get_all_groups($cm->course, $USER->id, $cm->groupingid);
                 if ($usersgroups) {
                     if (!isset($usersgroups[$currentgroup])) {
-                        return array();
+                        return array('conditionssql' => '', 'params' => array(), 'isempty' => true);
                     }
                 } else { // They belong to no group, so return an empty array.
-                    return array();
+                    return array('conditionssql' => '', 'params' => array(), 'isempty' => true);
                 }
             }
 
             $groupusers = array_keys(groups_get_members($currentgroup, 'u.*'));
             if (empty($groupusers)) {
-                return array();
+                return array('conditionssql' => '', 'params' => array(), 'isempty' => true);
             }
 
             list($sql, $params) = $DB->get_in_or_equal($groupusers, SQL_PARAMS_NAMED, 'grp');
-            $conditionssql .= "AND u.id $sql ";
+            $conditionssql .= " AND $useridfield $sql";
             $conditionsparams += $params;
         }
+    }
+
+    return array(
+        'conditionssql' => $conditionssql,
+        'params' => $conditionsparams,
+        'isempty' => false,
+    );
+}
+
+/**
+ * Returns a list of issued certificates - sorted for report.
+ *
+ * @param int $certificateid
+ * @param string $sort the sort order
+ * @param bool $groupmode are we in group mode ?
+ * @param stdClass $cm the course module
+ * @param int $page offset
+ * @param int $perpage total per page
+ * @return stdClass the users
+ */
+function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 0, $perpage = 0) {
+    global $DB;
+
+    $context = context_module::instance($cm->id);
+    $reportconditions = certificate_get_visible_issue_report_conditions($cm, $groupmode, 'u.id');
+    if ($reportconditions['isempty']) {
+        return array();
     }
 
     $page = (int) $page;
     $perpage = (int) $perpage;
 
     // Get all the users that have certificates issued, should only be one issue per user for a certificate
-    $allparams = $conditionsparams + array('certificateid' => $certificateid);
+    $allparams = $reportconditions['params'] + array('certificateid' => $certificateid);
 
     // The picture fields also include the name fields for the user.
     $picturefields = user_field_util::user_pic_select('u', user_field_util::get_extra_fields($context));
@@ -526,7 +580,7 @@ function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 
                                INNER JOIN {certificate_issues} ci
                                        ON u.id = ci.userid
                                     WHERE u.deleted = 0
-                                      AND ci.certificateid = :certificateid $conditionssql
+                                      AND ci.certificateid = :certificateid{$reportconditions['conditionssql']}
                                  ORDER BY {$sort}", $allparams, $limitfrom, $limitnum);
 
     return $users;
@@ -537,27 +591,25 @@ function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 
  *
  * @param int $certificateid certificate instance ID
  * @param stdClass $cm course module
+ * @param bool $groupmode are we in group mode?
  * @return int
  */
-function certificate_count_issues($certificateid, $cm) {
+function certificate_count_issues($certificateid, $cm, $groupmode = false) {
     global $DB;
 
-    $context = context_module::instance($cm->id);
-    $visibility = permission::get_viewable_users_sql($context, 'u.id');
-    $conditionssql = '';
-    if ($visibility['where'] !== '') {
-        $conditionssql = "AND ({$visibility['where']})";
+    $reportconditions = certificate_get_visible_issue_report_conditions($cm, $groupmode, 'u.id');
+    if ($reportconditions['isempty']) {
+        return 0;
     }
 
-    $params = $visibility['params'] + array('certificateid' => $certificateid);
+    $params = $reportconditions['params'] + array('certificateid' => $certificateid);
     // Count in the database instead of loading every visible issue and user into PHP.
     $sql = "SELECT COUNT(DISTINCT u.id)
               FROM {user} u
         INNER JOIN {certificate_issues} ci
                 ON u.id = ci.userid
              WHERE u.deleted = 0
-               AND ci.certificateid = :certificateid
-                   $conditionssql";
+               AND ci.certificateid = :certificateid{$reportconditions['conditionssql']}";
 
     return (int) $DB->count_records_sql($sql, $params);
 }
