@@ -93,7 +93,7 @@ if (!$canviewotherusers) {
 }
 
 if ($canviewotherusers) {
-    $numusers = count(certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm));
+    $numusers = certificate_count_issues($certificate->id, $cm);
     $url = html_writer::tag('a', get_string('viewcertificateviews', 'certificate', $numusers),
         array('href' => $CFG->wwwroot . '/mod/certificate/report.php?id=' . $cm->id));
     echo html_writer::tag('div', $url, array('class' => 'reportlink'));

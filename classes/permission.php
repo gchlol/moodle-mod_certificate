@@ -34,11 +34,25 @@ defined('MOODLE_INTERNAL') || die();
 class permission {
 
     /**
-     * Managed user IDs, cached by manager user ID for the current request.
+     * Managed-user SQL, cached by manager user ID for the current request.
      *
      * @var array
      */
-    protected static $manageduserids = array();
+    protected static $manageduserssql = array();
+
+    /**
+     * Targeted managed-user checks, cached for the current request.
+     *
+     * @var array
+     */
+    protected static $manageduserchecks = array();
+
+    /**
+     * Whether managers have at least one visible report, cached for the current request.
+     *
+     * @var array
+     */
+    protected static $hasvisiblemanagedusers = array();
 
     /**
      * Reset request-level permission caches.
@@ -46,7 +60,9 @@ class permission {
      * @return void
      */
     public static function reset_caches() {
-        self::$manageduserids = array();
+        self::$manageduserssql = array();
+        self::$manageduserchecks = array();
+        self::$hasvisiblemanagedusers = array();
     }
 
     /**
@@ -81,7 +97,7 @@ class permission {
             return true;
         }
 
-        return in_array($targetuserid, self::get_managed_user_ids((int) $USER->id), true);
+        return self::is_managed_user((int) $USER->id, $targetuserid);
     }
 
     /**
@@ -118,13 +134,7 @@ class permission {
             return true;
         }
 
-        foreach (self::get_managed_user_ids((int) $USER->id) as $userid) {
-            if (!is_siteadmin($userid)) {
-                return true;
-            }
-        }
-
-        return false;
+        return self::has_visible_managed_user((int) $USER->id);
     }
 
     /**
@@ -158,14 +168,7 @@ class permission {
         if (self::is_facilitator($context)) {
             $where = '';
         } else {
-            $sqlparts = api::get_myusers_sql(
-                (int) $USER->id,
-                false,
-                array(
-                    role_permission::MANAGER,
-                    role_permission::MANAGE_USERS,
-                )
-            );
+            $sqlparts = self::get_managed_users_sql((int) $USER->id);
             $params = $sqlparts['params'];
             $params['certrequester'] = (int) $USER->id;
             $where = "($useridfield = :certrequester OR $useridfield IN (
@@ -209,41 +212,101 @@ class permission {
     }
 
     /**
-     * Get all users recursively managed by a user through organisation roles.
+     * Get SQL for users recursively managed through organisation roles.
      *
      * @param int $manageruserid manager user ID
-     * @return int[]
+     * @return array
      */
-    protected static function get_managed_user_ids($manageruserid) {
-        global $DB;
-
-        if (array_key_exists($manageruserid, self::$manageduserids)) {
-            return self::$manageduserids[$manageruserid];
+    protected static function get_managed_users_sql($manageruserid) {
+        if (!array_key_exists($manageruserid, self::$manageduserssql)) {
+            self::$manageduserssql[$manageruserid] = api::get_myusers_sql(
+                $manageruserid,
+                false,
+                array(
+                    role_permission::MANAGER,
+                    role_permission::MANAGE_USERS,
+                )
+            );
         }
 
-        $sqlparts = api::get_myusers_sql(
-            $manageruserid,
-            false,
-            array(
-                role_permission::MANAGER,
-                role_permission::MANAGE_USERS,
-            )
-        );
+        return self::$manageduserssql[$manageruserid];
+    }
+
+    /**
+     * Check whether a manager recursively manages one target user.
+     *
+     * @param int $manageruserid manager user ID
+     * @param int $targetuserid target user ID
+     * @return bool
+     */
+    protected static function is_managed_user($manageruserid, $targetuserid) {
+        global $DB;
+
+        $cachekey = "$manageruserid:$targetuserid";
+        if (array_key_exists($cachekey, self::$manageduserchecks)) {
+            return self::$manageduserchecks[$cachekey];
+        }
+
+        $sqlparts = self::get_managed_users_sql($manageruserid);
+        $joins = $sqlparts['joins'];
+        $where = $sqlparts['where'];
+        $params = $sqlparts['params'];
+        $params['certtargetuserid'] = $targetuserid;
+
+        $sql = "
+            SELECT 1
+              FROM {user} u
+                   $joins
+             WHERE u.id = :certtargetuserid
+               AND ($where)
+        ";
+
+        self::$manageduserchecks[$cachekey] = $DB->record_exists_sql($sql, $params);
+
+        return self::$manageduserchecks[$cachekey];
+    }
+
+    /**
+     * Check whether a manager has at least one non-admin report.
+     *
+     * @param int $manageruserid manager user ID
+     * @return bool
+     */
+    protected static function has_visible_managed_user($manageruserid) {
+        global $DB;
+
+        if (array_key_exists($manageruserid, self::$hasvisiblemanagedusers)) {
+            return self::$hasvisiblemanagedusers[$manageruserid];
+        }
+
+        $sqlparts = self::get_managed_users_sql($manageruserid);
         $joins = $sqlparts['joins'];
         $where = $sqlparts['where'];
         $params = $sqlparts['params'];
 
+        $adminids = array_map('intval', array_keys(get_admins()));
+        $adminwhere = '';
+        if (!empty($adminids)) {
+            list($adminsql, $adminparams) = $DB->get_in_or_equal(
+                $adminids,
+                SQL_PARAMS_NAMED,
+                'certmanagedadmin',
+                false
+            );
+            $params += $adminparams;
+            $adminwhere = "AND u.id $adminsql";
+        }
+
         $sql = "
-            SELECT DISTINCT u.id
-
-            FROM {user} u
-                $joins
-
-            WHERE $where
+            SELECT 1
+              FROM {user} u
+                   $joins
+             WHERE ($where)
+                   $adminwhere
         ";
 
-        self::$manageduserids[$manageruserid] = array_map('intval', $DB->get_fieldset_sql($sql, $params));
+        self::$hasvisiblemanagedusers[$manageruserid] = $DB->record_exists_sql($sql, $params);
 
-        return self::$manageduserids[$manageruserid];
+        return self::$hasvisiblemanagedusers[$manageruserid];
     }
 }

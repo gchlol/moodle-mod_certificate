@@ -271,7 +271,7 @@ if ($download == "txt") {
     exit;
 }
 
-$usercount = count(certificate_get_issues($certificate->id, $DB->sql_fullname(), $groupmode, $cm));
+$usercount = certificate_count_issues($certificate->id, $cm);
 
 // Create the table for the users
 $table = new html_table();

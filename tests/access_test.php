@@ -342,6 +342,25 @@ class mod_certificate_access_testcase extends advanced_testcase {
     }
 
     /**
+     * Managed site administrators do not give a manager access to other-user reports.
+     */
+    public function test_manager_with_only_admin_reports_cannot_view_other_users() {
+        $this->resetAfterTest(true);
+        list($course, $context) = $this->create_certificate_context();
+        $manager = $this->getDataGenerator()->create_user();
+        $directreport = $this->getDataGenerator()->create_user();
+        $indirectreport = $this->getDataGenerator()->create_user();
+        $unrelateduser = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($manager->id, $course->id, 'student');
+        $this->create_manager_hierarchy($manager, $directreport, $indirectreport, $unrelateduser);
+        $this->make_site_admin($directreport);
+        $this->make_site_admin($indirectreport);
+        $this->setUser($manager);
+
+        $this->assertFalse(\mod_certificate\permission::can_view_other_users($context));
+    }
+
+    /**
      * A user with Certificate facilitator permission may access every non-admin certificate.
      */
     public function test_facilitator_can_view_non_admin_certificate() {
@@ -451,6 +470,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $this->assertSame(array((int) $manager->id, (int) $directreport->id), array_keys($firstpage));
         $this->assertSame(array((int) $indirectreport->id), array_keys($secondpage));
+        $this->assertSame(3, certificate_count_issues($certificate->id, $cm));
     }
 
     /**
@@ -473,6 +493,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', SEPARATEGROUPS, $cm);
 
         $this->assertSame(array((int) $facilitator->id, (int) $staff->id), array_keys($users));
+        $this->assertSame(2, certificate_count_issues($certificate->id, $cm));
     }
 
     /**
@@ -491,6 +512,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
 
         $this->assertSame(array((int) $staff->id), array_keys($users));
+        $this->assertSame(1, certificate_count_issues($certificate->id, $cm));
     }
 
     /**
@@ -509,6 +531,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
 
         $this->assertSame(array((int) $staff->id, (int) $otheradmin->id), array_keys($users));
+        $this->create_certificate_issue($certificate->id, $staff->id, 3);
+        $this->assertSame(2, certificate_count_issues($certificate->id, $cm));
     }
 
     /**

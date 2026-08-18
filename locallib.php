@@ -533,6 +533,36 @@ function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 
 }
 
 /**
+ * Count issued certificates visible to the current user.
+ *
+ * @param int $certificateid certificate instance ID
+ * @param stdClass $cm course module
+ * @return int
+ */
+function certificate_count_issues($certificateid, $cm) {
+    global $DB;
+
+    $context = context_module::instance($cm->id);
+    $visibility = permission::get_viewable_users_sql($context, 'u.id');
+    $conditionssql = '';
+    if ($visibility['where'] !== '') {
+        $conditionssql = "AND ({$visibility['where']})";
+    }
+
+    $params = $visibility['params'] + array('certificateid' => $certificateid);
+    // Count in the database instead of loading every visible issue and user into PHP.
+    $sql = "SELECT COUNT(DISTINCT u.id)
+              FROM {user} u
+        INNER JOIN {certificate_issues} ci
+                ON u.id = ci.userid
+             WHERE u.deleted = 0
+               AND ci.certificateid = :certificateid
+                   $conditionssql";
+
+    return (int) $DB->count_records_sql($sql, $params);
+}
+
+/**
  * Returns a list of previously issued certificates--used for reissue.
  *
  * @param int $certificateid
