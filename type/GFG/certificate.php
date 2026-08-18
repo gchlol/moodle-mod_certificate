@@ -34,14 +34,14 @@ require_once("$CFG->libdir/completionlib.php");
 require_once("$CFG->dirroot/mod/ciap/locallib.php");
 require_once(__DIR__ . '/gfg_pdf.php');
 
-$plan_id = required_param('ciap', PARAM_INT);
-if ($plan_id == '999999') {
+$planid = required_param('ciap', PARAM_INT);
+if ($planid == '999999') {
     $viewerid = isset($requestinguser) ? (int) $requestinguser->id : 0;
     output_data($viewerid);
 }
 
-$planaccess = new plan($plan_id);
-$plan = $DB->get_record('ciap_plans', [ 'id' => $plan_id ], '*', MUST_EXIST);
+$planaccess = new plan($planid);
+$plan = $DB->get_record('ciap_plans', [ 'id' => $planid ], '*', MUST_EXIST);
 $ciap = $DB->get_record('ciap', [
     'id' => $plan->ciapid,
     'course' => $course->id,

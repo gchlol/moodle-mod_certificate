@@ -102,15 +102,15 @@ $certrecord = certificate_get_issue_for_view($course, $targetuser, $certificate,
 make_cache_directory('tcpdf');
 
 // Load the specific certificate type.
-$require_path = "$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php";
-$repo_name = get_config('certificate', 'reponame');
-if (!empty($repo_name)) {
-    $require_path = "$CFG->dataroot/repository/$repo_name/CERTIFICATE/type/$certificate->certificatetype/certificate.php";
+$requirepath = "$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php";
+$reponame = get_config('certificate', 'reponame');
+if (!empty($reponame)) {
+    $requirepath = "$CFG->dataroot/repository/$reponame/CERTIFICATE/type/$certificate->certificatetype/certificate.php";
 }
 $usercontext = new temporary_user($targetuser);
 $requestinguser = $usercontext->get_requesting_user();
 try {
-    require($require_path);
+    require($requirepath);
 } finally {
     $usercontext->restore();
 }
