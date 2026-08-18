@@ -32,3 +32,7 @@ $plugin->component = 'mod_certificate';
 
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->release   = "Master (Build: 2020082500)"; // User-friendly version number
+
+$plugin->dependencies = [
+    'tool_organisation' => 2023100301,
+];
