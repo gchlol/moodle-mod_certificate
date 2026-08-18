@@ -387,6 +387,66 @@ function certificate_get_issue($course, $user, $certificate, $cm) {
 }
 
 /**
+ * Checks whether a certificate type is a site-specific portfolio implementation.
+ *
+ * Portfolio implementations follow the portfolio_ prefix naming convention.
+ * The legacy Portfolio support directory is deliberately excluded.
+ *
+ * @param string $certificatetype certificate type identifier
+ * @return bool
+ */
+function certificate_is_portfolio_type($certificatetype) {
+    return strpos((string) $certificatetype, 'portfolio_') === 0;
+}
+
+/**
+ * Gets the issue record used to render a certificate for a target user.
+ *
+ * The caller must authorise access to the target user before calling this function. Users may create their own
+ * issue record, and portfolio certificates may be created on demand for an authorised target. Other certificate
+ * types require an existing issue record when viewed by somebody else.
+ *
+ * @param stdClass $course
+ * @param stdClass $user target user
+ * @param stdClass $certificate
+ * @param stdClass $cm course module
+ * @return stdClass certificate issue record
+ * @throws moodle_exception when a delegated non-portfolio certificate has not been issued
+ */
+function certificate_get_issue_for_view($course, $user, $certificate, $cm) {
+    global $DB, $USER;
+
+    $isowncertificate = (int) $user->id === (int) $USER->id;
+    $isportfolio = certificate_is_portfolio_type($certificate->certificatetype);
+
+    if (!$isowncertificate && !$isportfolio) {
+        $certissue = $DB->get_record('certificate_issues', array(
+            'userid' => $user->id,
+            'certificateid' => $certificate->id,
+        ));
+
+        if (!$certissue) {
+            throw new moodle_exception('nocertificatesissued', 'certificate');
+        }
+
+        return $certissue;
+    }
+
+    if ($isowncertificate) {
+        return certificate_get_issue($course, $user, $certificate, $cm);
+    }
+
+    // Legacy issue notifications read the global user, so create a delegated portfolio as its owner.
+    $requestinguser = $USER;
+    $USER = $user;
+    try {
+        return certificate_get_issue($course, $user, $certificate, $cm);
+    } finally {
+        $USER = $requestinguser;
+    }
+}
+
+/**
  * Returns a list of issued certificates - sorted for report.
  *
  * @param int $certificateid

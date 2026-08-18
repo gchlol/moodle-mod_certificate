@@ -37,6 +37,135 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
     }
 
     /**
+     * Create a certificate activity for issue tests.
+     *
+     * @param string $certificatetype certificate type identifier
+     * @return array course, certificate, and course module
+     */
+    private function create_certificate($certificatetype) {
+        $course = $this->getDataGenerator()->create_course();
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_certificate');
+        $certificate = $generator->create_instance(array(
+            'course' => $course->id,
+            'certificatetype' => $certificatetype,
+        ));
+        $cm = get_coursemodule_from_id('certificate', $certificate->cmid, 0, false, MUST_EXIST);
+
+        return array($course, $certificate, $cm);
+    }
+
+    /**
+     * Portfolio certificate types use the documented, case-sensitive portfolio_ prefix.
+     */
+    public function test_portfolio_certificate_type_detection() {
+        $this->assertTrue(certificate_is_portfolio_type('portfolio_gch'));
+        $this->assertTrue(certificate_is_portfolio_type('portfolio_example'));
+        $this->assertFalse(certificate_is_portfolio_type('Portfolio'));
+        $this->assertFalse(certificate_is_portfolio_type('portfolio'));
+        $this->assertFalse(certificate_is_portfolio_type('my_portfolio_gch'));
+    }
+
+    /**
+     * An authorised delegate may create a target user's portfolio issue on demand.
+     */
+    public function test_delegate_can_create_portfolio_issue_for_target() {
+        global $DB, $USER;
+
+        $this->resetAfterTest(true);
+        list($course, $certificate, $cm) = $this->create_certificate('portfolio_gch');
+        $target = $this->getDataGenerator()->create_user();
+        $this->setAdminUser();
+        $requestinguserid = (int) $USER->id;
+
+        $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
+
+        $this->assertSame((int) $target->id, (int) $issue->userid);
+        $this->assertSame($requestinguserid, (int) $USER->id);
+        $this->assertSame(1, $DB->count_records('certificate_issues', array(
+            'certificateid' => $certificate->id,
+            'userid' => $target->id,
+        )));
+
+        $secondissue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
+
+        $this->assertSame((int) $issue->id, (int) $secondissue->id);
+        $this->assertSame(1, $DB->count_records('certificate_issues', array(
+            'certificateid' => $certificate->id,
+            'userid' => $target->id,
+        )));
+    }
+
+    /**
+     * A delegated conventional certificate still requires an existing issue.
+     */
+    public function test_delegate_cannot_create_conventional_issue_for_target() {
+        global $DB;
+
+        $this->resetAfterTest(true);
+        list($course, $certificate, $cm) = $this->create_certificate('A4_non_embedded');
+        $target = $this->getDataGenerator()->create_user();
+        $this->setAdminUser();
+
+        try {
+            certificate_get_issue_for_view($course, $target, $certificate, $cm);
+            $this->fail('Expected a missing delegated certificate issue to be rejected.');
+        } catch (moodle_exception $exception) {
+            $this->assertSame('nocertificatesissued', $exception->errorcode);
+        }
+
+        $this->assertFalse($DB->record_exists('certificate_issues', array(
+            'certificateid' => $certificate->id,
+            'userid' => $target->id,
+        )));
+    }
+
+    /**
+     * A delegate may view an existing conventional certificate issue.
+     */
+    public function test_delegate_can_view_existing_conventional_issue() {
+        global $DB;
+
+        $this->resetAfterTest(true);
+        list($course, $certificate, $cm) = $this->create_certificate('A4_non_embedded');
+        $target = $this->getDataGenerator()->create_user();
+        $issueid = $DB->insert_record('certificate_issues', (object) array(
+            'certificateid' => $certificate->id,
+            'userid' => $target->id,
+            'code' => 'existing-conventional-issue',
+            'timecreated' => time(),
+        ));
+        $this->setAdminUser();
+
+        $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
+
+        $this->assertSame((int) $issueid, (int) $issue->id);
+        $this->assertSame(1, $DB->count_records('certificate_issues', array(
+            'certificateid' => $certificate->id,
+            'userid' => $target->id,
+        )));
+    }
+
+    /**
+     * A user may still create their own conventional certificate issue.
+     */
+    public function test_user_can_create_own_conventional_issue() {
+        global $DB;
+
+        $this->resetAfterTest(true);
+        list($course, $certificate, $cm) = $this->create_certificate('A4_non_embedded');
+        $target = $this->getDataGenerator()->create_user();
+        $this->setUser($target);
+
+        $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
+
+        $this->assertSame((int) $target->id, (int) $issue->userid);
+        $this->assertSame(1, $DB->count_records('certificate_issues', array(
+            'certificateid' => $certificate->id,
+            'userid' => $target->id,
+        )));
+    }
+
+    /**
      * Certificate email delivery uses the issue owner, not the logged-in delegate.
      */
     public function test_email_student_uses_issue_owner() {

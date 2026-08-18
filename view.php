@@ -95,13 +95,8 @@ if (
     }
 }
 
-// Users may issue their own certificate. Viewing another user requires an existing issue.
-if ($userid == $USER->id) {
-    $certrecord = certificate_get_issue($course, $targetuser, $certificate, $cm);
-} else if (!$certrecord = $DB->get_record('certificate_issues',
-        array('userid' => $userid, 'certificateid' => $certificate->id))) {
-    throw new moodle_exception('nocertificatesissued', 'certificate');
-}
+// Resolve the existing issue, or create one for self-service and on-demand portfolios.
+$certrecord = certificate_get_issue_for_view($course, $targetuser, $certificate, $cm);
 
 make_cache_directory('tcpdf');
 
