@@ -23,6 +23,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_certificate\local\temporary_user;
+use mod_certificate\permission;
+
 require_once("../../config.php");
 require_once("$CFG->dirroot/mod/certificate/locallib.php");
 require_once("$CFG->dirroot/mod/certificate/deprecatedlib.php");
@@ -104,7 +107,7 @@ $repo_name = get_config('certificate', 'reponame');
 if (!empty($repo_name)) {
     $require_path = "$CFG->dataroot/repository/$repo_name/CERTIFICATE/type/$certificate->certificatetype/certificate.php";
 }
-$usercontext = new \mod_certificate\local\temporary_user($targetuser);
+$usercontext = new temporary_user($targetuser);
 $requestinguser = $usercontext->get_requesting_user();
 try {
     require($require_path);
@@ -115,7 +118,7 @@ try {
 if (empty($action)) { // Not displaying PDF
     echo $OUTPUT->header();
 
-    $canviewotherusers = \mod_certificate\permission::can_view_other_users($context);
+    $canviewotherusers = permission::can_view_other_users($context);
     if (!$canviewotherusers) {
         $viewurl = new moodle_url('/mod/certificate/view.php', array('id' => $cm->id, 'userid' => $userid));
         groups_print_activity_menu($cm, $viewurl);

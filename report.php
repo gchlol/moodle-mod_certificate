@@ -24,6 +24,7 @@
  */
 
 use core_user\fields;
+use mod_certificate\permission;
 use mod_certificate\util\user_field_util;
 
 require_once('../../config.php');
@@ -74,7 +75,7 @@ require_login($course, false, $cm);
 // Check capabilities.
 $context = context_module::instance($cm->id);
 require_capability('mod/certificate:view', $context);
-if (!\mod_certificate\permission::can_view_other_users($context)) {
+if (!permission::can_view_other_users($context)) {
     throw new moodle_exception('nopermissions', 'error', '', get_string('report', 'certificate'));
 }
 

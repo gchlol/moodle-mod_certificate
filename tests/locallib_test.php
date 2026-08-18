@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use mod_certificate\local\temporary_user;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -80,11 +82,11 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $target->secret = 'target-secret';
         $this->setUser($requester);
 
-        $selfcontext = new \mod_certificate\local\temporary_user($requester);
+        $selfcontext = new temporary_user($requester);
         $this->assertSame($USER, $_SESSION['USER']);
         $selfcontext->restore();
 
-        $usercontext = new \mod_certificate\local\temporary_user($target);
+        $usercontext = new temporary_user($target);
         try {
             $this->assertSame((int) $target->id, (int) $USER->id);
             $this->assertSame((int) $requester->id, (int) $_SESSION['USER']->id);

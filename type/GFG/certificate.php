@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_ciap\plan;
+
 // Majorly modified to allow certificate
 if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.'); // It must be included from view.php
@@ -38,7 +40,7 @@ if ($plan_id == '999999') {
     output_data($viewerid);
 }
 
-$planaccess = new \mod_ciap\plan($plan_id);
+$planaccess = new plan($plan_id);
 $plan = $DB->get_record('ciap_plans', [ 'id' => $plan_id ], '*', MUST_EXIST);
 $ciap = $DB->get_record('ciap', [
     'id' => $plan->ciapid,

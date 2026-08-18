@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_certificate\local\temporary_user;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -324,7 +326,7 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
 
         // Load the specific certificate type as the certificate owner. It will fill the $pdf var.
         $targetuser = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
-        $usercontext = new \mod_certificate\local\temporary_user($targetuser);
+        $usercontext = new temporary_user($targetuser);
         $requestinguser = $usercontext->get_requesting_user();
         try {
             require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");

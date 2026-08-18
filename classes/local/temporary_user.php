@@ -16,6 +16,9 @@
 
 namespace mod_certificate\local;
 
+use core_shutdown_manager;
+use stdClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -28,7 +31,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 class temporary_user {
 
-    /** @var \stdClass user active before the temporary switch */
+    /** @var stdClass user active before the temporary switch */
     private $requestinguser;
 
     /** @var bool whether the requesting user has been restored */
@@ -41,7 +44,7 @@ class temporary_user {
      * session reference prevents the owner from being persisted as the logged-in user, while the shutdown callback
      * covers paths that skip the caller's finally block.
      *
-     * @param \stdClass $targetuser certificate owner
+     * @param stdClass $targetuser certificate owner
      */
     public function __construct($targetuser) {
         global $USER;
@@ -53,7 +56,7 @@ class temporary_user {
         }
 
         $sessionuser = isset($_SESSION['USER']) ? $_SESSION['USER'] : $this->requestinguser;
-        \core_shutdown_manager::register_function(array(__CLASS__, 'restore_user'), array($sessionuser));
+        core_shutdown_manager::register_function(array(__CLASS__, 'restore_user'), array($sessionuser));
 
         $temporaryuser = clone $targetuser;
         unset($temporaryuser->password, $temporaryuser->secret);
@@ -67,7 +70,7 @@ class temporary_user {
     /**
      * Return the authenticated user who requested the certificate.
      *
-     * @return \stdClass
+     * @return stdClass
      */
     public function get_requesting_user() {
         return $this->requestinguser;
@@ -92,7 +95,7 @@ class temporary_user {
      *
      * This is public so Moodle's shutdown manager can restore requests terminated inside legacy certificate types.
      *
-     * @param \stdClass $user user to restore
+     * @param stdClass $user user to restore
      * @return void
      */
     public static function restore_user($user) {

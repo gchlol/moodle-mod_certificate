@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use mod_certificate\permission;
+use tool_organisation\persistent\assignment;
+use tool_organisation\persistent\hierarchy;
+use tool_organisation\persistent\level;
+use tool_organisation\persistent\level_data;
+use tool_organisation\persistent\position;
+use tool_organisation\persistent\role;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -31,7 +39,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      */
     protected function setUp(): void {
         parent::setUp();
-        \mod_certificate\permission::reset_caches();
+        permission::reset_caches();
     }
 
     /**
@@ -88,7 +96,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      */
     private function assert_can_view_certificate($context, $userid) {
         $this->assertTrue(has_capability('mod/certificate:view', $context));
-        $this->assertTrue(\mod_certificate\permission::can_view_user_certificate($context, $userid));
+        $this->assertTrue(permission::can_view_user_certificate($context, $userid));
         certificate_require_user_certificate_access($userid, $context);
     }
 
@@ -101,7 +109,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      */
     private function assert_cannot_view_certificate($context, $userid) {
         $this->assertTrue(has_capability('mod/certificate:view', $context));
-        $this->assertFalse(\mod_certificate\permission::can_view_user_certificate($context, $userid));
+        $this->assertFalse(permission::can_view_user_certificate($context, $userid));
 
         try {
             certificate_require_user_certificate_access($userid, $context);
@@ -120,20 +128,20 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @return void
      */
     private function assign_user_to_level($user, $levelid, $suffix) {
-        $position = new \tool_organisation\persistent\position(0, (object) array(
+        $position = new position(0, (object) array(
             'name' => "Certificate position $suffix",
             'idnumber' => "certificate-position-$suffix",
         ));
         $position->create();
 
-        $assignment = new \tool_organisation\persistent\assignment(0, (object) array(
+        $assignment = new assignment(0, (object) array(
             'userid' => $user->id,
             'positionid' => $position->get('id'),
             'assignnu' => "certificate-assignment-$suffix",
         ));
         $assignment->create();
 
-        $leveldata = new \tool_organisation\persistent\level_data(0, (object) array(
+        $leveldata = new level_data(0, (object) array(
             'levelid' => $levelid,
             'assignid' => $assignment->get('id'),
         ));
@@ -151,21 +159,21 @@ class mod_certificate_access_testcase extends advanced_testcase {
      */
     private function create_manager_hierarchy($manager, $directreport, $indirectreport, $unrelateduser) {
         $suffix = uniqid('', true);
-        $hierarchy = new \tool_organisation\persistent\hierarchy(0, (object) array(
+        $hierarchy = new hierarchy(0, (object) array(
             'idnumber' => "certificate-hierarchy-$suffix",
             'name' => 'Certificate test hierarchy',
-            'type' => \tool_organisation\persistent\hierarchy::TYPE_ASSIGNMENT,
+            'type' => hierarchy::TYPE_ASSIGNMENT,
         ));
         $hierarchy->create();
 
-        $managerlevel = new \tool_organisation\persistent\level(0, (object) array(
+        $managerlevel = new level(0, (object) array(
             'hierarchyid' => $hierarchy->get('id'),
             'name' => 'Manager level',
             'idnumber' => "certificate-manager-$suffix",
         ));
         $managerlevel->create();
 
-        $directlevel = new \tool_organisation\persistent\level(0, (object) array(
+        $directlevel = new level(0, (object) array(
             'hierarchyid' => $hierarchy->get('id'),
             'parent' => $managerlevel->get('id'),
             'name' => 'Direct report level',
@@ -173,7 +181,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         ));
         $directlevel->create();
 
-        $indirectlevel = new \tool_organisation\persistent\level(0, (object) array(
+        $indirectlevel = new level(0, (object) array(
             'hierarchyid' => $hierarchy->get('id'),
             'parent' => $directlevel->get('id'),
             'name' => 'Indirect report level',
@@ -181,17 +189,17 @@ class mod_certificate_access_testcase extends advanced_testcase {
         ));
         $indirectlevel->create();
 
-        $unrelatedlevel = new \tool_organisation\persistent\level(0, (object) array(
+        $unrelatedlevel = new level(0, (object) array(
             'hierarchyid' => $hierarchy->get('id'),
             'name' => 'Unrelated level',
             'idnumber' => "certificate-unrelated-$suffix",
         ));
         $unrelatedlevel->create();
 
-        $managerrole = new \tool_organisation\persistent\role(0, (object) array(
+        $managerrole = new role(0, (object) array(
             'levelid' => $managerlevel->get('id'),
             'userid' => $manager->id,
-            'type' => \tool_organisation\persistent\role::TYPE_USER,
+            'type' => role::TYPE_USER,
             'manager' => 1,
         ));
         $managerrole->create();
@@ -252,7 +260,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->setUser($staff);
 
         $this->assert_can_view_certificate($context, $staff->id);
-        $this->assertFalse(\mod_certificate\permission::can_view_other_users($context));
+        $this->assertFalse(permission::can_view_other_users($context));
     }
 
     /**
@@ -278,7 +286,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
 
-        $this->assertFalse(\mod_certificate\permission::can_view_user_certificate($context, $user->id));
+        $this->assertFalse(permission::can_view_user_certificate($context, $user->id));
         $this->expectException(required_capability_exception::class);
         certificate_require_user_certificate_access($user->id, $context);
     }
@@ -297,7 +305,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->setUser($facilitator);
 
         $this->assertTrue(has_capability('mod/certificate:viewallnonadmincertificates', $context));
-        $this->assertFalse(\mod_certificate\permission::can_view_user_certificate($context, $facilitator->id));
+        $this->assertFalse(permission::can_view_user_certificate($context, $facilitator->id));
         $this->expectException(required_capability_exception::class);
         certificate_require_user_certificate_access($facilitator->id, $context);
     }
@@ -320,7 +328,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->assert_can_view_certificate($context, $directreport->id);
         $this->assert_can_view_certificate($context, $indirectreport->id);
         $this->assert_cannot_view_certificate($context, $unrelateduser->id);
-        $this->assertTrue(\mod_certificate\permission::can_view_other_users($context));
+        $this->assertTrue(permission::can_view_other_users($context));
     }
 
     /**
@@ -357,7 +365,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->make_site_admin($indirectreport);
         $this->setUser($manager);
 
-        $this->assertFalse(\mod_certificate\permission::can_view_other_users($context));
+        $this->assertFalse(permission::can_view_other_users($context));
     }
 
     /**
@@ -374,7 +382,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $this->assertTrue(has_capability('mod/certificate:viewallnonadmincertificates', $context));
         $this->assert_can_view_certificate($context, $staff->id);
-        $this->assertTrue(\mod_certificate\permission::can_view_other_users($context));
+        $this->assertTrue(permission::can_view_other_users($context));
     }
 
     /**
@@ -425,8 +433,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->setUser($teacher);
 
         $this->assertFalse(has_capability('mod/certificate:viewallnonadmincertificates', $context));
-        $this->assertFalse(\mod_certificate\permission::can_view_user_certificate($context, $otheruser->id));
-        $this->assertFalse(\mod_certificate\permission::can_view_other_users($context));
+        $this->assertFalse(permission::can_view_user_certificate($context, $otheruser->id));
+        $this->assertFalse(permission::can_view_other_users($context));
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
         $this->assertSame(array((int) $teacher->id), array_keys($users));
     }
@@ -444,7 +452,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $this->assert_can_view_certificate($context, $staff->id);
         $this->assert_can_view_certificate($context, $otheradmin->id);
-        $this->assertTrue(\mod_certificate\permission::can_view_other_users($context));
+        $this->assertTrue(permission::can_view_other_users($context));
     }
 
     /**

@@ -23,6 +23,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_certificate\local\temporary_user;
+use mod_certificate\permission;
+
 require_once('../../config.php');
 require_once('locallib.php');
 require_once("$CFG->libdir/pdflib.php");
@@ -66,7 +69,7 @@ if (!$certrecord = $DB->get_record('certificate_issues', array('userid' => $user
 }
 
 // Load the specific certificate type as the certificate owner.
-$usercontext = new \mod_certificate\local\temporary_user($targetuser);
+$usercontext = new temporary_user($targetuser);
 $requestinguser = $usercontext->get_requesting_user();
 try {
     require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
@@ -84,7 +87,7 @@ if ($action) {
 
 echo $OUTPUT->header();
 
-$canviewotherusers = \mod_certificate\permission::can_view_other_users($context);
+$canviewotherusers = permission::can_view_other_users($context);
 if (!$canviewotherusers) {
     $reviewurl = new moodle_url('/mod/certificate/review.php', array('id' => $cm->id, 'userid' => $userid));
     groups_print_activity_menu($cm, $reviewurl);
