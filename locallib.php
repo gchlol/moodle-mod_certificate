@@ -411,7 +411,7 @@ function certificate_is_portfolio_type($certificatetype) {
  * @param stdClass $certificate
  * @param stdClass $cm course module
  * @return stdClass certificate issue record
- * @throws moodle_exception when a delegated non-portfolio certificate has not been issued
+ * @throws moodle_exception when a delegated certificate cannot be viewed or issued
  */
 function certificate_get_issue_for_view($course, $user, $certificate, $cm) {
     global $DB, $USER;
@@ -419,17 +419,29 @@ function certificate_get_issue_for_view($course, $user, $certificate, $cm) {
     $isowncertificate = (int) $user->id === (int) $USER->id;
     $isportfolio = certificate_is_portfolio_type($certificate->certificatetype);
 
-    if (!$isowncertificate && !$isportfolio) {
+    if (!$isowncertificate) {
         $certissue = $DB->get_record('certificate_issues', array(
             'userid' => $user->id,
             'certificateid' => $certificate->id,
         ));
 
-        if (!$certissue) {
+        if ($certissue) {
+            return $certissue;
+        }
+
+        if (!$isportfolio) {
             throw new moodle_exception('nocertificatesissued', 'certificate');
         }
 
-        return $certissue;
+        $context = context_module::instance($cm->id);
+        if ($certificate->requiredtime && !has_capability('mod/certificate:manage', $context, $user->id)) {
+            // Check the owner before issuing so a delegate cannot bypass the required course time.
+            if (certificate_get_course_time($course->id, $user->id) < ($certificate->requiredtime * 60)) {
+                $a = new stdClass();
+                $a->requiredtime = $certificate->requiredtime;
+                throw new moodle_exception('requiredtimenotmet', 'certificate', '', $a);
+            }
+        }
     }
 
     if ($isowncertificate) {
@@ -605,10 +617,15 @@ function certificate_print_attempts($course, $certificate, $attempts) {
  * Get the time the user has spent in the course
  *
  * @param int $courseid
+ * @param int|null $userid user whose course time is returned; defaults to the current user
  * @return int the total time spent in seconds
  */
-function certificate_get_course_time($courseid) {
+function certificate_get_course_time($courseid, $userid = null) {
     global $CFG, $DB, $USER;
+
+    if ($userid === null) {
+        $userid = $USER->id;
+    }
 
     $logmanager = get_log_manager();
     $readers = $logmanager->get_readers();
@@ -617,6 +634,9 @@ function certificate_get_course_time($courseid) {
 
     // Go through all the readers until we find one that we can use.
     foreach ($enabledreaders as $enabledreader) {
+        if (!isset($readers[$enabledreader])) {
+            continue;
+        }
         $reader = $readers[$enabledreader];
         if ($reader instanceof \logstore_legacy\log\store) {
             $logtable = 'log';
@@ -641,7 +661,7 @@ function certificate_get_course_time($courseid) {
              WHERE userid = :userid
                AND $coursefield = :courseid
           ORDER BY $timefield ASC";
-    $params = array('userid' => $USER->id, 'courseid' => $courseid);
+    $params = array('userid' => $userid, 'courseid' => $courseid);
 
     $totaltime = 0;
     if ($logs = $DB->get_recordset_sql($sql, $params)) {

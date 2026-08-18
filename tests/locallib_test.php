@@ -40,14 +40,16 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      * Create a certificate activity for issue tests.
      *
      * @param string $certificatetype certificate type identifier
+     * @param int $requiredtime required course time in minutes
      * @return array course, certificate, and course module
      */
-    private function create_certificate($certificatetype) {
+    private function create_certificate($certificatetype, $requiredtime = 0) {
         $course = $this->getDataGenerator()->create_course();
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_certificate');
         $certificate = $generator->create_instance(array(
             'course' => $course->id,
             'certificatetype' => $certificatetype,
+            'requiredtime' => $requiredtime,
         ));
         $cm = get_coursemodule_from_id('certificate', $certificate->cmid, 0, false, MUST_EXIST);
 
@@ -89,6 +91,59 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $secondissue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
 
         $this->assertSame((int) $issue->id, (int) $secondissue->id);
+        $this->assertSame(1, $DB->count_records('certificate_issues', array(
+            'certificateid' => $certificate->id,
+            'userid' => $target->id,
+        )));
+    }
+
+    /**
+     * A delegate cannot create a portfolio issue before its owner meets the required course time.
+     */
+    public function test_delegate_cannot_create_portfolio_issue_before_required_time() {
+        global $DB, $USER;
+
+        $this->resetAfterTest(true);
+        list($course, $certificate, $cm) = $this->create_certificate('portfolio_gch', 1);
+        $target = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($target->id, $course->id, 'student');
+        $this->setAdminUser();
+        $requestinguserid = (int) $USER->id;
+
+        try {
+            certificate_get_issue_for_view($course, $target, $certificate, $cm);
+            $this->fail('Expected the target user\'s required course time to be enforced.');
+        } catch (moodle_exception $exception) {
+            $this->assertSame('requiredtimenotmet', $exception->errorcode);
+        }
+
+        $this->assertSame($requestinguserid, (int) $USER->id);
+        $this->assertFalse($DB->record_exists('certificate_issues', array(
+            'certificateid' => $certificate->id,
+            'userid' => $target->id,
+        )));
+    }
+
+    /**
+     * A delegate may still view a portfolio issue created before its required course time changes.
+     */
+    public function test_delegate_can_view_existing_portfolio_issue_before_required_time() {
+        global $DB;
+
+        $this->resetAfterTest(true);
+        list($course, $certificate, $cm) = $this->create_certificate('portfolio_gch', 1);
+        $target = $this->getDataGenerator()->create_user();
+        $issueid = $DB->insert_record('certificate_issues', (object) array(
+            'certificateid' => $certificate->id,
+            'userid' => $target->id,
+            'code' => 'existing-portfolio-issue',
+            'timecreated' => time(),
+        ));
+        $this->setAdminUser();
+
+        $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
+
+        $this->assertSame((int) $issueid, (int) $issue->id);
         $this->assertSame(1, $DB->count_records('certificate_issues', array(
             'certificateid' => $certificate->id,
             'userid' => $target->id,
