@@ -60,6 +60,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * Portfolio certificate types use the documented, case-sensitive portfolio_ prefix.
+     *
+     * @return void
      */
     public function test_portfolio_certificate_type_detection() {
         $this->assertTrue(certificate_is_portfolio_type('portfolio_gch'));
@@ -71,6 +73,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * Rendering as another user must not replace the user stored in the session.
+     *
+     * @return void
      */
     public function test_temporary_global_user_does_not_change_session_user() {
         global $USER;
@@ -104,6 +108,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * Teacher notifications exclude the certificate owner, not the logged-in delegate.
+     *
+     * @return void
      */
     public function test_get_teachers_excludes_certificate_owner() {
         $this->resetAfterTest(true);
@@ -122,6 +128,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * An authorised delegate may create a target user's portfolio issue on demand.
+     *
+     * @return void
      */
     public function test_delegate_can_create_portfolio_issue_for_target() {
         global $DB, $USER;
@@ -152,6 +160,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * A delegate cannot create a portfolio issue before its owner meets the required course time.
+     *
+     * @return void
      */
     public function test_delegate_cannot_create_portfolio_issue_before_required_time() {
         global $DB, $USER;
@@ -179,6 +189,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * A delegate may still view a portfolio issue created before its required course time changes.
+     *
+     * @return void
      */
     public function test_delegate_can_view_existing_portfolio_issue_before_required_time() {
         global $DB;
@@ -205,6 +217,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * A delegated conventional certificate still requires an existing issue.
+     *
+     * @return void
      */
     public function test_delegate_cannot_create_conventional_issue_for_target() {
         global $DB;
@@ -229,6 +243,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * A delegate may view an existing conventional certificate issue.
+     *
+     * @return void
      */
     public function test_delegate_can_view_existing_conventional_issue() {
         global $DB;
@@ -255,6 +271,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * A user may still create their own conventional certificate issue.
+     *
+     * @return void
      */
     public function test_user_can_create_own_conventional_issue() {
         global $DB;
@@ -275,6 +293,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * A self-service GFG request continues to create the requesting user's issue record.
+     *
+     * @return void
      */
     public function test_self_service_gfg_issue_is_owned_by_requester() {
         global $DB;
@@ -295,6 +315,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * Certificate email delivery uses the issue owner, not the logged-in delegate.
+     *
+     * @return void
      */
     public function test_email_student_uses_issue_owner() {
         global $DB;
@@ -338,6 +360,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
     /**
      * Award notifications identify the certificate owner without changing the logged-in user.
+     *
+     * @return void
      */
     public function test_award_notifications_use_issue_owner() {
         global $DB, $USER;

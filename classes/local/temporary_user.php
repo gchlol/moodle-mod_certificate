@@ -45,6 +45,7 @@ class temporary_user {
      * covers paths that skip the caller's finally block.
      *
      * @param stdClass $targetuser certificate owner
+     * @return void
      */
     public function __construct($targetuser) {
         global $USER;

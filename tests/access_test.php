@@ -36,6 +36,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * Reset request-level permission caches between tests.
+     *
+     * @return void
      */
     protected function setUp(): void {
         parent::setUp();
@@ -251,6 +253,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A staff member may access their own certificate.
+     *
+     * @return void
      */
     public function test_staff_can_view_own_certificate() {
         $this->resetAfterTest(true);
@@ -265,6 +269,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A staff member may not access another user's certificate.
+     *
+     * @return void
      */
     public function test_staff_cannot_view_another_certificate() {
         $this->resetAfterTest(true);
@@ -279,6 +285,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * Target-user permission does not replace the view capability.
+     *
+     * @return void
      */
     public function test_view_capability_is_required() {
         $this->resetAfterTest(true);
@@ -293,6 +301,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * Facilitator permission does not replace the base view capability.
+     *
+     * @return void
      */
     public function test_facilitator_capability_does_not_replace_view_capability() {
         $this->resetAfterTest(true);
@@ -312,6 +322,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A manager may access their own, direct reports', and indirect reports' certificates.
+     *
+     * @return void
      */
     public function test_manager_can_view_recursive_reports() {
         $this->resetAfterTest(true);
@@ -333,6 +345,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A manager may not access a site administrator's certificate.
+     *
+     * @return void
      */
     public function test_manager_cannot_view_admin_certificate() {
         $this->resetAfterTest(true);
@@ -351,6 +365,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * Managed site administrators do not give a manager access to other-user reports.
+     *
+     * @return void
      */
     public function test_manager_with_only_admin_reports_cannot_view_other_users() {
         $this->resetAfterTest(true);
@@ -370,6 +386,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A user with Certificate facilitator permission may access every non-admin certificate.
+     *
+     * @return void
      */
     public function test_facilitator_can_view_non_admin_certificate() {
         $this->resetAfterTest(true);
@@ -387,6 +405,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A facilitator may not access a site administrator's certificate.
+     *
+     * @return void
      */
     public function test_facilitator_cannot_view_admin_certificate() {
         $this->resetAfterTest(true);
@@ -403,6 +423,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * Certificate management permission does not make an editing teacher a facilitator.
+     *
+     * @return void
      */
     public function test_editing_teacher_without_facilitator_capability_cannot_view_another_certificate() {
         $this->resetAfterTest(true);
@@ -420,6 +442,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A non-editing teacher archetype alone does not grant facilitator access.
+     *
+     * @return void
      */
     public function test_nonediting_teacher_without_facilitator_capability_only_sees_self() {
         $this->resetAfterTest(true);
@@ -441,6 +465,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A site administrator may access any user's certificate, including another administrator.
+     *
+     * @return void
      */
     public function test_admin_can_view_any_certificate() {
         $this->resetAfterTest(true);
@@ -457,6 +483,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A manager's report contains only their recursive reports and paginates after filtering.
+     *
+     * @return void
      */
     public function test_manager_report_is_filtered_and_paginated() {
         $this->resetAfterTest(true);
@@ -483,6 +511,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A facilitator's report contains non-admin users and excludes site admins.
+     *
+     * @return void
      */
     public function test_facilitator_report_excludes_admins() {
         $this->resetAfterTest(true);
@@ -506,6 +536,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A staff member's report contains only their own certificate.
+     *
+     * @return void
      */
     public function test_staff_report_only_contains_self() {
         $this->resetAfterTest(true);
@@ -525,6 +557,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * A site administrator's report contains ordinary users and other site administrators.
+     *
+     * @return void
      */
     public function test_admin_report_contains_all_users() {
         $this->resetAfterTest(true);
@@ -545,6 +579,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * The upgrade registers the new capability and migrates only the established facilitator role.
+     *
+     * @return void
      */
     public function test_upgrade_migrates_legacy_facilitator_permissions() {
         global $DB;
@@ -609,6 +645,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
     /**
      * The upgrade preserves an explicitly configured facilitator override.
+     *
+     * @return void
      */
     public function test_upgrade_preserves_existing_facilitator_override() {
         global $DB;

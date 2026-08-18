@@ -435,9 +435,9 @@ function certificate_is_portfolio_type($certificatetype) {
  * issue record, and portfolio certificates may be created on demand for an authorised target. Other certificate
  * types require an existing issue record when viewed by somebody else.
  *
- * @param stdClass $course
+ * @param stdClass $course course containing the certificate activity
  * @param stdClass $user target user
- * @param stdClass $certificate
+ * @param stdClass $certificate certificate instance
  * @param stdClass $cm course module
  * @return stdClass certificate issue record
  * @throws moodle_exception when a delegated certificate cannot be viewed or issued
