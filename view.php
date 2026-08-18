@@ -106,12 +106,12 @@ $repo_name = get_config('certificate', 'reponame');
 if (!empty($repo_name)) {
     $require_path = "$CFG->dataroot/repository/$repo_name/CERTIFICATE/type/$certificate->certificatetype/certificate.php";
 }
-$requestinguser = $USER;
-$USER = $targetuser;
+$usercontext = new \mod_certificate\local\temporary_user($targetuser);
+$requestinguser = $usercontext->get_requesting_user();
 try {
     require($require_path);
 } finally {
-    $USER = $requestinguser;
+    $usercontext->restore();
 }
 
 if (empty($action)) { // Not displaying PDF

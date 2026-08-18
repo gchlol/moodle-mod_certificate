@@ -60,8 +60,6 @@ define('CERT_MAX_PER_PAGE', 200);
  * @return array the teacher array
  */
 function certificate_get_teachers($certificate, $user, $course, $cm) {
-    global $USER;
-
     $context = context_module::instance($cm->id);
     $potteachers = get_users_by_capability($context, 'mod/certificate:manage',
         '', '', '', '', '', '', false, false);
@@ -84,7 +82,7 @@ function certificate_get_teachers($certificate, $user, $course, $cm) {
         } else {
             // user not in group, try to find teachers without group
             foreach ($potteachers as $t) {
-                if ($t->id == $USER->id) {
+                if ($t->id == $user->id) {
                     continue; // do not send self
                 }
                 if (!groups_get_all_groups($course->id, $t->id)) { //ugly hack
@@ -94,7 +92,7 @@ function certificate_get_teachers($certificate, $user, $course, $cm) {
         }
     } else {
         foreach ($potteachers as $t) {
-            if ($t->id == $USER->id) {
+            if ($t->id == $user->id) {
                 continue; // do not send self
             }
             $teachers[$t->id] = $t;
@@ -114,23 +112,23 @@ function certificate_get_teachers($certificate, $user, $course, $cm) {
  * @param stdClass $cm course module
  */
 function certificate_email_teachers($course, $certificate, $certrecord, $cm) {
-    global $USER, $CFG, $DB;
+    global $CFG, $DB;
 
     if ($certificate->emailteachers == 0) {          // No need to do anything
         return;
     }
 
-    $user = $DB->get_record('user', array('id' => $certrecord->userid));
+    $user = $DB->get_record('user', array('id' => $certrecord->userid), '*', MUST_EXIST);
 
     if ($teachers = certificate_get_teachers($certificate, $user, $course, $cm)) {
         $strawarded = get_string('awarded', 'certificate');
         foreach ($teachers as $teacher) {
             $info = new stdClass;
-            $info->student = fullname($USER);
+            $info->student = fullname($user);
             $info->course = format_string($course->fullname,true);
             $info->certificate = format_string($certificate->name,true);
             $info->url = $CFG->wwwroot.'/mod/certificate/report.php?id='.$cm->id;
-            $from = $USER;
+            $from = $user;
             $postsubject = $strawarded . ': ' . $info->student . ' -> ' . $certificate->name;
             $posttext = certificate_email_teachers_text($info);
             $posthtml = ($teacher->mailformat == 1) ? certificate_email_teachers_html($info) : '';
@@ -152,9 +150,10 @@ function certificate_email_teachers($course, $certificate, $certrecord, $cm) {
  * @param stdClass $cm course module
  */
 function certificate_email_others($course, $certificate, $certrecord, $cm) {
-    global $USER, $CFG;
+    global $CFG, $DB;
 
     if ($certificate->emailothers) {
+        $user = $DB->get_record('user', array('id' => $certrecord->userid), '*', MUST_EXIST);
         $others = explode(',', $certificate->emailothers);
         if ($others) {
             $strawarded = get_string('awarded', 'certificate');
@@ -165,11 +164,11 @@ function certificate_email_others($course, $certificate, $certrecord, $cm) {
                     $destination->id = 1;
                     $destination->email = $other;
                     $info = new stdClass;
-                    $info->student = fullname($USER);
+                    $info->student = fullname($user);
                     $info->course = format_string($course->fullname, true);
                     $info->certificate = format_string($certificate->name, true);
                     $info->url = $CFG->wwwroot.'/mod/certificate/report.php?id='.$cm->id;
-                    $from = $USER;
+                    $from = $user;
                     $postsubject = $strawarded . ': ' . $info->student . ' -> ' . $certificate->name;
                     $posttext = certificate_email_teachers_text($info);
                     $posthtml = certificate_email_teachers_html($info);
@@ -444,18 +443,7 @@ function certificate_get_issue_for_view($course, $user, $certificate, $cm) {
         }
     }
 
-    if ($isowncertificate) {
-        return certificate_get_issue($course, $user, $certificate, $cm);
-    }
-
-    // Legacy issue notifications read the global user, so create a delegated portfolio as its owner.
-    $requestinguser = $USER;
-    $USER = $user;
-    try {
-        return certificate_get_issue($course, $user, $certificate, $cm);
-    } finally {
-        $USER = $requestinguser;
-    }
+    return certificate_get_issue($course, $user, $certificate, $cm);
 }
 
 /**

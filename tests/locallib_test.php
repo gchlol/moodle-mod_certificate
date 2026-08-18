@@ -68,6 +68,57 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
     }
 
     /**
+     * Rendering as another user must not replace the user stored in the session.
+     */
+    public function test_temporary_global_user_does_not_change_session_user() {
+        global $USER;
+
+        $this->resetAfterTest(true);
+        $requester = $this->getDataGenerator()->create_user();
+        $target = $this->getDataGenerator()->create_user();
+        $target->password = 'target-password-hash';
+        $target->secret = 'target-secret';
+        $this->setUser($requester);
+
+        $selfcontext = new \mod_certificate\local\temporary_user($requester);
+        $this->assertSame($USER, $_SESSION['USER']);
+        $selfcontext->restore();
+
+        $usercontext = new \mod_certificate\local\temporary_user($target);
+        try {
+            $this->assertSame((int) $target->id, (int) $USER->id);
+            $this->assertSame((int) $requester->id, (int) $_SESSION['USER']->id);
+            $this->assertFalse(property_exists($USER, 'password'));
+            $this->assertFalse(property_exists($USER, 'secret'));
+        } finally {
+            $usercontext->restore();
+        }
+
+        $this->assertSame((int) $requester->id, (int) $USER->id);
+        $this->assertSame((int) $requester->id, (int) $_SESSION['USER']->id);
+        $USER->firstname = 'Restored requester';
+        $this->assertSame($USER->firstname, $_SESSION['USER']->firstname);
+    }
+
+    /**
+     * Teacher notifications exclude the certificate owner, not the logged-in delegate.
+     */
+    public function test_get_teachers_excludes_certificate_owner() {
+        $this->resetAfterTest(true);
+        list($course, $certificate, $cm) = $this->create_certificate('portfolio_gch');
+        $owner = $this->getDataGenerator()->create_user();
+        $delegate = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($owner->id, $course->id, 'editingteacher');
+        $this->getDataGenerator()->enrol_user($delegate->id, $course->id, 'editingteacher');
+        $this->setUser($delegate);
+
+        $teachers = certificate_get_teachers($certificate, $owner, $course, $cm);
+
+        $this->assertArrayNotHasKey($owner->id, $teachers);
+        $this->assertArrayHasKey($delegate->id, $teachers);
+    }
+
+    /**
      * An authorised delegate may create a target user's portfolio issue on demand.
      */
     public function test_delegate_can_create_portfolio_issue_for_target() {
@@ -281,5 +332,60 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $this->assertSame($student->email, $emails[0]->to);
         $this->assertNotSame($delegate->email, $emails[0]->to);
         $sink->close();
+    }
+
+    /**
+     * Award notifications identify the certificate owner without changing the logged-in user.
+     */
+    public function test_award_notifications_use_issue_owner() {
+        global $DB, $USER;
+
+        $this->resetAfterTest(true);
+        $course = $this->getDataGenerator()->create_course();
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_certificate');
+        $otheremail = 'certificate-observer@example.test';
+        $certificate = $generator->create_instance(array(
+            'course' => $course->id,
+            'emailteachers' => 1,
+            'emailothers' => $otheremail,
+        ));
+        $cm = get_coursemodule_from_id('certificate', $certificate->cmid, 0, false, MUST_EXIST);
+        $owner = $this->getDataGenerator()->create_user(array(
+            'firstname' => 'Certificate',
+            'lastname' => 'Owner',
+            'email' => 'certificate-owner@example.com',
+        ));
+        $delegate = $this->getDataGenerator()->create_user(array(
+            'firstname' => 'Certificate',
+            'lastname' => 'Delegate',
+            'email' => 'certificate-delegate@example.com',
+        ));
+        $this->getDataGenerator()->enrol_user($delegate->id, $course->id, 'editingteacher');
+        $issue = (object) array(
+            'certificateid' => $certificate->id,
+            'userid' => $owner->id,
+        );
+
+        $this->setUser($delegate);
+        $sink = $this->redirectEmails();
+        certificate_email_teachers($course, $certificate, $issue, $cm);
+        certificate_email_others($course, $certificate, $issue, $cm);
+
+        $messages = array();
+        foreach ($sink->get_messages() as $message) {
+            $messages[$message->to] = $message;
+        }
+        $sink->close();
+
+        $this->assertArrayHasKey($delegate->email, $messages);
+        $this->assertArrayHasKey($otheremail, $messages);
+        foreach ($messages as $message) {
+            $this->assertStringContainsString(fullname($owner), $message->subject);
+            $this->assertStringNotContainsString(fullname($delegate), $message->subject);
+            $this->assertStringContainsString(fullname($owner), $message->header);
+            $this->assertStringNotContainsString(fullname($delegate), $message->header);
+        }
+        $this->assertSame((int) $delegate->id, (int) $USER->id);
+        $this->assertSame((int) $delegate->id, (int) $_SESSION['USER']->id);
     }
 }

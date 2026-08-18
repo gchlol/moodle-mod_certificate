@@ -68,12 +68,12 @@ if (!$certrecord = $DB->get_record('certificate_issues', array('userid' => $user
 }
 
 // Load the specific certificate type as the certificate owner.
-$requestinguser = $USER;
-$USER = $targetuser;
+$usercontext = new \mod_certificate\local\temporary_user($targetuser);
+$requestinguser = $usercontext->get_requesting_user();
 try {
     require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
 } finally {
-    $USER = $requestinguser;
+    $usercontext->restore();
 }
 
 if ($action) {
