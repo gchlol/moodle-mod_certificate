@@ -30,23 +30,10 @@ if (!defined('MOODLE_INTERNAL')) {
 require_once($CFG->libdir . '/filelib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
-$userid = (int) $USER->id;
+$userid = optional_param('userid', $USER->id, PARAM_INT);
 $responseid = optional_param('responseid', 0, PARAM_INT);
-$user = $USER;
-$response = $DB->get_record_sql(
-    "SELECT qr.*
-       FROM {questionnaire_response} qr
-       JOIN {questionnaire} q ON q.id = qr.questionnaireid
-      WHERE qr.id = :responseid
-            AND qr.userid = :userid
-            AND q.course = :courseid",
-    array(
-        'responseid' => $responseid,
-        'userid' => $userid,
-        'courseid' => $course->id,
-    ),
-    MUST_EXIST
-);
+$user = $DB->get_record('user', array('id' => $userid));
+$response = $DB->get_record('questionnaire_response', array('id' => $responseid));
 $responsedate=$response->submitted;
 
 $pdf = new TCPDF($certificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
