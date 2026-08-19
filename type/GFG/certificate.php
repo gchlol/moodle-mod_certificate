@@ -23,41 +23,21 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_ciap\plan;
-
 // Majorly modified to allow certificate
 if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.'); // It must be included from view.php
 }
 require_once("$CFG->libdir/filelib.php");
 require_once("$CFG->libdir/completionlib.php");
-require_once("$CFG->dirroot/mod/ciap/locallib.php");
 require_once(__DIR__ . '/gfg_pdf.php');
 
-$planid = required_param('ciap', PARAM_INT);
-if ($planid == '999999') {
-    $viewerid = isset($requestinguser) ? (int) $requestinguser->id : 0;
-    output_data($viewerid);
+$plan_id = required_param('ciap', PARAM_INT);
+if ($plan_id == '999999') {
+    output_data();
 }
 
-$planaccess = new plan($planid);
-$plan = $DB->get_record('ciap_plans', [ 'id' => $planid ], '*', MUST_EXIST);
-$ciap = $DB->get_record('ciap', [
-    'id' => $plan->ciapid,
-    'course' => $course->id,
-    'linked_certificate' => $cm->id,
-], '*', MUST_EXIST);
-$ciapcm = get_coursemodule_from_instance('ciap', $ciap->id, $course->id, false, MUST_EXIST);
-$ciapcontext = context_module::instance($ciapcm->id);
-$viewerid = isset($requestinguser) ? (int) $requestinguser->id : (int) $USER->id;
-$targetuserid = (int) $USER->id;
-if (
-    !is_siteadmin($viewerid) &&
-    !has_capability('mod/ciap:viewplans', $ciapcontext, $targetuserid) &&
-    !$planaccess->can_view($targetuserid)
-) {
-    throw new moodle_exception('nopermissions', 'error', '', get_string('view'));
-}
+$plan = $DB->get_record('ciap_plans', [ 'id' => $plan_id ]);
+$ciap = $DB->get_record('ciap', [ 'id' => $plan->ciapid ]);
 $actions = $DB->get_records('ciap_actions', [ 'planid' => $plan->id ]);
 
 $plan->custom_fields = get_custom_field_values('plans', $ciap->id, $plan->id);
@@ -359,16 +339,11 @@ function get_action_content(stdClass $action): array {
 /**
  * Directly output all CIAP action data.
  *
- * @param int $viewerid ID of the user requesting the data.
  * @return void
  * @throws dml_exception
  */
-function output_data(int $viewerid): void {
+function output_data(): void {
     global $DB;
-
-    if (!is_siteadmin($viewerid)) {
-        throw new moodle_exception('nopermissions', 'error', '', get_string('view'));
-    }
 
     $actions = $DB->get_records('ciap_actions');
     foreach ($actions as $action) {
