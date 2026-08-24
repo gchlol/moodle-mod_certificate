@@ -59,7 +59,7 @@ define('CERT_MAX_PER_PAGE', 200);
  * @return void
  */
 function certificate_require_user_certificate_access($userid, $context) {
-    permission::require_view_user_certificate($context, (int) $userid);
+    permission::require_view_user_certificate($context, (int)$userid);
 }
 
 /**
@@ -425,7 +425,7 @@ function certificate_get_issue($course, $user, $certificate, $cm) {
  * @return bool
  */
 function certificate_is_portfolio_type($certificatetype) {
-    return strpos((string) $certificatetype, 'portfolio_') === 0;
+    return strpos((string)$certificatetype, 'portfolio_') === 0;
 }
 
 /**
@@ -445,7 +445,7 @@ function certificate_is_portfolio_type($certificatetype) {
 function certificate_get_issue_for_view($course, $user, $certificate, $cm) {
     global $DB, $USER;
 
-    $isowncertificate = (int) $user->id === (int) $USER->id;
+    $isowncertificate = (int)$user->id === (int)$USER->id;
     $isportfolio = certificate_is_portfolio_type($certificate->certificatetype);
 
     if (!$isowncertificate) {
@@ -611,7 +611,7 @@ function certificate_count_issues($certificateid, $cm, $groupmode = false) {
              WHERE u.deleted = 0
                AND ci.certificateid = :certificateid{$reportconditions['conditionssql']}";
 
-    return (int) $DB->count_records_sql($sql, $params);
+    return (int)$DB->count_records_sql($sql, $params);
 }
 
 /**

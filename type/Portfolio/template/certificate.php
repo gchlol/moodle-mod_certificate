@@ -43,7 +43,7 @@ if (
     throw new moodle_exception('landscape_unsupported', 'mod_certificate');
 }
 
-$userid = (int) $USER->id;
+$userid = (int)$USER->id;
 $user = $USER;
 
 /** @var TCPDF|stdClass $pdf */

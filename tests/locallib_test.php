@@ -93,12 +93,12 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $selfcontext->restore();
 
         $usercontext = new temporary_user($target);
-        $this->assertSame((int) $requester->id, (int) $USER->id);
-        $this->assertSame((int) $requester->id, (int) $_SESSION['USER']->id);
+        $this->assertSame((int)$requester->id, (int)$USER->id);
+        $this->assertSame((int)$requester->id, (int)$_SESSION['USER']->id);
         try {
             $usercontext->apply();
-            $this->assertSame((int) $target->id, (int) $USER->id);
-            $this->assertSame((int) $requester->id, (int) $_SESSION['USER']->id);
+            $this->assertSame((int)$target->id, (int)$USER->id);
+            $this->assertSame((int)$requester->id, (int)$_SESSION['USER']->id);
             $this->assertFalse(property_exists($USER, 'password'));
             $this->assertFalse(property_exists($USER, 'secret'));
 
@@ -106,8 +106,8 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
             $usercontext->restore();
         }
 
-        $this->assertSame((int) $requester->id, (int) $USER->id);
-        $this->assertSame((int) $requester->id, (int) $_SESSION['USER']->id);
+        $this->assertSame((int)$requester->id, (int)$USER->id);
+        $this->assertSame((int)$requester->id, (int)$_SESSION['USER']->id);
         $USER->firstname = 'Restored requester';
         $this->assertSame($USER->firstname, $_SESSION['USER']->firstname);
     }
@@ -144,12 +144,12 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         list($course, $certificate, $cm) = $this->create_certificate('portfolio_gch');
         $target = $this->getDataGenerator()->create_user();
         $this->setAdminUser();
-        $requestinguserid = (int) $USER->id;
+        $requestinguserid = (int)$USER->id;
 
         $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
 
-        $this->assertSame((int) $target->id, (int) $issue->userid);
-        $this->assertSame($requestinguserid, (int) $USER->id);
+        $this->assertSame((int)$target->id, (int)$issue->userid);
+        $this->assertSame($requestinguserid, (int)$USER->id);
         $this->assertSame(1, $DB->count_records('certificate_issues', array(
             'certificateid' => $certificate->id,
             'userid' => $target->id,
@@ -157,7 +157,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
         $secondissue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
 
-        $this->assertSame((int) $issue->id, (int) $secondissue->id);
+        $this->assertSame((int)$issue->id, (int)$secondissue->id);
         $this->assertSame(1, $DB->count_records('certificate_issues', array(
             'certificateid' => $certificate->id,
             'userid' => $target->id,
@@ -177,7 +177,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $target = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user($target->id, $course->id, 'student');
         $this->setAdminUser();
-        $requestinguserid = (int) $USER->id;
+        $requestinguserid = (int)$USER->id;
 
         try {
             certificate_get_issue_for_view($course, $target, $certificate, $cm);
@@ -187,7 +187,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
             $this->assertSame('requiredtimenotmet', $exception->errorcode);
         }
 
-        $this->assertSame($requestinguserid, (int) $USER->id);
+        $this->assertSame($requestinguserid, (int)$USER->id);
         $this->assertFalse($DB->record_exists('certificate_issues', array(
             'certificateid' => $certificate->id,
             'userid' => $target->id,
@@ -205,7 +205,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         list($course, $certificate, $cm) = $this->create_certificate('portfolio_gch', 1);
         $target = $this->getDataGenerator()->create_user();
-        $issueid = $DB->insert_record('certificate_issues', (object) array(
+        $issueid = $DB->insert_record('certificate_issues', (object)array(
             'certificateid' => $certificate->id,
             'userid' => $target->id,
             'code' => 'existing-portfolio-issue',
@@ -215,7 +215,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
         $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
 
-        $this->assertSame((int) $issueid, (int) $issue->id);
+        $this->assertSame((int)$issueid, (int)$issue->id);
         $this->assertSame(1, $DB->count_records('certificate_issues', array(
             'certificateid' => $certificate->id,
             'userid' => $target->id,
@@ -260,7 +260,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         list($course, $certificate, $cm) = $this->create_certificate('A4_non_embedded');
         $target = $this->getDataGenerator()->create_user();
-        $issueid = $DB->insert_record('certificate_issues', (object) array(
+        $issueid = $DB->insert_record('certificate_issues', (object)array(
             'certificateid' => $certificate->id,
             'userid' => $target->id,
             'code' => 'existing-conventional-issue',
@@ -270,7 +270,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
         $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
 
-        $this->assertSame((int) $issueid, (int) $issue->id);
+        $this->assertSame((int)$issueid, (int)$issue->id);
         $this->assertSame(1, $DB->count_records('certificate_issues', array(
             'certificateid' => $certificate->id,
             'userid' => $target->id,
@@ -292,7 +292,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
         $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
 
-        $this->assertSame((int) $target->id, (int) $issue->userid);
+        $this->assertSame((int)$target->id, (int)$issue->userid);
         $this->assertSame(1, $DB->count_records('certificate_issues', array(
             'certificateid' => $certificate->id,
             'userid' => $target->id,
@@ -317,7 +317,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $teacher = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user($teacher->id, $course->id, 'editingteacher');
 
-        $issueid = $DB->insert_record('certificate_issues', (object) array(
+        $issueid = $DB->insert_record('certificate_issues', (object)array(
             'certificateid' => $certificate->id,
             'userid' => $student->id,
             'code' => 'email-owner-test',
@@ -373,7 +373,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
             'email' => 'certificate-delegate@example.com',
         ));
         $this->getDataGenerator()->enrol_user($delegate->id, $course->id, 'editingteacher');
-        $issue = (object) array(
+        $issue = (object)array(
             'certificateid' => $certificate->id,
             'userid' => $owner->id,
         );
@@ -399,7 +399,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
             $this->assertStringNotContainsString(fullname($delegate), $message->header);
         }
 
-        $this->assertSame((int) $delegate->id, (int) $USER->id);
-        $this->assertSame((int) $delegate->id, (int) $_SESSION['USER']->id);
+        $this->assertSame((int)$delegate->id, (int)$USER->id);
+        $this->assertSame((int)$delegate->id, (int)$_SESSION['USER']->id);
     }
 }

@@ -64,7 +64,7 @@ class temporary_user {
     public function apply() {
         global $USER;
 
-        if ($this->applied || (int) $this->targetuser->id === (int) $this->requestinguser->id) {
+        if ($this->applied || (int)$this->targetuser->id === (int)$this->requestinguser->id) {
 
             return;
         }
@@ -121,7 +121,7 @@ class temporary_user {
         $USER = $user;
 
         // A nested temporary user must not replace the original session user.
-        if (!$sessionuser || (int) $sessionuser->id === (int) $user->id) {
+        if (!$sessionuser || (int)$sessionuser->id === (int)$user->id) {
             $_SESSION['USER'] =& $GLOBALS['USER'];
         }
     }

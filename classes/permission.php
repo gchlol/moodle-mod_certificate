@@ -75,7 +75,7 @@ class permission {
     public static function can_view_user_certificate(context_module $context, int $targetuserid) {
         global $USER;
 
-        $targetuserid = (int) $targetuserid;
+        $targetuserid = (int)$targetuserid;
 
         if (!has_capability('mod/certificate:view', $context)) {
             return false;
@@ -93,11 +93,11 @@ class permission {
             return true;
         }
 
-        if ($targetuserid === (int) $USER->id) {
+        if ($targetuserid === (int)$USER->id) {
             return true;
         }
 
-        return self::is_managed_user((int) $USER->id, $targetuserid);
+        return self::is_managed_user((int)$USER->id, $targetuserid);
     }
 
     /**
@@ -134,7 +134,7 @@ class permission {
             return true;
         }
 
-        return self::has_visible_managed_user((int) $USER->id);
+        return self::has_visible_managed_user((int)$USER->id);
     }
 
     /**
@@ -169,9 +169,9 @@ class permission {
             $where = '';
 
         } else {
-            $sqlparts = self::get_managed_users_sql((int) $USER->id);
+            $sqlparts = self::get_managed_users_sql((int)$USER->id);
             $params = $sqlparts['params'];
-            $params['certrequester'] = (int) $USER->id;
+            $params['certrequester'] = (int)$USER->id;
             $where = "($useridfield = :certrequester OR $useridfield IN (
                           SELECT DISTINCT u.id
                             FROM {user} u

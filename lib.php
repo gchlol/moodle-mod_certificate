@@ -308,7 +308,7 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
         require_once("$CFG->libdir/pdflib.php");
 
         $userid = optional_param('userid', $certrecord->userid, PARAM_INT);
-        if ((int) $userid !== (int) $certrecord->userid) {
+        if ((int)$userid !== (int)$certrecord->userid) {
             throw new moodle_exception('nopermissions', 'error', '',
                 get_string('certificate:view', 'certificate'));
         }

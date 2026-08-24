@@ -79,7 +79,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
     private function create_certificate_issue(int $certificateid, int $userid, int $timecreated) {
         global $DB;
 
-        $DB->insert_record('certificate_issues', (object) array(
+        $DB->insert_record('certificate_issues', (object)array(
             'certificateid' => $certificateid,
             'userid' => $userid,
             'code' => "certificate-code-$userid",
@@ -129,20 +129,20 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @return void
      */
     private function assign_user_to_level(stdClass $user, int $levelid, string $suffix) {
-        $position = new position(0, (object) array(
+        $position = new position(0, (object)array(
             'name' => "Certificate position $suffix",
             'idnumber' => "certificate-position-$suffix",
         ));
         $position->create();
 
-        $assignment = new assignment(0, (object) array(
+        $assignment = new assignment(0, (object)array(
             'userid' => $user->id,
             'positionid' => $position->get('id'),
             'assignnu' => "certificate-assignment-$suffix",
         ));
         $assignment->create();
 
-        $leveldata = new level_data(0, (object) array(
+        $leveldata = new level_data(0, (object)array(
             'levelid' => $levelid,
             'assignid' => $assignment->get('id'),
         ));
@@ -165,21 +165,21 @@ class mod_certificate_access_testcase extends advanced_testcase {
         stdClass $unrelateduser
     ) {
         $suffix = uniqid('', true);
-        $hierarchy = new hierarchy(0, (object) array(
+        $hierarchy = new hierarchy(0, (object)array(
             'idnumber' => "certificate-hierarchy-$suffix",
             'name' => 'Certificate test hierarchy',
             'type' => hierarchy::TYPE_ASSIGNMENT,
         ));
         $hierarchy->create();
 
-        $managerlevel = new level(0, (object) array(
+        $managerlevel = new level(0, (object)array(
             'hierarchyid' => $hierarchy->get('id'),
             'name' => 'Manager level',
             'idnumber' => "certificate-manager-$suffix",
         ));
         $managerlevel->create();
 
-        $directlevel = new level(0, (object) array(
+        $directlevel = new level(0, (object)array(
             'hierarchyid' => $hierarchy->get('id'),
             'parent' => $managerlevel->get('id'),
             'name' => 'Direct report level',
@@ -187,7 +187,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         ));
         $directlevel->create();
 
-        $indirectlevel = new level(0, (object) array(
+        $indirectlevel = new level(0, (object)array(
             'hierarchyid' => $hierarchy->get('id'),
             'parent' => $directlevel->get('id'),
             'name' => 'Indirect report level',
@@ -195,14 +195,14 @@ class mod_certificate_access_testcase extends advanced_testcase {
         ));
         $indirectlevel->create();
 
-        $unrelatedlevel = new level(0, (object) array(
+        $unrelatedlevel = new level(0, (object)array(
             'hierarchyid' => $hierarchy->get('id'),
             'name' => 'Unrelated level',
             'idnumber' => "certificate-unrelated-$suffix",
         ));
         $unrelatedlevel->create();
 
-        $managerrole = new role(0, (object) array(
+        $managerrole = new role(0, (object)array(
             'levelid' => $managerlevel->get('id'),
             'userid' => $manager->id,
             'type' => role::TYPE_USER,
@@ -471,7 +471,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->assertFalse(permission::can_view_user_certificate($context, $otheruser->id));
         $this->assertFalse(permission::can_view_other_users($context));
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
-        $this->assertSame(array((int) $teacher->id), array_keys($users));
+        $this->assertSame(array((int)$teacher->id), array_keys($users));
     }
 
     /**
@@ -515,8 +515,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $firstpage = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm, 0, 2);
         $secondpage = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm, 1, 2);
 
-        $this->assertSame(array((int) $manager->id, (int) $directreport->id), array_keys($firstpage));
-        $this->assertSame(array((int) $indirectreport->id), array_keys($secondpage));
+        $this->assertSame(array((int)$manager->id, (int)$directreport->id), array_keys($firstpage));
+        $this->assertSame(array((int)$indirectreport->id), array_keys($secondpage));
         $this->assertSame(3, certificate_count_issues($certificate->id, $cm));
     }
 
@@ -541,7 +541,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', SEPARATEGROUPS, $cm);
 
-        $this->assertSame(array((int) $facilitator->id, (int) $staff->id), array_keys($users));
+        $this->assertSame(array((int)$facilitator->id, (int)$staff->id), array_keys($users));
         $this->assertSame(2, certificate_count_issues($certificate->id, $cm));
     }
 
@@ -562,7 +562,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
 
-        $this->assertSame(array((int) $staff->id), array_keys($users));
+        $this->assertSame(array((int)$staff->id), array_keys($users));
         $this->assertSame(1, certificate_count_issues($certificate->id, $cm));
     }
 
@@ -583,7 +583,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
 
-        $this->assertSame(array((int) $staff->id, (int) $otheradmin->id), array_keys($users));
+        $this->assertSame(array((int)$staff->id, (int)$otheradmin->id), array_keys($users));
         $this->create_certificate_issue($certificate->id, $staff->id, 3);
         $this->assertSame(2, certificate_count_issues($certificate->id, $cm));
     }
