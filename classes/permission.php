@@ -167,6 +167,7 @@ class permission {
         $params = array();
         if (self::is_facilitator($context)) {
             $where = '';
+
         } else {
             $sqlparts = self::get_managed_users_sql((int) $USER->id);
             $params = $sqlparts['params'];

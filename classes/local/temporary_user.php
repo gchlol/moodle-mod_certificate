@@ -65,6 +65,7 @@ class temporary_user {
         global $USER;
 
         if ($this->applied || (int) $this->targetuser->id === (int) $this->requestinguser->id) {
+
             return;
         }
 
@@ -97,6 +98,7 @@ class temporary_user {
      */
     public function restore() {
         if (!$this->applied) {
+
             return;
         }
 

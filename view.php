@@ -107,11 +107,13 @@ $reponame = get_config('certificate', 'reponame');
 if (!empty($reponame)) {
     $requirepath = "$CFG->dataroot/repository/$reponame/CERTIFICATE/type/$certificate->certificatetype/certificate.php";
 }
+
 $usercontext = new temporary_user($targetuser);
 try {
     $usercontext->apply();
     $requestinguser = $usercontext->get_requesting_user();
     require($requirepath);
+
 } finally {
     $usercontext->restore();
 }
@@ -177,6 +179,7 @@ if (empty($action)) { // Not displaying PDF
         if ($userid == $USER->id) {
             certificate_email_student($course, $certificate, $certrecord, $context, $filecontents, $filename);
         }
+
         // Open in browser for the requester.
         send_file($filecontents, $filename, 0, 0, true, false, 'application/pdf');
     }

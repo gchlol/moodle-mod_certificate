@@ -74,6 +74,7 @@ try {
     $usercontext->apply();
     $requestinguser = $usercontext->get_requesting_user();
     require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
+
 } finally {
     $usercontext->restore();
 }

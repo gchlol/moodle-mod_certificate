@@ -114,6 +114,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         try {
             certificate_require_user_certificate_access($userid, $context);
             $this->fail('Expected certificate access to be denied.');
+
         } catch (moodle_exception $exception) {
             $this->assertSame('nopermissions', $exception->errorcode);
         }

@@ -326,9 +326,11 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
             $usercontext->apply();
             $requestinguser = $usercontext->get_requesting_user();
             require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
+
         } finally {
             $usercontext->restore();
         }
+
         $filename = certificate_get_certificate_filename($certificate, $cm, $course) . '.pdf';
         $filecontents = $pdf->Output('', 'S');
         send_file($filecontents, $filename, 0, 0, true, true, 'application/pdf');

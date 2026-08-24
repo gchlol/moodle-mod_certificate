@@ -101,6 +101,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
             $this->assertSame((int) $requester->id, (int) $_SESSION['USER']->id);
             $this->assertFalse(property_exists($USER, 'password'));
             $this->assertFalse(property_exists($USER, 'secret'));
+
         } finally {
             $usercontext->restore();
         }
@@ -181,6 +182,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         try {
             certificate_get_issue_for_view($course, $target, $certificate, $cm);
             $this->fail('Expected the target user\'s required course time to be enforced.');
+
         } catch (moodle_exception $exception) {
             $this->assertSame('requiredtimenotmet', $exception->errorcode);
         }
@@ -236,6 +238,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         try {
             certificate_get_issue_for_view($course, $target, $certificate, $cm);
             $this->fail('Expected a missing delegated certificate issue to be rejected.');
+
         } catch (moodle_exception $exception) {
             $this->assertSame('nocertificatesissued', $exception->errorcode);
         }
@@ -384,6 +387,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         foreach ($sink->get_messages() as $message) {
             $messages[$message->to] = $message;
         }
+
         $sink->close();
 
         $this->assertArrayHasKey($delegate->email, $messages);
@@ -394,6 +398,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
             $this->assertStringContainsString(fullname($owner), $message->header);
             $this->assertStringNotContainsString(fullname($delegate), $message->header);
         }
+
         $this->assertSame((int) $delegate->id, (int) $USER->id);
         $this->assertSame((int) $delegate->id, (int) $_SESSION['USER']->id);
     }

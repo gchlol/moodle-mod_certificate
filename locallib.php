@@ -707,6 +707,7 @@ function certificate_get_course_time($courseid, $userid = null) {
         if (!isset($readers[$enabledreader])) {
             continue;
         }
+
         $reader = $readers[$enabledreader];
         if ($reader instanceof \logstore_legacy\log\store) {
             $logtable = 'log';
