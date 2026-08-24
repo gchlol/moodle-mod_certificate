@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+use mod_certificate\local\issue;
 use mod_certificate\permission;
 use tool_organisation\persistent\assignment;
 use tool_organisation\persistent\hierarchy;
@@ -88,7 +89,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
     }
 
     /**
-     * Assert that both the permission policy and its enforcement wrapper allow a target user.
+     * Assert that both permission checks allow a target user.
      *
      * @param context_module $context certificate activity context
      * @param int $userid target user ID
@@ -97,11 +98,11 @@ class mod_certificate_access_testcase extends advanced_testcase {
     private function assert_can_view_certificate(context_module $context, int $userid) {
         $this->assertTrue(has_capability('mod/certificate:view', $context));
         $this->assertTrue(permission::can_view_user_certificate($context, $userid));
-        certificate_require_user_certificate_access($userid, $context);
+        permission::require_view_user_certificate($context, $userid);
     }
 
     /**
-     * Assert that both the permission policy and its enforcement wrapper deny a target user.
+     * Assert that both permission checks deny a target user.
      *
      * @param context_module $context certificate activity context
      * @param int $userid target user ID
@@ -112,7 +113,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->assertFalse(permission::can_view_user_certificate($context, $userid));
 
         try {
-            certificate_require_user_certificate_access($userid, $context);
+            permission::require_view_user_certificate($context, $userid);
             $this->fail('Expected certificate access to be denied.');
 
         } catch (moodle_exception $exception) {
@@ -300,7 +301,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $this->assertFalse(permission::can_view_user_certificate($context, $user->id));
         $this->expectException(required_capability_exception::class);
-        certificate_require_user_certificate_access($user->id, $context);
+        permission::require_view_user_certificate($context, $user->id);
     }
 
     /**
@@ -321,7 +322,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->assertTrue(has_capability('mod/certificate:viewallnonadmincertificates', $context));
         $this->assertFalse(permission::can_view_user_certificate($context, $facilitator->id));
         $this->expectException(required_capability_exception::class);
-        certificate_require_user_certificate_access($facilitator->id, $context);
+        permission::require_view_user_certificate($context, $facilitator->id);
     }
 
     /**
@@ -517,7 +518,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $this->assertSame([(int)$manager->id, (int)$directreport->id], array_keys($firstpage));
         $this->assertSame([(int)$indirectreport->id], array_keys($secondpage));
-        $this->assertSame(3, certificate_count_issues($certificate->id, $cm));
+        $this->assertSame(3, issue::count_visible($certificate->id, $cm));
     }
 
     /**
@@ -542,7 +543,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', SEPARATEGROUPS, $cm);
 
         $this->assertSame([(int)$facilitator->id, (int)$staff->id], array_keys($users));
-        $this->assertSame(2, certificate_count_issues($certificate->id, $cm));
+        $this->assertSame(2, issue::count_visible($certificate->id, $cm));
     }
 
     /**
@@ -563,7 +564,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
 
         $this->assertSame([(int)$staff->id], array_keys($users));
-        $this->assertSame(1, certificate_count_issues($certificate->id, $cm));
+        $this->assertSame(1, issue::count_visible($certificate->id, $cm));
     }
 
     /**
@@ -585,6 +586,6 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $this->assertSame([(int)$staff->id, (int)$otheradmin->id], array_keys($users));
         $this->create_certificate_issue($certificate->id, $staff->id, 3);
-        $this->assertSame(2, certificate_count_issues($certificate->id, $cm));
+        $this->assertSame(2, issue::count_visible($certificate->id, $cm));
     }
 }

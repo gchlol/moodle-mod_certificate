@@ -23,6 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_certificate\local\issue;
 use mod_certificate\local\temporary_user;
 use mod_certificate\permission;
 
@@ -49,7 +50,7 @@ require_login($course, false, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/certificate:view', $context);
 
-list($userid, $targetuser) = certificate_get_requested_user($context);
+list($userid, $targetuser) = permission::get_requested_user($context);
 
 $event = \mod_certificate\event\course_module_viewed::create(array(
     'objectid' => $certificate->id,
@@ -99,7 +100,7 @@ if (
 }
 
 // Resolve the existing issue, or create one for self-service and on-demand portfolios.
-$certrecord = certificate_get_issue_for_view($course, $targetuser, $certificate, $cm);
+$certrecord = issue::get_for_view($course, $targetuser, $certificate, $cm);
 
 make_cache_directory('tcpdf');
 
@@ -125,7 +126,7 @@ if (empty($action)) { // Not displaying PDF
 
     $canviewotherusers = permission::can_view_other_users($context);
     if ($canviewotherusers) {
-        $numusers = certificate_count_issues($certificate->id, $cm);
+        $numusers = issue::count_visible($certificate->id, $cm);
         $url = html_writer::tag('a', get_string('viewcertificateviews', 'certificate', $numusers),
             array('href' => $CFG->wwwroot . '/mod/certificate/report.php?id=' . $cm->id));
         echo html_writer::tag('div', $url, array('class' => 'reportlink'));

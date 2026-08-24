@@ -24,7 +24,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_certificate\permission;
+use mod_certificate\local\issue;
 use mod_certificate\util\user_field_util;
 
 defined('MOODLE_INTERNAL') || die();
@@ -47,37 +47,6 @@ define('CERT_IMAGE_SEAL', 'seals');
 define('CERT_PER_PAGE', 30);
 
 define('CERT_MAX_PER_PAGE', 200);
-
-/**
- * Require access to view or generate a certificate for a user.
- *
- * The view capability permits access to the certificate activity. The
- * target-user policy determines whose certificate may be requested.
- *
- * @param int $userid certificate owner ID
- * @param context $context certificate activity context
- * @return void
- */
-function certificate_require_user_certificate_access($userid, $context) {
-    permission::require_view_user_certificate($context, (int)$userid);
-}
-
-/**
- * Get the requested certificate owner for the current request.
- *
- * @param context_module $context certificate activity context
- * @return array{int, stdClass} requested user ID and user record
- */
-function certificate_get_requested_user($context) {
-    global $DB, $USER;
-
-    $userid = optional_param('userid', $USER->id, PARAM_INT);
-    certificate_require_user_certificate_access($userid, $context);
-    $user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0], '*', MUST_EXIST);
-
-    return [$userid, $user];
-}
-
 
 /**
  * Returns a list of teachers by group
@@ -413,134 +382,6 @@ function certificate_get_issue($course, $user, $certificate, $cm) {
 }
 
 /**
- * Checks whether a certificate type is a site-specific portfolio implementation.
- *
- * Portfolio implementations follow the portfolio_ prefix naming convention.
- * The legacy Portfolio support directory is deliberately excluded.
- *
- * @param string $certificatetype certificate type identifier
- * @return bool
- */
-function certificate_is_portfolio_type($certificatetype) {
-    return strpos((string)$certificatetype, 'portfolio_') === 0;
-}
-
-/**
- * Gets the issue record used to render a certificate for a target user.
- *
- * The caller must authorise access to the target user before calling this function. Users may create their own
- * issue record, and portfolio certificates may be created on demand for an authorised target. Other certificate
- * types require an existing issue record when viewed by somebody else.
- *
- * @param stdClass $course course containing the certificate activity
- * @param stdClass $user target user
- * @param stdClass $certificate certificate instance
- * @param stdClass $cm course module
- * @return stdClass certificate issue record
- * @throws moodle_exception when a delegated certificate cannot be viewed or issued
- */
-function certificate_get_issue_for_view($course, $user, $certificate, $cm) {
-    global $DB, $USER;
-
-    $isowncertificate = (int)$user->id === (int)$USER->id;
-    $isportfolio = certificate_is_portfolio_type($certificate->certificatetype);
-
-    if (!$isowncertificate) {
-        $certissue = $DB->get_record('certificate_issues', ['userid' => $user->id, 'certificateid' => $certificate->id]);
-
-        if ($certissue) {
-            return $certissue;
-        }
-
-        if (!$isportfolio) {
-            throw new moodle_exception('nocertificatesissued', 'certificate');
-        }
-
-        $context = context_module::instance($cm->id);
-        if ($certificate->requiredtime && !has_capability('mod/certificate:manage', $context, $user->id)) {
-            // Check the owner before issuing so a delegate cannot bypass the required course time.
-            if (certificate_get_course_time($course->id, $user->id) < ($certificate->requiredtime * 60)) {
-                $a = new stdClass();
-                $a->requiredtime = $certificate->requiredtime;
-                throw new moodle_exception('requiredtimenotmet', 'certificate', '', $a);
-            }
-        }
-    }
-
-    return certificate_get_issue($course, $user, $certificate, $cm);
-}
-
-/**
- * Get the SQL conditions that restrict the issue report to visible users.
- *
- * @param stdClass $cm the course module
- * @param bool $groupmode are we in group mode?
- * @param string $useridfield SQL field containing the user ID
- * @return array{conditionssql: string, params: array<string, int>, isempty: bool} SQL fragment, params, and
- *     whether the result set is empty
- */
-function certificate_get_visible_issue_report_conditions($cm, $groupmode, $useridfield) {
-    global $DB, $USER;
-
-    $context = context_module::instance($cm->id);
-    $conditionssql = '';
-    $conditionsparams = array();
-
-    $visibility = permission::get_viewable_users_sql($context, $useridfield);
-    if ($visibility['where'] !== '') {
-        $conditionssql .= " AND ({$visibility['where']})";
-        $conditionsparams += $visibility['params'];
-    }
-
-    // Organisation managers, facilitators, and admins use the target-user policy
-    // across groups. Group filtering remains an additional restriction for users
-    // whose scope is limited to themselves.
-    if ($groupmode && !permission::can_view_other_users($context)) {
-        $canaccessallgroups = has_capability('moodle/site:accessallgroups', $context);
-        $currentgroup = groups_get_activity_group($cm);
-
-        // If we are viewing all participants and the user does not have access to all groups then return nothing.
-        if (!$currentgroup && !$canaccessallgroups) {
-            return ['conditionssql' => '', 'params' => [], 'isempty' => true];
-        }
-
-        if ($currentgroup) {
-            if (!$canaccessallgroups) {
-                // Guest users do not belong to any groups.
-                if (isguestuser()) {
-                    return ['conditionssql' => '', 'params' => [], 'isempty' => true];
-                }
-
-                // Check that the user belongs to the group we are viewing.
-                $usersgroups = groups_get_all_groups($cm->course, $USER->id, $cm->groupingid);
-                if ($usersgroups) {
-                    if (!isset($usersgroups[$currentgroup])) {
-                        return ['conditionssql' => '', 'params' => [], 'isempty' => true];
-                    }
-                } else { // They belong to no group, so return an empty array.
-                    return ['conditionssql' => '', 'params' => [], 'isempty' => true];
-                }
-            }
-
-            $groupusers = array_keys(groups_get_members($currentgroup, 'u.*'));
-            if (empty($groupusers)) {
-                return ['conditionssql' => '', 'params' => [], 'isempty' => true];
-            }
-
-            list($sql, $params) = $DB->get_in_or_equal($groupusers, SQL_PARAMS_NAMED, 'grp');
-            $conditionssql .= " AND $useridfield $sql";
-            $conditionsparams += $params;
-        }
-    }
-
-    return [
-        'conditionssql' => $conditionssql,
-        'params' => $conditionsparams,
-        'isempty' => false,
-    ];
-}
-
-/**
  * Returns a list of issued certificates - sorted for report.
  *
  * @param int $certificateid
@@ -555,7 +396,7 @@ function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 
     global $DB;
 
     $context = context_module::instance($cm->id);
-    $reportconditions = certificate_get_visible_issue_report_conditions($cm, $groupmode, 'u.id');
+    $reportconditions = issue::get_visible_report_conditions($cm, $groupmode, 'u.id');
     if ($reportconditions['isempty']) {
         return [];
     }
@@ -579,34 +420,6 @@ function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 
                                  ORDER BY {$sort}", $allparams, $limitfrom, $limitnum);
 
     return $users;
-}
-
-/**
- * Count issued certificates visible to the current user.
- *
- * @param int $certificateid certificate instance ID
- * @param stdClass $cm course module
- * @param bool $groupmode are we in group mode?
- * @return int
- */
-function certificate_count_issues($certificateid, $cm, $groupmode = false) {
-    global $DB;
-
-    $reportconditions = certificate_get_visible_issue_report_conditions($cm, $groupmode, 'u.id');
-    if ($reportconditions['isempty']) {
-        return 0;
-    }
-
-    $params = $reportconditions['params'] + ['certificateid' => $certificateid];
-    // Count in the database instead of loading every visible issue and user into PHP.
-    $sql = "SELECT COUNT(DISTINCT u.id)
-              FROM {user} u
-        INNER JOIN {certificate_issues} ci
-                ON u.id = ci.userid
-             WHERE u.deleted = 0
-               AND ci.certificateid = :certificateid{$reportconditions['conditionssql']}";
-
-    return (int)$DB->count_records_sql($sql, $params);
 }
 
 /**

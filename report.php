@@ -24,6 +24,7 @@
  */
 
 use core_user\fields;
+use mod_certificate\local\issue;
 use mod_certificate\permission;
 use mod_certificate\util\user_field_util;
 
@@ -268,7 +269,7 @@ if ($download == "txt") {
     exit;
 }
 
-$usercount = certificate_count_issues($certificate->id, $cm);
+$usercount = issue::count_visible($certificate->id, $cm);
 
 // Create the table for the users
 $table = new html_table();

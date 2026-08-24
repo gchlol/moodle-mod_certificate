@@ -23,6 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_certificate\local\issue;
 use mod_certificate\local\temporary_user;
 use mod_certificate\permission;
 
@@ -53,7 +54,7 @@ require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/certificate:view', $context);
 
-list($userid, $targetuser) = certificate_get_requested_user($context);
+list($userid, $targetuser) = permission::get_requested_user($context);
 
 // Initialize $PAGE, compute blocks
 $PAGE->set_url('/mod/certificate/review.php', ['id' => $cm->id, 'userid' => $userid]);
@@ -91,7 +92,7 @@ echo $OUTPUT->header();
 
 $canviewotherusers = permission::can_view_other_users($context);
 if ($canviewotherusers) {
-    $numusers = certificate_count_issues($certificate->id, $cm);
+    $numusers = issue::count_visible($certificate->id, $cm);
     $url = html_writer::tag('a', get_string('viewcertificateviews', 'certificate', $numusers),
         array('href' => $CFG->wwwroot . '/mod/certificate/report.php?id=' . $cm->id));
     echo html_writer::tag('div', $url, array('class' => 'reportlink'));

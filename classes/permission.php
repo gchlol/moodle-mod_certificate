@@ -18,6 +18,7 @@ namespace mod_certificate;
 
 use context_module;
 use moodle_exception;
+use stdClass;
 use tool_organisation\api;
 use tool_organisation\local\type\role_permission;
 
@@ -114,6 +115,22 @@ class permission {
         if (!self::can_view_user_certificate($context, $targetuserid)) {
             throw new moodle_exception('nopermissions', 'error', '', get_string('certificate:view', 'certificate'));
         }
+    }
+
+    /**
+     * Get the requested certificate owner for the current request.
+     *
+     * @param context_module $context certificate activity context
+     * @return array{int, stdClass} requested user ID and user record
+     */
+    public static function get_requested_user(context_module $context) {
+        global $DB, $USER;
+
+        $userid = optional_param('userid', $USER->id, PARAM_INT);
+        self::require_view_user_certificate($context, (int)$userid);
+        $user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0], '*', MUST_EXIST);
+
+        return [$userid, $user];
     }
 
     /**

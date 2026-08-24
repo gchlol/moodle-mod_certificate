@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+use mod_certificate\local\issue;
 use mod_certificate\local\temporary_user;
 
 defined('MOODLE_INTERNAL') || die();
@@ -64,11 +65,11 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      * @return void
      */
     public function test_portfolio_certificate_type_detection() {
-        $this->assertTrue(certificate_is_portfolio_type('portfolio_gch'));
-        $this->assertTrue(certificate_is_portfolio_type('portfolio_example'));
-        $this->assertFalse(certificate_is_portfolio_type('Portfolio'));
-        $this->assertFalse(certificate_is_portfolio_type('portfolio'));
-        $this->assertFalse(certificate_is_portfolio_type('my_portfolio_gch'));
+        $this->assertTrue(issue::is_portfolio_type('portfolio_gch'));
+        $this->assertTrue(issue::is_portfolio_type('portfolio_example'));
+        $this->assertFalse(issue::is_portfolio_type('Portfolio'));
+        $this->assertFalse(issue::is_portfolio_type('portfolio'));
+        $this->assertFalse(issue::is_portfolio_type('my_portfolio_gch'));
     }
 
     /**
@@ -146,7 +147,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $this->setAdminUser();
         $requestinguserid = (int)$USER->id;
 
-        $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
+        $issue = issue::get_for_view($course, $target, $certificate, $cm);
 
         $this->assertSame((int)$target->id, (int)$issue->userid);
         $this->assertSame($requestinguserid, (int)$USER->id);
@@ -155,7 +156,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
             'userid' => $target->id,
         ]));
 
-        $secondissue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
+        $secondissue = issue::get_for_view($course, $target, $certificate, $cm);
 
         $this->assertSame((int)$issue->id, (int)$secondissue->id);
         $this->assertSame(1, $DB->count_records('certificate_issues', [
@@ -180,7 +181,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $requestinguserid = (int)$USER->id;
 
         try {
-            certificate_get_issue_for_view($course, $target, $certificate, $cm);
+            issue::get_for_view($course, $target, $certificate, $cm);
             $this->fail('Expected the target user\'s required course time to be enforced.');
 
         } catch (moodle_exception $exception) {
@@ -213,7 +214,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         ]);
         $this->setAdminUser();
 
-        $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
+        $issue = issue::get_for_view($course, $target, $certificate, $cm);
 
         $this->assertSame((int)$issueid, (int)$issue->id);
         $this->assertSame(1, $DB->count_records('certificate_issues', [
@@ -236,7 +237,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $this->setAdminUser();
 
         try {
-            certificate_get_issue_for_view($course, $target, $certificate, $cm);
+            issue::get_for_view($course, $target, $certificate, $cm);
             $this->fail('Expected a missing delegated certificate issue to be rejected.');
 
         } catch (moodle_exception $exception) {
@@ -268,7 +269,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         ]);
         $this->setAdminUser();
 
-        $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
+        $issue = issue::get_for_view($course, $target, $certificate, $cm);
 
         $this->assertSame((int)$issueid, (int)$issue->id);
         $this->assertSame(1, $DB->count_records('certificate_issues', [
@@ -290,7 +291,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $target = $this->getDataGenerator()->create_user();
         $this->setUser($target);
 
-        $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
+        $issue = issue::get_for_view($course, $target, $certificate, $cm);
 
         $this->assertSame((int)$target->id, (int)$issue->userid);
         $this->assertSame(1, $DB->count_records('certificate_issues', [

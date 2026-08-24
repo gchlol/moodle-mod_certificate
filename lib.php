@@ -24,6 +24,7 @@
  */
 
 use mod_certificate\local\temporary_user;
+use mod_certificate\permission;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -292,7 +293,7 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
         return false;
     }
 
-    certificate_require_user_certificate_access($certrecord->userid, $context);
+    permission::require_view_user_certificate($context, (int)$certrecord->userid);
     $canmanagecertificate = has_capability('mod/certificate:manage', $context);
 
     if ($filearea === 'issue') {
