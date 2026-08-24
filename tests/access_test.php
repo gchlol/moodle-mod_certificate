@@ -52,8 +52,6 @@ class mod_certificate_access_testcase extends advanced_testcase {
     public static function setUpBeforeClass(): void {
         global $CFG;
         require_once($CFG->dirroot . '/mod/certificate/locallib.php');
-        require_once($CFG->libdir . '/upgradelib.php');
-        require_once($CFG->dirroot . '/mod/certificate/db/upgrade.php');
     }
 
     /**
@@ -239,12 +237,12 @@ class mod_certificate_access_testcase extends advanced_testcase {
     }
 
     /**
-     * Create a teacher-archetype role without facilitator permission.
+     * Create a role using a teacher archetype.
      *
      * @param string $archetype role archetype
      * @return int role ID
      */
-    private function create_nonfacilitator_teacher_role($archetype = 'teacher') {
+    private function create_teacher_archetype_role($archetype = 'teacher') {
         return $this->getDataGenerator()->create_role(array(
             'archetype' => $archetype,
             'mod/certificate:view' => 'allow',
@@ -431,7 +429,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         list($course, $context) = $this->create_certificate_context();
         $editingteacher = $this->getDataGenerator()->create_user();
         $staff = $this->getDataGenerator()->create_user();
-        $roleid = $this->create_nonfacilitator_teacher_role('editingteacher');
+        $roleid = $this->create_teacher_archetype_role('editingteacher');
         $this->getDataGenerator()->enrol_user($editingteacher->id, $course->id, $roleid);
         $this->setUser($editingteacher);
 
@@ -441,16 +439,23 @@ class mod_certificate_access_testcase extends advanced_testcase {
     }
 
     /**
-     * A non-editing teacher archetype alone does not grant facilitator access.
+     * Facilitator access can be prevented for a non-editing teacher role.
      *
      * @return void
      */
-    public function test_nonediting_teacher_without_facilitator_capability_only_sees_self() {
+    public function test_nonediting_teacher_with_facilitator_capability_prevent_only_sees_self() {
         $this->resetAfterTest(true);
         list($course, $context, $certificate, $cm) = $this->create_certificate_context();
         $teacher = $this->getDataGenerator()->create_user();
         $otheruser = $this->getDataGenerator()->create_user();
-        $roleid = $this->create_nonfacilitator_teacher_role();
+        $roleid = $this->create_teacher_archetype_role();
+        assign_capability(
+            'mod/certificate:viewallnonadmincertificates',
+            CAP_PREVENT,
+            $roleid,
+            context_system::instance()->id,
+            true
+        );
         $this->getDataGenerator()->enrol_user($teacher->id, $course->id, $roleid);
         $this->create_certificate_issue($certificate->id, $teacher->id, 1);
         $this->create_certificate_issue($certificate->id, $otheruser->id, 2);
@@ -575,120 +580,5 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->assertSame(array((int) $staff->id, (int) $otheradmin->id), array_keys($users));
         $this->create_certificate_issue($certificate->id, $staff->id, 3);
         $this->assertSame(2, certificate_count_issues($certificate->id, $cm));
-    }
-
-    /**
-     * The upgrade registers the new capability and migrates only the established facilitator role.
-     *
-     * @return void
-     */
-    public function test_upgrade_migrates_legacy_facilitator_permissions() {
-        global $DB;
-
-        $this->resetAfterTest(true);
-        list(, $context) = $this->create_certificate_context();
-        $systemcontext = context_system::instance();
-        $facilitatorroleid = $this->getDataGenerator()->create_role(array(
-            'shortname' => 'facilitator',
-        ));
-        $teacherroleid = $this->getDataGenerator()->create_role(array(
-            'shortname' => 'legacy-certificate-teacher',
-        ));
-
-        assign_capability(
-            'mod/certificate:manage',
-            CAP_ALLOW,
-            $facilitatorroleid,
-            $systemcontext->id
-        );
-        assign_capability(
-            'mod/certificate:manage',
-            CAP_PREVENT,
-            $facilitatorroleid,
-            $context->id
-        );
-        assign_capability(
-            'mod/certificate:manage',
-            CAP_ALLOW,
-            $teacherroleid,
-            $systemcontext->id
-        );
-
-        $DB->delete_records('role_capabilities', array(
-            'capability' => 'mod/certificate:viewallnonadmincertificates',
-        ));
-        $DB->delete_records('capabilities', array(
-            'name' => 'mod/certificate:viewallnonadmincertificates',
-        ));
-        set_config('version', 2023061502, 'mod_certificate');
-
-        xmldb_certificate_upgrade(2023061502);
-
-        $this->assertSame(CAP_ALLOW, (int) $DB->get_field('role_capabilities', 'permission', array(
-            'roleid' => $facilitatorroleid,
-            'contextid' => $systemcontext->id,
-            'capability' => 'mod/certificate:viewallnonadmincertificates',
-        ), MUST_EXIST));
-        $this->assertSame(CAP_PREVENT, (int) $DB->get_field('role_capabilities', 'permission', array(
-            'roleid' => $facilitatorroleid,
-            'contextid' => $context->id,
-            'capability' => 'mod/certificate:viewallnonadmincertificates',
-        ), MUST_EXIST));
-        $this->assertFalse($DB->record_exists('role_capabilities', array(
-            'roleid' => $teacherroleid,
-            'capability' => 'mod/certificate:viewallnonadmincertificates',
-        )));
-        $this->assertTrue($DB->record_exists('capabilities', array(
-            'name' => 'mod/certificate:viewallnonadmincertificates',
-        )));
-    }
-
-    /**
-     * The upgrade preserves an explicitly configured facilitator override.
-     *
-     * @return void
-     */
-    public function test_upgrade_preserves_existing_facilitator_override() {
-        global $DB;
-
-        $this->resetAfterTest(true);
-        list(, $context) = $this->create_certificate_context();
-        $systemcontext = context_system::instance();
-        $facilitatorroleid = $this->getDataGenerator()->create_role(array(
-            'shortname' => 'facilitator',
-        ));
-
-        assign_capability(
-            'mod/certificate:manage',
-            CAP_ALLOW,
-            $facilitatorroleid,
-            $systemcontext->id
-        );
-        assign_capability(
-            'mod/certificate:manage',
-            CAP_PREVENT,
-            $facilitatorroleid,
-            $context->id
-        );
-        assign_capability(
-            'mod/certificate:viewallnonadmincertificates',
-            CAP_PROHIBIT,
-            $facilitatorroleid,
-            $systemcontext->id
-        );
-        set_config('version', 2023061503, 'mod_certificate');
-
-        xmldb_certificate_upgrade(2023061503);
-
-        $this->assertSame(CAP_PROHIBIT, (int) $DB->get_field('role_capabilities', 'permission', array(
-            'roleid' => $facilitatorroleid,
-            'contextid' => $systemcontext->id,
-            'capability' => 'mod/certificate:viewallnonadmincertificates',
-        ), MUST_EXIST));
-        $this->assertSame(CAP_PREVENT, (int) $DB->get_field('role_capabilities', 'permission', array(
-            'roleid' => $facilitatorroleid,
-            'contextid' => $context->id,
-            'capability' => 'mod/certificate:viewallnonadmincertificates',
-        ), MUST_EXIST));
     }
 }

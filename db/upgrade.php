@@ -508,38 +508,5 @@ function xmldb_certificate_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2020082500, 'certificate');
     }
 
-    if ($oldversion < 2023061504) {
-        $managecapability = 'mod/certificate:manage';
-        $facilitatorcapability = 'mod/certificate:viewallnonadmincertificates';
-
-        // Core normally registers capabilities after upgrade.php. Register this new capability first so its legacy
-        // facilitator assignments can be migrated during the same deployment.
-        if (!$DB->record_exists('capabilities', array('name' => $facilitatorcapability))) {
-            update_capabilities('mod_certificate');
-        }
-
-        // The manage capability is also held by ordinary teacher and manager roles, so only migrate the site's
-        // established facilitator role. Preserve its context-specific allow, prevent, and prohibit overrides.
-        $facilitatorroleid = $DB->get_field('role', 'id', array('shortname' => 'facilitator'));
-        if ($facilitatorroleid) {
-            $assignments = $DB->get_recordset('role_capabilities', array(
-                'roleid' => $facilitatorroleid,
-                'capability' => $managecapability,
-            ));
-            foreach ($assignments as $assignment) {
-                assign_capability(
-                    $facilitatorcapability,
-                    $assignment->permission,
-                    $facilitatorroleid,
-                    $assignment->contextid
-                );
-            }
-            $assignments->close();
-        }
-
-        // Certificate savepoint reached.
-        upgrade_mod_savepoint(true, 2023061504, 'certificate');
-    }
-
     return true;
 }

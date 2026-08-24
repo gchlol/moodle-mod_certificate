@@ -201,8 +201,8 @@ class permission {
     /**
      * Check whether the current user is a facilitator.
      *
-     * The dedicated capability distinguishes facilitators from other users
-     * whose roles may happen to use the non-editing teacher archetype.
+     * The dedicated capability identifies facilitators and is granted to
+     * non-editing teacher roles by default.
      *
      * @param context_module $context certificate activity context
      * @return bool
