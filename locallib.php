@@ -66,7 +66,7 @@ function certificate_require_user_certificate_access($userid, $context) {
  * Get the requested certificate owner for the current request.
  *
  * @param context_module $context certificate activity context
- * @return array requested user ID and user record
+ * @return array{int, stdClass} requested user ID and user record
  */
 function certificate_get_requested_user($context) {
     global $DB, $USER;
@@ -482,7 +482,8 @@ function certificate_get_issue_for_view($course, $user, $certificate, $cm) {
  * @param stdClass $cm the course module
  * @param bool $groupmode are we in group mode?
  * @param string $useridfield SQL field containing the user ID
- * @return array SQL fragment, params, and whether the result set is empty
+ * @return array{conditionssql: string, params: array<string, int>, isempty: bool} SQL fragment, params, and
+ *     whether the result set is empty
  */
 function certificate_get_visible_issue_report_conditions($cm, $groupmode, $useridfield) {
     global $DB, $USER;

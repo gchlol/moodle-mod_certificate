@@ -57,7 +57,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
     /**
      * Create a certificate activity context.
      *
-     * @return array course, context, certificate, and course module
+     * @return array{stdClass, context_module, stdClass, stdClass} course, context, certificate, and course module
      */
     private function create_certificate_context() {
         $course = $this->getDataGenerator()->create_course();

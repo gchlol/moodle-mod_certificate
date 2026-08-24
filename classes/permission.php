@@ -36,21 +36,21 @@ class permission {
     /**
      * Managed-user SQL, cached by manager user ID for the current request.
      *
-     * @var array
+     * @var array<int, array{joins: string, where: string, params: array<string, int>, directreports: int[]}>
      */
     protected static array $manageduserssql = [];
 
     /**
      * Targeted managed-user checks, cached for the current request.
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected static array $manageduserchecks = [];
 
     /**
      * Whether managers have at least one visible report, cached for the current request.
      *
-     * @var array
+     * @var array<int, bool>
      */
     protected static array $hasvisiblemanagedusers = [];
 
@@ -145,7 +145,7 @@ class permission {
      *
      * @param context_module $context certificate activity context
      * @param string $useridfield SQL field containing the target user ID
-     * @return array SQL where fragment and parameters
+     * @return array{where: string, params: array<string, int>} SQL where fragment and parameters
      */
     public static function get_viewable_users_sql(context_module $context, string $useridfield) {
         global $DB, $USER;
@@ -216,7 +216,7 @@ class permission {
      * Get SQL for users recursively managed through organisation roles.
      *
      * @param int $manageruserid manager user ID
-     * @return array
+     * @return array{joins: string, where: string, params: array<string, int>, directreports: int[]}
      */
     protected static function get_managed_users_sql(int $manageruserid) {
         if (!array_key_exists($manageruserid, self::$manageduserssql)) {
