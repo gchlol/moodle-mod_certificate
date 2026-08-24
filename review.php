@@ -99,8 +99,7 @@ if ($canviewotherusers) {
 
 echo html_writer::tag('p', get_string('viewed', 'certificate'). '<br />' . userdate($certrecord->timecreated), array('style' => 'text-align:center'));
 
-$link = new moodle_url('/mod/certificate/review.php',
-    ['id' => $cm->id, 'action' => 'get', 'userid' => $userid]);
+$link = new moodle_url('/mod/certificate/review.php', ['id' => $cm->id, 'action' => 'get', 'userid' => $userid]);
 $linkname = get_string('reviewcertificate', 'certificate');
 $button = new single_button($link, $linkname);
 $button->add_action(new popup_action('click', $link, array('height' => 600, 'width' => 800)));

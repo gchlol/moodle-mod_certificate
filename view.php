@@ -77,8 +77,10 @@ if (($edit != -1) and $PAGE->user_allowed_editing()) {
 if ($PAGE->user_allowed_editing()) {
     $editvalue = $PAGE->user_is_editing() ? 'off' : 'on';
     $strsubmit = $PAGE->user_is_editing() ? get_string('blockseditoff') : get_string('blocksediton');
-    $url = new moodle_url($CFG->wwwroot . '/mod/certificate/view.php',
-        ['id' => $cm->id, 'userid' => $userid, 'edit' => $editvalue]);
+    $url = new moodle_url(
+        $CFG->wwwroot . '/mod/certificate/view.php',
+        ['id' => $cm->id, 'userid' => $userid, 'edit' => $editvalue]
+    );
     $PAGE->set_button($OUTPUT->single_button($url, $strsubmit));
 }
 
@@ -142,8 +144,7 @@ if (empty($action)) { // Not displaying PDF
     echo html_writer::tag('p', $str, array('style' => 'text-align:center'));
     $linkname = get_string('getcertificate', 'certificate');
 
-    $link = new moodle_url('/mod/certificate/view.php',
-        ['id' => $cm->id, 'action' => 'get', 'userid' => $userid]);
+    $link = new moodle_url('/mod/certificate/view.php', ['id' => $cm->id, 'action' => 'get', 'userid' => $userid]);
     $button = new single_button($link, $linkname);
     if ($certificate->delivery != 1) {
         $button->add_action(new popup_action('click', $link, 'view' . $cm->id, array('height' => 600, 'width' => 800)));

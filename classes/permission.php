@@ -112,8 +112,7 @@ class permission {
         require_capability('mod/certificate:view', $context);
 
         if (!self::can_view_user_certificate($context, $targetuserid)) {
-            throw new moodle_exception('nopermissions', 'error', '',
-                get_string('certificate:view', 'certificate'));
+            throw new moodle_exception('nopermissions', 'error', '', get_string('certificate:view', 'certificate'));
         }
     }
 

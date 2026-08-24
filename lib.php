@@ -309,8 +309,7 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
 
         $userid = optional_param('userid', $certrecord->userid, PARAM_INT);
         if ((int)$userid !== (int)$certrecord->userid) {
-            throw new moodle_exception('nopermissions', 'error', '',
-                get_string('certificate:view', 'certificate'));
+            throw new moodle_exception('nopermissions', 'error', '', get_string('certificate:view', 'certificate'));
         }
 
         if ($userid == $USER->id && $certificate->requiredtime && !$canmanagecertificate) {

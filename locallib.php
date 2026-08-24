@@ -251,10 +251,7 @@ function certificate_email_teachers_html($info) {
 function certificate_email_student($course, $certificate, $certrecord, $context, $filecontents, $filename) {
     global $DB;
 
-    $student = $DB->get_record('user', [
-        'id' => $certrecord->userid,
-        'deleted' => 0,
-    ], '*', MUST_EXIST);
+    $student = $DB->get_record('user', ['id' => $certrecord->userid, 'deleted' => 0], '*', MUST_EXIST);
 
     // Get teachers
     if ($users = get_users_by_capability($context, 'mod/certificate:printteacher', 'u.*', 'u.id ASC',
@@ -449,10 +446,7 @@ function certificate_get_issue_for_view($course, $user, $certificate, $cm) {
     $isportfolio = certificate_is_portfolio_type($certificate->certificatetype);
 
     if (!$isowncertificate) {
-        $certissue = $DB->get_record('certificate_issues', [
-            'userid' => $user->id,
-            'certificateid' => $certificate->id,
-        ]);
+        $certissue = $DB->get_record('certificate_issues', ['userid' => $user->id, 'certificateid' => $certificate->id]);
 
         if ($certissue) {
             return $certissue;
