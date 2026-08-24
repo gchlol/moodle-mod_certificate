@@ -48,14 +48,14 @@ $capabilities = array(
         )
     ),
 
-    'mod/certificate:viewallnonadmincertificates' => array(
+    'mod/certificate:viewallnonadmincertificates' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'teacher' => CAP_ALLOW
-        )
-    ),
+        ]
+    ],
 
     'mod/certificate:manage' => array(
 

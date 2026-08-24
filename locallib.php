@@ -73,9 +73,9 @@ function certificate_get_requested_user($context) {
 
     $userid = optional_param('userid', $USER->id, PARAM_INT);
     certificate_require_user_certificate_access($userid, $context);
-    $user = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
+    $user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0], '*', MUST_EXIST);
 
-    return array($userid, $user);
+    return [$userid, $user];
 }
 
 
@@ -148,7 +148,7 @@ function certificate_email_teachers($course, $certificate, $certrecord, $cm) {
         return;
     }
 
-    $user = $DB->get_record('user', array('id' => $certrecord->userid), '*', MUST_EXIST);
+    $user = $DB->get_record('user', ['id' => $certrecord->userid], '*', MUST_EXIST);
 
     if ($teachers = certificate_get_teachers($certificate, $user, $course, $cm)) {
         $strawarded = get_string('awarded', 'certificate');
@@ -183,7 +183,7 @@ function certificate_email_others($course, $certificate, $certrecord, $cm) {
     global $CFG, $DB;
 
     if ($certificate->emailothers) {
-        $user = $DB->get_record('user', array('id' => $certrecord->userid), '*', MUST_EXIST);
+        $user = $DB->get_record('user', ['id' => $certrecord->userid], '*', MUST_EXIST);
         $others = explode(',', $certificate->emailothers);
         if ($others) {
             $strawarded = get_string('awarded', 'certificate');
@@ -251,10 +251,10 @@ function certificate_email_teachers_html($info) {
 function certificate_email_student($course, $certificate, $certrecord, $context, $filecontents, $filename) {
     global $DB;
 
-    $student = $DB->get_record('user', array(
+    $student = $DB->get_record('user', [
         'id' => $certrecord->userid,
         'deleted' => 0,
-    ), '*', MUST_EXIST);
+    ], '*', MUST_EXIST);
 
     // Get teachers
     if ($users = get_users_by_capability($context, 'mod/certificate:printteacher', 'u.*', 'u.id ASC',
@@ -449,10 +449,10 @@ function certificate_get_issue_for_view($course, $user, $certificate, $cm) {
     $isportfolio = certificate_is_portfolio_type($certificate->certificatetype);
 
     if (!$isowncertificate) {
-        $certissue = $DB->get_record('certificate_issues', array(
+        $certissue = $DB->get_record('certificate_issues', [
             'userid' => $user->id,
             'certificateid' => $certificate->id,
-        ));
+        ]);
 
         if ($certissue) {
             return $certissue;
@@ -506,30 +506,30 @@ function certificate_get_visible_issue_report_conditions($cm, $groupmode, $useri
 
         // If we are viewing all participants and the user does not have access to all groups then return nothing.
         if (!$currentgroup && !$canaccessallgroups) {
-            return array('conditionssql' => '', 'params' => array(), 'isempty' => true);
+            return ['conditionssql' => '', 'params' => [], 'isempty' => true];
         }
 
         if ($currentgroup) {
             if (!$canaccessallgroups) {
                 // Guest users do not belong to any groups.
                 if (isguestuser()) {
-                    return array('conditionssql' => '', 'params' => array(), 'isempty' => true);
+                    return ['conditionssql' => '', 'params' => [], 'isempty' => true];
                 }
 
                 // Check that the user belongs to the group we are viewing.
                 $usersgroups = groups_get_all_groups($cm->course, $USER->id, $cm->groupingid);
                 if ($usersgroups) {
                     if (!isset($usersgroups[$currentgroup])) {
-                        return array('conditionssql' => '', 'params' => array(), 'isempty' => true);
+                        return ['conditionssql' => '', 'params' => [], 'isempty' => true];
                     }
                 } else { // They belong to no group, so return an empty array.
-                    return array('conditionssql' => '', 'params' => array(), 'isempty' => true);
+                    return ['conditionssql' => '', 'params' => [], 'isempty' => true];
                 }
             }
 
             $groupusers = array_keys(groups_get_members($currentgroup, 'u.*'));
             if (empty($groupusers)) {
-                return array('conditionssql' => '', 'params' => array(), 'isempty' => true);
+                return ['conditionssql' => '', 'params' => [], 'isempty' => true];
             }
 
             list($sql, $params) = $DB->get_in_or_equal($groupusers, SQL_PARAMS_NAMED, 'grp');
@@ -538,11 +538,11 @@ function certificate_get_visible_issue_report_conditions($cm, $groupmode, $useri
         }
     }
 
-    return array(
+    return [
         'conditionssql' => $conditionssql,
         'params' => $conditionsparams,
         'isempty' => false,
-    );
+    ];
 }
 
 /**
@@ -562,14 +562,14 @@ function certificate_get_issues($certificateid, $sort, $groupmode, $cm, $page = 
     $context = context_module::instance($cm->id);
     $reportconditions = certificate_get_visible_issue_report_conditions($cm, $groupmode, 'u.id');
     if ($reportconditions['isempty']) {
-        return array();
+        return [];
     }
 
     $page = (int) $page;
     $perpage = (int) $perpage;
 
     // Get all the users that have certificates issued, should only be one issue per user for a certificate
-    $allparams = $reportconditions['params'] + array('certificateid' => $certificateid);
+    $allparams = $reportconditions['params'] + ['certificateid' => $certificateid];
 
     // The picture fields also include the name fields for the user.
     $picturefields = user_field_util::user_pic_select('u', user_field_util::get_extra_fields($context));
@@ -602,7 +602,7 @@ function certificate_count_issues($certificateid, $cm, $groupmode = false) {
         return 0;
     }
 
-    $params = $reportconditions['params'] + array('certificateid' => $certificateid);
+    $params = $reportconditions['params'] + ['certificateid' => $certificateid];
     // Count in the database instead of loading every visible issue and user into PHP.
     $sql = "SELECT COUNT(DISTINCT u.id)
               FROM {user} u
@@ -632,7 +632,7 @@ function certificate_get_attempts($certificateid, $userid = null) {
               FROM {certificate_issues} i
              WHERE certificateid = :certificateid
                AND userid = :userid";
-    if ($issues = $DB->get_records_sql($sql, array('certificateid' => $certificateid, 'userid' => $userid))) {
+    if ($issues = $DB->get_records_sql($sql, ['certificateid' => $certificateid, 'userid' => $userid])) {
         return $issues;
     }
 
@@ -732,7 +732,7 @@ function certificate_get_course_time($courseid, $userid = null) {
              WHERE userid = :userid
                AND $coursefield = :courseid
           ORDER BY $timefield ASC";
-    $params = array('userid' => $userid, 'courseid' => $courseid);
+    $params = ['userid' => $userid, 'courseid' => $courseid];
 
     $totaltime = 0;
     if ($logs = $DB->get_recordset_sql($sql, $params)) {

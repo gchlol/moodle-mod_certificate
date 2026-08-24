@@ -62,10 +62,10 @@ class mod_certificate_access_testcase extends advanced_testcase {
     private function create_certificate_context() {
         $course = $this->getDataGenerator()->create_course();
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_certificate');
-        $certificate = $generator->create_instance(array('course' => $course->id));
+        $certificate = $generator->create_instance(['course' => $course->id]);
         $cm = get_coursemodule_from_id('certificate', $certificate->cmid, 0, false, MUST_EXIST);
 
-        return array($course, context_module::instance($certificate->cmid), $certificate, $cm);
+        return [$course, context_module::instance($certificate->cmid), $certificate, $cm];
     }
 
     /**
@@ -79,12 +79,12 @@ class mod_certificate_access_testcase extends advanced_testcase {
     private function create_certificate_issue(int $certificateid, int $userid, int $timecreated) {
         global $DB;
 
-        $DB->insert_record('certificate_issues', (object)array(
+        $DB->insert_record('certificate_issues', (object)[
             'certificateid' => $certificateid,
             'userid' => $userid,
             'code' => "certificate-code-$userid",
             'timecreated' => $timecreated,
-        ));
+        ]);
     }
 
     /**
@@ -129,23 +129,23 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @return void
      */
     private function assign_user_to_level(stdClass $user, int $levelid, string $suffix) {
-        $position = new position(0, (object)array(
+        $position = new position(0, (object)[
             'name' => "Certificate position $suffix",
             'idnumber' => "certificate-position-$suffix",
-        ));
+        ]);
         $position->create();
 
-        $assignment = new assignment(0, (object)array(
+        $assignment = new assignment(0, (object)[
             'userid' => $user->id,
             'positionid' => $position->get('id'),
             'assignnu' => "certificate-assignment-$suffix",
-        ));
+        ]);
         $assignment->create();
 
-        $leveldata = new level_data(0, (object)array(
+        $leveldata = new level_data(0, (object)[
             'levelid' => $levelid,
             'assignid' => $assignment->get('id'),
-        ));
+        ]);
         $leveldata->create();
     }
 
@@ -165,49 +165,49 @@ class mod_certificate_access_testcase extends advanced_testcase {
         stdClass $unrelateduser
     ) {
         $suffix = uniqid('', true);
-        $hierarchy = new hierarchy(0, (object)array(
+        $hierarchy = new hierarchy(0, (object)[
             'idnumber' => "certificate-hierarchy-$suffix",
             'name' => 'Certificate test hierarchy',
             'type' => hierarchy::TYPE_ASSIGNMENT,
-        ));
+        ]);
         $hierarchy->create();
 
-        $managerlevel = new level(0, (object)array(
+        $managerlevel = new level(0, (object)[
             'hierarchyid' => $hierarchy->get('id'),
             'name' => 'Manager level',
             'idnumber' => "certificate-manager-$suffix",
-        ));
+        ]);
         $managerlevel->create();
 
-        $directlevel = new level(0, (object)array(
+        $directlevel = new level(0, (object)[
             'hierarchyid' => $hierarchy->get('id'),
             'parent' => $managerlevel->get('id'),
             'name' => 'Direct report level',
             'idnumber' => "certificate-direct-$suffix",
-        ));
+        ]);
         $directlevel->create();
 
-        $indirectlevel = new level(0, (object)array(
+        $indirectlevel = new level(0, (object)[
             'hierarchyid' => $hierarchy->get('id'),
             'parent' => $directlevel->get('id'),
             'name' => 'Indirect report level',
             'idnumber' => "certificate-indirect-$suffix",
-        ));
+        ]);
         $indirectlevel->create();
 
-        $unrelatedlevel = new level(0, (object)array(
+        $unrelatedlevel = new level(0, (object)[
             'hierarchyid' => $hierarchy->get('id'),
             'name' => 'Unrelated level',
             'idnumber' => "certificate-unrelated-$suffix",
-        ));
+        ]);
         $unrelatedlevel->create();
 
-        $managerrole = new role(0, (object)array(
+        $managerrole = new role(0, (object)[
             'levelid' => $managerlevel->get('id'),
             'userid' => $manager->id,
             'type' => role::TYPE_USER,
             'manager' => 1,
-        ));
+        ]);
         $managerrole->create();
 
         $this->assign_user_to_level($directreport, $directlevel->get('id'), "direct-$suffix");
@@ -236,10 +236,10 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @return int role ID
      */
     private function create_facilitator_role() {
-        return $this->getDataGenerator()->create_role(array(
+        return $this->getDataGenerator()->create_role([
             'mod/certificate:view' => 'allow',
             'mod/certificate:viewallnonadmincertificates' => 'allow',
-        ));
+        ]);
     }
 
     /**
@@ -249,10 +249,10 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @return int role ID
      */
     private function create_teacher_archetype_role(string $archetype = 'teacher') {
-        return $this->getDataGenerator()->create_role(array(
+        return $this->getDataGenerator()->create_role([
             'archetype' => $archetype,
             'mod/certificate:view' => 'allow',
-        ));
+        ]);
     }
 
     /**
@@ -312,9 +312,9 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $facilitator = $this->getDataGenerator()->create_user();
-        $roleid = $this->getDataGenerator()->create_role(array(
+        $roleid = $this->getDataGenerator()->create_role([
             'mod/certificate:viewallnonadmincertificates' => 'allow',
-        ));
+        ]);
         $this->getDataGenerator()->enrol_user($facilitator->id, $course->id, $roleid);
         $this->setUser($facilitator);
 
@@ -471,7 +471,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->assertFalse(permission::can_view_user_certificate($context, $otheruser->id));
         $this->assertFalse(permission::can_view_other_users($context));
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
-        $this->assertSame(array((int)$teacher->id), array_keys($users));
+        $this->assertSame([(int)$teacher->id], array_keys($users));
     }
 
     /**
@@ -515,8 +515,8 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $firstpage = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm, 0, 2);
         $secondpage = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm, 1, 2);
 
-        $this->assertSame(array((int)$manager->id, (int)$directreport->id), array_keys($firstpage));
-        $this->assertSame(array((int)$indirectreport->id), array_keys($secondpage));
+        $this->assertSame([(int)$manager->id, (int)$directreport->id], array_keys($firstpage));
+        $this->assertSame([(int)$indirectreport->id], array_keys($secondpage));
         $this->assertSame(3, certificate_count_issues($certificate->id, $cm));
     }
 
@@ -541,7 +541,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', SEPARATEGROUPS, $cm);
 
-        $this->assertSame(array((int)$facilitator->id, (int)$staff->id), array_keys($users));
+        $this->assertSame([(int)$facilitator->id, (int)$staff->id], array_keys($users));
         $this->assertSame(2, certificate_count_issues($certificate->id, $cm));
     }
 
@@ -562,7 +562,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
 
-        $this->assertSame(array((int)$staff->id), array_keys($users));
+        $this->assertSame([(int)$staff->id], array_keys($users));
         $this->assertSame(1, certificate_count_issues($certificate->id, $cm));
     }
 
@@ -583,7 +583,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
 
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);
 
-        $this->assertSame(array((int)$staff->id, (int)$otheradmin->id), array_keys($users));
+        $this->assertSame([(int)$staff->id, (int)$otheradmin->id], array_keys($users));
         $this->create_certificate_issue($certificate->id, $staff->id, 3);
         $this->assertSame(2, certificate_count_issues($certificate->id, $cm));
     }

@@ -56,14 +56,14 @@ require_capability('mod/certificate:view', $context);
 list($userid, $targetuser) = certificate_get_requested_user($context);
 
 // Initialize $PAGE, compute blocks
-$PAGE->set_url('/mod/certificate/review.php', array('id' => $cm->id, 'userid' => $userid));
+$PAGE->set_url('/mod/certificate/review.php', ['id' => $cm->id, 'userid' => $userid]);
 $PAGE->set_context($context);
 $PAGE->set_cm($cm);
 $PAGE->set_title(format_string($certificate->name));
 $PAGE->set_heading(format_string($course->fullname));
 
 // Get previous cert record
-if (!$certrecord = $DB->get_record('certificate_issues', array('userid' => $userid, 'certificateid' => $certificate->id))) {
+if (!$certrecord = $DB->get_record('certificate_issues', ['userid' => $userid, 'certificateid' => $certificate->id])) {
     notice(get_string('nocertificatesissued', 'certificate'), "$CFG->wwwroot/course/view.php?id=$course->id");
     die;
 }
@@ -100,7 +100,7 @@ if ($canviewotherusers) {
 echo html_writer::tag('p', get_string('viewed', 'certificate'). '<br />' . userdate($certrecord->timecreated), array('style' => 'text-align:center'));
 
 $link = new moodle_url('/mod/certificate/review.php',
-    array('id' => $cm->id, 'action' => 'get', 'userid' => $userid));
+    ['id' => $cm->id, 'action' => 'get', 'userid' => $userid]);
 $linkname = get_string('reviewcertificate', 'certificate');
 $button = new single_button($link, $linkname);
 $button->add_action(new popup_action('click', $link, array('height' => 600, 'width' => 800)));

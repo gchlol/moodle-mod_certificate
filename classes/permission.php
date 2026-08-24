@@ -38,21 +38,21 @@ class permission {
      *
      * @var array
      */
-    protected static array $manageduserssql = array();
+    protected static array $manageduserssql = [];
 
     /**
      * Targeted managed-user checks, cached for the current request.
      *
      * @var array
      */
-    protected static array $manageduserchecks = array();
+    protected static array $manageduserchecks = [];
 
     /**
      * Whether managers have at least one visible report, cached for the current request.
      *
      * @var array
      */
-    protected static array $hasvisiblemanagedusers = array();
+    protected static array $hasvisiblemanagedusers = [];
 
     /**
      * Reset request-level permission caches.
@@ -60,9 +60,9 @@ class permission {
      * @return void
      */
     public static function reset_caches() {
-        self::$manageduserssql = array();
-        self::$manageduserchecks = array();
-        self::$hasvisiblemanagedusers = array();
+        self::$manageduserssql = [];
+        self::$manageduserchecks = [];
+        self::$hasvisiblemanagedusers = [];
     }
 
     /**
@@ -151,20 +151,20 @@ class permission {
         global $DB, $USER;
 
         if (!has_capability('mod/certificate:view', $context)) {
-            return array(
+            return [
                 'where' => '1 = 0',
-                'params' => array(),
-            );
+                'params' => [],
+            ];
         }
 
         if (is_siteadmin()) {
-            return array(
+            return [
                 'where' => '',
-                'params' => array(),
-            );
+                'params' => [],
+            ];
         }
 
-        $params = array();
+        $params = [];
         if (self::is_facilitator($context)) {
             $where = '';
 
@@ -193,10 +193,10 @@ class permission {
             $where = $where === '' ? $adminwhere : "$where AND $adminwhere";
         }
 
-        return array(
+        return [
             'where' => $where,
             'params' => $params,
-        );
+        ];
     }
 
     /**
@@ -223,10 +223,10 @@ class permission {
             self::$manageduserssql[$manageruserid] = api::get_myusers_sql(
                 $manageruserid,
                 false,
-                array(
+                [
                     role_permission::MANAGER,
                     role_permission::MANAGE_USERS,
-                )
+                ]
             );
         }
 

@@ -48,14 +48,14 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
     private function create_certificate(string $certificatetype, int $requiredtime = 0) {
         $course = $this->getDataGenerator()->create_course();
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_certificate');
-        $certificate = $generator->create_instance(array(
+        $certificate = $generator->create_instance([
             'course' => $course->id,
             'certificatetype' => $certificatetype,
             'requiredtime' => $requiredtime,
-        ));
+        ]);
         $cm = get_coursemodule_from_id('certificate', $certificate->cmid, 0, false, MUST_EXIST);
 
-        return array($course, $certificate, $cm);
+        return [$course, $certificate, $cm];
     }
 
     /**
@@ -150,18 +150,18 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
         $this->assertSame((int)$target->id, (int)$issue->userid);
         $this->assertSame($requestinguserid, (int)$USER->id);
-        $this->assertSame(1, $DB->count_records('certificate_issues', array(
+        $this->assertSame(1, $DB->count_records('certificate_issues', [
             'certificateid' => $certificate->id,
             'userid' => $target->id,
-        )));
+        ]));
 
         $secondissue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
 
         $this->assertSame((int)$issue->id, (int)$secondissue->id);
-        $this->assertSame(1, $DB->count_records('certificate_issues', array(
+        $this->assertSame(1, $DB->count_records('certificate_issues', [
             'certificateid' => $certificate->id,
             'userid' => $target->id,
-        )));
+        ]));
     }
 
     /**
@@ -188,10 +188,10 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         }
 
         $this->assertSame($requestinguserid, (int)$USER->id);
-        $this->assertFalse($DB->record_exists('certificate_issues', array(
+        $this->assertFalse($DB->record_exists('certificate_issues', [
             'certificateid' => $certificate->id,
             'userid' => $target->id,
-        )));
+        ]));
     }
 
     /**
@@ -205,21 +205,21 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         list($course, $certificate, $cm) = $this->create_certificate('portfolio_gch', 1);
         $target = $this->getDataGenerator()->create_user();
-        $issueid = $DB->insert_record('certificate_issues', (object)array(
+        $issueid = $DB->insert_record('certificate_issues', (object)[
             'certificateid' => $certificate->id,
             'userid' => $target->id,
             'code' => 'existing-portfolio-issue',
             'timecreated' => time(),
-        ));
+        ]);
         $this->setAdminUser();
 
         $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
 
         $this->assertSame((int)$issueid, (int)$issue->id);
-        $this->assertSame(1, $DB->count_records('certificate_issues', array(
+        $this->assertSame(1, $DB->count_records('certificate_issues', [
             'certificateid' => $certificate->id,
             'userid' => $target->id,
-        )));
+        ]));
     }
 
     /**
@@ -243,10 +243,10 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
             $this->assertSame('nocertificatesissued', $exception->errorcode);
         }
 
-        $this->assertFalse($DB->record_exists('certificate_issues', array(
+        $this->assertFalse($DB->record_exists('certificate_issues', [
             'certificateid' => $certificate->id,
             'userid' => $target->id,
-        )));
+        ]));
     }
 
     /**
@@ -260,21 +260,21 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         list($course, $certificate, $cm) = $this->create_certificate('A4_non_embedded');
         $target = $this->getDataGenerator()->create_user();
-        $issueid = $DB->insert_record('certificate_issues', (object)array(
+        $issueid = $DB->insert_record('certificate_issues', (object)[
             'certificateid' => $certificate->id,
             'userid' => $target->id,
             'code' => 'existing-conventional-issue',
             'timecreated' => time(),
-        ));
+        ]);
         $this->setAdminUser();
 
         $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
 
         $this->assertSame((int)$issueid, (int)$issue->id);
-        $this->assertSame(1, $DB->count_records('certificate_issues', array(
+        $this->assertSame(1, $DB->count_records('certificate_issues', [
             'certificateid' => $certificate->id,
             'userid' => $target->id,
-        )));
+        ]));
     }
 
     /**
@@ -293,10 +293,10 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $issue = certificate_get_issue_for_view($course, $target, $certificate, $cm);
 
         $this->assertSame((int)$target->id, (int)$issue->userid);
-        $this->assertSame(1, $DB->count_records('certificate_issues', array(
+        $this->assertSame(1, $DB->count_records('certificate_issues', [
             'certificateid' => $certificate->id,
             'userid' => $target->id,
-        )));
+        ]));
     }
 
     /**
@@ -310,20 +310,20 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         $course = $this->getDataGenerator()->create_course();
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_certificate');
-        $certificate = $generator->create_instance(array('course' => $course->id));
+        $certificate = $generator->create_instance(['course' => $course->id]);
         $context = context_module::instance($certificate->cmid);
         $student = $this->getDataGenerator()->create_user();
         $delegate = $this->getDataGenerator()->create_user();
         $teacher = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user($teacher->id, $course->id, 'editingteacher');
 
-        $issueid = $DB->insert_record('certificate_issues', (object)array(
+        $issueid = $DB->insert_record('certificate_issues', (object)[
             'certificateid' => $certificate->id,
             'userid' => $student->id,
             'code' => 'email-owner-test',
             'timecreated' => time(),
-        ));
-        $issue = $DB->get_record('certificate_issues', array('id' => $issueid), '*', MUST_EXIST);
+        ]);
+        $issue = $DB->get_record('certificate_issues', ['id' => $issueid], '*', MUST_EXIST);
 
         $this->setUser($delegate);
         $sink = $this->redirectEmails();
@@ -356,34 +356,34 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_certificate');
         $otheremail = 'certificate-observer@example.test';
-        $certificate = $generator->create_instance(array(
+        $certificate = $generator->create_instance([
             'course' => $course->id,
             'emailteachers' => 1,
             'emailothers' => $otheremail,
-        ));
+        ]);
         $cm = get_coursemodule_from_id('certificate', $certificate->cmid, 0, false, MUST_EXIST);
-        $owner = $this->getDataGenerator()->create_user(array(
+        $owner = $this->getDataGenerator()->create_user([
             'firstname' => 'Certificate',
             'lastname' => 'Owner',
             'email' => 'certificate-owner@example.com',
-        ));
-        $delegate = $this->getDataGenerator()->create_user(array(
+        ]);
+        $delegate = $this->getDataGenerator()->create_user([
             'firstname' => 'Certificate',
             'lastname' => 'Delegate',
             'email' => 'certificate-delegate@example.com',
-        ));
+        ]);
         $this->getDataGenerator()->enrol_user($delegate->id, $course->id, 'editingteacher');
-        $issue = (object)array(
+        $issue = (object)[
             'certificateid' => $certificate->id,
             'userid' => $owner->id,
-        );
+        ];
 
         $this->setUser($delegate);
         $sink = $this->redirectEmails();
         certificate_email_teachers($course, $certificate, $issue, $cm);
         certificate_email_others($course, $certificate, $issue, $cm);
 
-        $messages = array();
+        $messages = [];
         foreach ($sink->get_messages() as $message) {
             $messages[$message->to] = $message;
         }
