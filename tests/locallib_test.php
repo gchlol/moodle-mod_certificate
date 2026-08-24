@@ -88,10 +88,15 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
         $selfcontext = new temporary_user($requester);
         $this->assertSame($USER, $_SESSION['USER']);
+        $selfcontext->apply();
+        $this->assertSame($USER, $_SESSION['USER']);
         $selfcontext->restore();
 
         $usercontext = new temporary_user($target);
+        $this->assertSame((int) $requester->id, (int) $USER->id);
+        $this->assertSame((int) $requester->id, (int) $_SESSION['USER']->id);
         try {
+            $usercontext->apply();
             $this->assertSame((int) $target->id, (int) $USER->id);
             $this->assertSame((int) $requester->id, (int) $_SESSION['USER']->id);
             $this->assertFalse(property_exists($USER, 'password'));

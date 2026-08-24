@@ -34,8 +34,23 @@ class temporary_user {
     /** @var stdClass user active before the temporary switch */
     private stdClass $requestinguser;
 
-    /** @var bool whether the requesting user has been restored */
-    private bool $restored = false;
+    /** @var stdClass user to expose during the temporary switch */
+    private stdClass $targetuser;
+
+    /** @var bool whether the temporary user has been applied */
+    private bool $applied = false;
+
+    /**
+     * Capture the users required for the temporary switch.
+     *
+     * @param stdClass $targetuser certificate owner
+     */
+    public function __construct(stdClass $targetuser) {
+        global $USER;
+
+        $this->requestinguser = $USER;
+        $this->targetuser = $targetuser;
+    }
 
     /**
      * Switch the global user without changing the user stored in the session.
@@ -44,25 +59,23 @@ class temporary_user {
      * session reference prevents the owner from being persisted as the logged-in user, while the shutdown callback
      * covers paths that skip the caller's finally block.
      *
-     * @param stdClass $targetuser certificate owner
      * @return void
      */
-    public function __construct(stdClass $targetuser) {
+    public function apply() {
         global $USER;
 
-        $this->requestinguser = $USER;
-        if ((int) $targetuser->id === (int) $USER->id) {
-            $this->restored = true;
+        if ($this->applied || (int) $this->targetuser->id === (int) $this->requestinguser->id) {
             return;
         }
 
         $sessionuser = isset($_SESSION['USER']) ? $_SESSION['USER'] : $this->requestinguser;
         core_shutdown_manager::register_function(array(__CLASS__, 'restore_user'), array($sessionuser));
 
-        $temporaryuser = clone $targetuser;
+        $temporaryuser = clone $this->targetuser;
         unset($temporaryuser->password, $temporaryuser->secret);
 
         // Break Moodle's session reference before exposing the certificate owner through the legacy global.
+        $this->applied = true;
         unset($_SESSION['USER']);
         $_SESSION['USER'] = $sessionuser;
         $USER = $temporaryuser;
@@ -83,12 +96,12 @@ class temporary_user {
      * @return void
      */
     public function restore() {
-        if ($this->restored) {
+        if (!$this->applied) {
             return;
         }
 
         self::restore_user($this->requestinguser);
-        $this->restored = true;
+        $this->applied = false;
     }
 
     /**

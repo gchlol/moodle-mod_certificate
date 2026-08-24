@@ -108,8 +108,9 @@ if (!empty($reponame)) {
     $requirepath = "$CFG->dataroot/repository/$reponame/CERTIFICATE/type/$certificate->certificatetype/certificate.php";
 }
 $usercontext = new temporary_user($targetuser);
-$requestinguser = $usercontext->get_requesting_user();
 try {
+    $usercontext->apply();
+    $requestinguser = $usercontext->get_requesting_user();
     require($requirepath);
 } finally {
     $usercontext->restore();

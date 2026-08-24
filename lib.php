@@ -322,8 +322,9 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
         // Load the specific certificate type as the certificate owner. It will fill the $pdf var.
         $targetuser = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
         $usercontext = new temporary_user($targetuser);
-        $requestinguser = $usercontext->get_requesting_user();
         try {
+            $usercontext->apply();
+            $requestinguser = $usercontext->get_requesting_user();
             require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
         } finally {
             $usercontext->restore();
