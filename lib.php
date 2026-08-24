@@ -281,7 +281,7 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
     require_login($course, false, $cm);
 
     require_once($CFG->libdir.'/filelib.php');
-    require_once($CFG->dirroot.'/mod/certificate/locallib.php');
+    require_once("$CFG->dirroot/mod/certificate/locallib.php");
 
     $certrecord = (int)array_shift($args);
 
