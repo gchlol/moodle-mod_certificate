@@ -45,7 +45,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      * @param int $requiredtime required course time in minutes
      * @return array course, certificate, and course module
      */
-    private function create_certificate($certificatetype, $requiredtime = 0) {
+    private function create_certificate(string $certificatetype, int $requiredtime = 0) {
         $course = $this->getDataGenerator()->create_course();
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_certificate');
         $certificate = $generator->create_instance(array(

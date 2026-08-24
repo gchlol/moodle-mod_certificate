@@ -76,7 +76,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param int $timecreated issue time used for deterministic sorting
      * @return void
      */
-    private function create_certificate_issue($certificateid, $userid, $timecreated) {
+    private function create_certificate_issue(int $certificateid, int $userid, int $timecreated) {
         global $DB;
 
         $DB->insert_record('certificate_issues', (object) array(
@@ -94,7 +94,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param int $userid target user ID
      * @return void
      */
-    private function assert_can_view_certificate($context, $userid) {
+    private function assert_can_view_certificate(context_module $context, int $userid) {
         $this->assertTrue(has_capability('mod/certificate:view', $context));
         $this->assertTrue(permission::can_view_user_certificate($context, $userid));
         certificate_require_user_certificate_access($userid, $context);
@@ -107,7 +107,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param int $userid target user ID
      * @return void
      */
-    private function assert_cannot_view_certificate($context, $userid) {
+    private function assert_cannot_view_certificate(context_module $context, int $userid) {
         $this->assertTrue(has_capability('mod/certificate:view', $context));
         $this->assertFalse(permission::can_view_user_certificate($context, $userid));
 
@@ -127,7 +127,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param string $suffix unique record suffix
      * @return void
      */
-    private function assign_user_to_level($user, $levelid, $suffix) {
+    private function assign_user_to_level(stdClass $user, int $levelid, string $suffix) {
         $position = new position(0, (object) array(
             'name' => "Certificate position $suffix",
             'idnumber' => "certificate-position-$suffix",
@@ -157,7 +157,12 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param stdClass $unrelateduser unrelated user
      * @return void
      */
-    private function create_manager_hierarchy($manager, $directreport, $indirectreport, $unrelateduser) {
+    private function create_manager_hierarchy(
+        stdClass $manager,
+        stdClass $directreport,
+        stdClass $indirectreport,
+        stdClass $unrelateduser
+    ) {
         $suffix = uniqid('', true);
         $hierarchy = new hierarchy(0, (object) array(
             'idnumber' => "certificate-hierarchy-$suffix",
@@ -215,7 +220,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param stdClass $user user to make an administrator
      * @return void
      */
-    private function make_site_admin($user) {
+    private function make_site_admin(stdClass $user) {
         global $CFG;
 
         $adminids = array_filter(explode(',', $CFG->siteadmins));
@@ -242,7 +247,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param string $archetype role archetype
      * @return int role ID
      */
-    private function create_teacher_archetype_role($archetype = 'teacher') {
+    private function create_teacher_archetype_role(string $archetype = 'teacher') {
         return $this->getDataGenerator()->create_role(array(
             'archetype' => $archetype,
             'mod/certificate:view' => 'allow',

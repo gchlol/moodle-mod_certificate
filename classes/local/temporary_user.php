@@ -32,10 +32,10 @@ defined('MOODLE_INTERNAL') || die();
 class temporary_user {
 
     /** @var stdClass user active before the temporary switch */
-    private $requestinguser;
+    private stdClass $requestinguser;
 
     /** @var bool whether the requesting user has been restored */
-    private $restored = false;
+    private bool $restored = false;
 
     /**
      * Switch the global user without changing the user stored in the session.
@@ -47,7 +47,7 @@ class temporary_user {
      * @param stdClass $targetuser certificate owner
      * @return void
      */
-    public function __construct($targetuser) {
+    public function __construct(stdClass $targetuser) {
         global $USER;
 
         $this->requestinguser = $USER;
@@ -99,7 +99,7 @@ class temporary_user {
      * @param stdClass $user user to restore
      * @return void
      */
-    public static function restore_user($user) {
+    public static function restore_user(stdClass $user) {
         global $USER;
 
         $sessionuser = isset($_SESSION['USER']) ? $_SESSION['USER'] : null;

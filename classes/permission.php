@@ -38,21 +38,21 @@ class permission {
      *
      * @var array
      */
-    protected static $manageduserssql = array();
+    protected static array $manageduserssql = array();
 
     /**
      * Targeted managed-user checks, cached for the current request.
      *
      * @var array
      */
-    protected static $manageduserchecks = array();
+    protected static array $manageduserchecks = array();
 
     /**
      * Whether managers have at least one visible report, cached for the current request.
      *
      * @var array
      */
-    protected static $hasvisiblemanagedusers = array();
+    protected static array $hasvisiblemanagedusers = array();
 
     /**
      * Reset request-level permission caches.
@@ -72,7 +72,7 @@ class permission {
      * @param int $targetuserid target user ID
      * @return bool
      */
-    public static function can_view_user_certificate(context_module $context, $targetuserid) {
+    public static function can_view_user_certificate(context_module $context, int $targetuserid) {
         global $USER;
 
         $targetuserid = (int) $targetuserid;
@@ -108,7 +108,7 @@ class permission {
      * @return void
      * @throws moodle_exception if the target user is not visible
      */
-    public static function require_view_user_certificate(context_module $context, $targetuserid) {
+    public static function require_view_user_certificate(context_module $context, int $targetuserid) {
         require_capability('mod/certificate:view', $context);
 
         if (!self::can_view_user_certificate($context, $targetuserid)) {
@@ -147,7 +147,7 @@ class permission {
      * @param string $useridfield SQL field containing the target user ID
      * @return array SQL where fragment and parameters
      */
-    public static function get_viewable_users_sql(context_module $context, $useridfield) {
+    public static function get_viewable_users_sql(context_module $context, string $useridfield) {
         global $DB, $USER;
 
         if (!has_capability('mod/certificate:view', $context)) {
@@ -217,7 +217,7 @@ class permission {
      * @param int $manageruserid manager user ID
      * @return array
      */
-    protected static function get_managed_users_sql($manageruserid) {
+    protected static function get_managed_users_sql(int $manageruserid) {
         if (!array_key_exists($manageruserid, self::$manageduserssql)) {
             self::$manageduserssql[$manageruserid] = api::get_myusers_sql(
                 $manageruserid,
@@ -239,7 +239,7 @@ class permission {
      * @param int $targetuserid target user ID
      * @return bool
      */
-    protected static function is_managed_user($manageruserid, $targetuserid) {
+    protected static function is_managed_user(int $manageruserid, int $targetuserid) {
         global $DB;
 
         $cachekey = "$manageruserid:$targetuserid";
@@ -272,7 +272,7 @@ class permission {
      * @param int $manageruserid manager user ID
      * @return bool
      */
-    protected static function has_visible_managed_user($manageruserid) {
+    protected static function has_visible_managed_user(int $manageruserid) {
         global $DB;
 
         if (array_key_exists($manageruserid, self::$hasvisiblemanagedusers)) {
