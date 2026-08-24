@@ -69,7 +69,7 @@ class temporary_user {
             return;
         }
 
-        $sessionuser = isset($_SESSION['USER']) ? $_SESSION['USER'] : $this->requestinguser;
+        $sessionuser = $_SESSION['USER'] ?? $this->requestinguser;
         core_shutdown_manager::register_function(array(__CLASS__, 'restore_user'), array($sessionuser));
 
         $temporaryuser = clone $this->targetuser;
