@@ -16,6 +16,7 @@
 
 namespace mod_certificate;
 
+use context;
 use context_module;
 use moodle_exception;
 use stdClass;
@@ -71,11 +72,11 @@ class permission {
     /**
      * Check whether the current user can view a target user's certificate.
      *
-     * @param context_module $context certificate activity context
+     * @param context $context certificate activity context
      * @param int $targetuserid target user ID
      * @return bool
      */
-    public static function can_view_user_certificate(context_module $context, int $targetuserid) {
+    public static function can_view_user_certificate(context $context, int $targetuserid) {
         global $USER;
 
         $targetuserid = (int)$targetuserid;
@@ -106,12 +107,12 @@ class permission {
     /**
      * Require permission to view a target user's certificate.
      *
-     * @param context_module $context certificate activity context
+     * @param context $context certificate activity context
      * @param int $targetuserid target user ID
      * @return void
      * @throws moodle_exception if the target user is not visible
      */
-    public static function require_view_user_certificate(context_module $context, int $targetuserid) {
+    public static function require_view_user_certificate(context $context, int $targetuserid) {
         require_capability('mod/certificate:view', $context);
 
         if (!self::can_view_user_certificate($context, $targetuserid)) {
@@ -138,10 +139,10 @@ class permission {
     /**
      * Check whether the current user can view at least one other user.
      *
-     * @param context_module $context certificate activity context
+     * @param context $context certificate activity context
      * @return bool
      */
-    public static function can_view_other_users(context_module $context) {
+    public static function can_view_other_users(context $context) {
         global $USER;
 
         if (!has_capability('mod/certificate:view', $context)) {
@@ -161,11 +162,11 @@ class permission {
      * The field expression is supplied by trusted plugin code and must not contain
      * request data.
      *
-     * @param context_module $context certificate activity context
+     * @param context $context certificate activity context
      * @param string $useridfield SQL field containing the target user ID
      * @return array{where: string, params: array<string, int>} SQL where fragment and parameters
      */
-    public static function get_viewable_users_sql(context_module $context, string $useridfield) {
+    public static function get_viewable_users_sql(context $context, string $useridfield) {
         global $DB, $USER;
 
         if (!has_capability('mod/certificate:view', $context)) {
@@ -223,10 +224,10 @@ class permission {
      * The dedicated capability identifies facilitators and is granted to
      * non-editing teacher roles by default.
      *
-     * @param context_module $context certificate activity context
+     * @param context $context certificate activity context
      * @return bool
      */
-    protected static function is_facilitator(context_module $context) {
+    protected static function is_facilitator(context $context) {
         return has_capability(static::CAP_VIEW_ANY, $context);
     }
 
