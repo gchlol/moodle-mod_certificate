@@ -48,7 +48,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/certificate:viewallnonadmincertificates' => [
+    'mod/certificate:viewany' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,

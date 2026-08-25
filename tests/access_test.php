@@ -239,7 +239,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
     private function create_facilitator_role() {
         return $this->getDataGenerator()->create_role([
             'mod/certificate:view' => 'allow',
-            'mod/certificate:viewallnonadmincertificates' => 'allow',
+            permission::CAP_VIEW_ANY => 'allow',
         ]);
     }
 
@@ -314,12 +314,12 @@ class mod_certificate_access_testcase extends advanced_testcase {
         list($course, $context) = $this->create_certificate_context();
         $facilitator = $this->getDataGenerator()->create_user();
         $roleid = $this->getDataGenerator()->create_role([
-            'mod/certificate:viewallnonadmincertificates' => 'allow',
+            permission::CAP_VIEW_ANY => 'allow',
         ]);
         $this->getDataGenerator()->enrol_user($facilitator->id, $course->id, $roleid);
         $this->setUser($facilitator);
 
-        $this->assertTrue(has_capability('mod/certificate:viewallnonadmincertificates', $context));
+        $this->assertTrue(has_capability(permission::CAP_VIEW_ANY, $context));
         $this->assertFalse(permission::can_view_user_certificate($context, $facilitator->id));
         $this->expectException(required_capability_exception::class);
         permission::require_view_user_certificate($context, $facilitator->id);
@@ -403,7 +403,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->getDataGenerator()->enrol_user($facilitator->id, $course->id, $facilitatorroleid);
         $this->setUser($facilitator);
 
-        $this->assertTrue(has_capability('mod/certificate:viewallnonadmincertificates', $context));
+        $this->assertTrue(has_capability(permission::CAP_VIEW_ANY, $context));
         $this->assert_can_view_certificate($context, $staff->id);
         $this->assertTrue(permission::can_view_other_users($context));
     }
@@ -441,7 +441,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->setUser($editingteacher);
 
         $this->assertTrue(has_capability('mod/certificate:manage', $context));
-        $this->assertFalse(has_capability('mod/certificate:viewallnonadmincertificates', $context));
+        $this->assertFalse(has_capability(permission::CAP_VIEW_ANY, $context));
         $this->assert_cannot_view_certificate($context, $staff->id);
     }
 
@@ -457,7 +457,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $otheruser = $this->getDataGenerator()->create_user();
         $roleid = $this->create_teacher_archetype_role();
         assign_capability(
-            'mod/certificate:viewallnonadmincertificates',
+            permission::CAP_VIEW_ANY,
             CAP_PREVENT,
             $roleid,
             context_system::instance()->id,
@@ -468,7 +468,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         $this->create_certificate_issue($certificate->id, $otheruser->id, 2);
         $this->setUser($teacher);
 
-        $this->assertFalse(has_capability('mod/certificate:viewallnonadmincertificates', $context));
+        $this->assertFalse(has_capability(permission::CAP_VIEW_ANY, $context));
         $this->assertFalse(permission::can_view_user_certificate($context, $otheruser->id));
         $this->assertFalse(permission::can_view_other_users($context));
         $users = certificate_get_issues($certificate->id, 'ci.timecreated ASC', 0, $cm);

@@ -34,6 +34,8 @@ defined('MOODLE_INTERNAL') || die();
  */
 class permission {
 
+    public const CAP_VIEW_ANY = 'mod/certificate:viewany';
+
     /**
      * Managed-user SQL, cached by manager user ID for the current request.
      *
@@ -225,7 +227,7 @@ class permission {
      * @return bool
      */
     protected static function is_facilitator(context_module $context) {
-        return has_capability('mod/certificate:viewallnonadmincertificates', $context);
+        return has_capability(static::CAP_VIEW_ANY, $context);
     }
 
     /**
