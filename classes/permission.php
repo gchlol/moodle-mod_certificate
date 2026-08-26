@@ -191,12 +191,17 @@ class permission {
             $sqlparts = self::get_managed_users_sql((int)$USER->id);
             $params = $sqlparts['params'];
             $params['certrequester'] = (int)$USER->id;
-            $where = "($useridfield = :certrequester OR $useridfield IN (
-                          SELECT DISTINCT u.id
-                            FROM {user} u
-                                 {$sqlparts['joins']}
-                           WHERE {$sqlparts['where']}
-                      ))";
+            $where = "
+                (
+                    $useridfield = :certrequester OR
+                    $useridfield IN (
+                        SELECT  DISTINCT u.id
+                        FROM    {user} u
+                                {$sqlparts['joins']}
+                        WHERE   {$sqlparts['where']}
+                    )
+                )
+            ";
         }
 
         $adminids = array_map('intval', array_keys(get_admins()));
