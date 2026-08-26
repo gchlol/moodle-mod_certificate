@@ -43,7 +43,7 @@ class issue {
      * @return bool
      */
     public static function is_portfolio_type(string $certificatetype) {
-        return strpos($certificatetype, 'portfolio_') === 0;
+        return str_starts_with($certificatetype, 'portfolio_');
     }
 
     /**
