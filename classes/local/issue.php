@@ -83,13 +83,15 @@ class issue {
             }
 
             $context = context_module::instance($cm->id);
-            if ($certificate->requiredtime && !has_capability('mod/certificate:manage', $context, $user->id)) {
-                // Check the owner before issuing so a delegate cannot bypass the required course time.
-                if (certificate_get_course_time($course->id, $user->id) < ($certificate->requiredtime * 60)) {
-                    $a = new stdClass();
-                    $a->requiredtime = $certificate->requiredtime;
-                    throw new moodle_exception('requiredtimenotmet', 'certificate', '', $a);
-                }
+            // Check the owner before issuing so a delegate cannot bypass the required course time.
+            if (
+                $certificate->requiredtime &&
+                !has_capability('mod/certificate:manage', $context, $user->id) &&
+                certificate_get_course_time($course->id, $user->id) < ($certificate->requiredtime * 60)
+            ) {
+                $a = new stdClass();
+                $a->requiredtime = $certificate->requiredtime;
+                throw new moodle_exception('requiredtimenotmet', 'certificate', '', $a);
             }
         }
 
