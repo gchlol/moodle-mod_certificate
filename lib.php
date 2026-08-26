@@ -289,6 +289,7 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
     if (!$certrecord = $DB->get_record('certificate_issues', array('id' => $certrecord))) {
         return false;
     }
+
     if ($certrecord->certificateid != $certificate->id) {
         return false;
     }
