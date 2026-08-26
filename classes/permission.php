@@ -63,7 +63,7 @@ class permission {
      *
      * @return void
      */
-    public static function reset_caches() {
+    public static function reset_caches(): void {
         self::$manageduserssql = [];
         self::$manageduserchecks = [];
         self::$hasvisiblemanagedusers = [];
@@ -76,7 +76,7 @@ class permission {
      * @param int $targetuserid target user ID
      * @return bool
      */
-    public static function can_view_user_certificate(context $context, int $targetuserid) {
+    public static function can_view_user_certificate(context $context, int $targetuserid): bool {
         global $USER;
 
         if (!has_capability('mod/certificate:view', $context)) {
@@ -110,7 +110,7 @@ class permission {
      * @return void
      * @throws moodle_exception if the target user is not visible
      */
-    public static function require_view_user_certificate(context $context, int $targetuserid) {
+    public static function require_view_user_certificate(context $context, int $targetuserid): void {
         require_capability('mod/certificate:view', $context);
 
         if (!static::can_view_user_certificate($context, $targetuserid)) {
@@ -124,7 +124,7 @@ class permission {
      * @param context_module $context certificate activity context
      * @return array{int, stdClass} requested user ID and user record
      */
-    public static function get_requested_user(context_module $context) {
+    public static function get_requested_user(context_module $context): array {
         global $DB, $USER;
 
         $userid = optional_param('userid', $USER->id, PARAM_INT);
@@ -140,7 +140,7 @@ class permission {
      * @param context $context certificate activity context
      * @return bool
      */
-    public static function can_view_other_users(context $context) {
+    public static function can_view_other_users(context $context): bool {
         global $USER;
 
         if (!has_capability('mod/certificate:view', $context)) {
@@ -164,7 +164,7 @@ class permission {
      * @param string $useridfield SQL field containing the target user ID
      * @return array{where: string, params: array<string, int>} SQL where fragment and parameters
      */
-    public static function get_viewable_users_sql(context $context, string $useridfield) {
+    public static function get_viewable_users_sql(context $context, string $useridfield): array {
         global $DB, $USER;
 
         if (!has_capability('mod/certificate:view', $context)) {
@@ -235,7 +235,7 @@ class permission {
      * @param context $context certificate activity context
      * @return bool
      */
-    protected static function is_facilitator(context $context) {
+    protected static function is_facilitator(context $context): bool {
         return has_capability(static::CAP_VIEW_ANY, $context);
     }
 
@@ -245,7 +245,7 @@ class permission {
      * @param int $manageruserid manager user ID
      * @return array{joins: string, where: string, params: array<string, int>, directreports: int[]}
      */
-    protected static function get_managed_users_sql(int $manageruserid) {
+    protected static function get_managed_users_sql(int $manageruserid): array {
         if (!array_key_exists($manageruserid, self::$manageduserssql)) {
             self::$manageduserssql[$manageruserid] = api::get_myusers_sql(
                 $manageruserid,
@@ -267,7 +267,7 @@ class permission {
      * @param int $targetuserid target user ID
      * @return bool
      */
-    protected static function is_managed_user(int $manageruserid, int $targetuserid) {
+    protected static function is_managed_user(int $manageruserid, int $targetuserid): bool {
         global $DB;
 
         $cachekey = "$manageruserid:$targetuserid";
@@ -304,7 +304,7 @@ class permission {
      * @param int $manageruserid manager user ID
      * @return bool
      */
-    protected static function has_visible_managed_user(int $manageruserid) {
+    protected static function has_visible_managed_user(int $manageruserid): bool {
         global $DB;
 
         if (array_key_exists($manageruserid, self::$hasvisiblemanagedusers)) {

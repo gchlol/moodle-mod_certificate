@@ -61,7 +61,7 @@ class temporary_user {
      *
      * @return void
      */
-    public function apply() {
+    public function apply(): void {
         global $USER;
 
         if ($this->applied || (int)$this->targetuser->id === (int)$this->requestinguser->id) {
@@ -87,7 +87,7 @@ class temporary_user {
      *
      * @return stdClass
      */
-    public function get_requesting_user() {
+    public function get_requesting_user(): stdClass {
         return $this->requestinguser;
     }
 
@@ -96,7 +96,7 @@ class temporary_user {
      *
      * @return void
      */
-    public function restore() {
+    public function restore(): void {
         if (!$this->applied) {
 
             return;
@@ -114,7 +114,7 @@ class temporary_user {
      * @param stdClass $user user to restore
      * @return void
      */
-    public static function restore_user(stdClass $user) {
+    public static function restore_user(stdClass $user): void {
         global $USER;
 
         $sessionuser = isset($_SESSION['USER']) ? $_SESSION['USER'] : null;

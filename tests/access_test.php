@@ -60,7 +60,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return array{stdClass, context_module, stdClass, stdClass} course, context, certificate, and course module
      */
-    private function create_certificate_context() {
+    private function create_certificate_context(): array {
         $course = $this->getDataGenerator()->create_course();
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_certificate');
         $certificate = $generator->create_instance(['course' => $course->id]);
@@ -77,7 +77,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param int $timecreated issue time used for deterministic sorting
      * @return void
      */
-    private function create_certificate_issue(int $certificateid, int $userid, int $timecreated) {
+    private function create_certificate_issue(int $certificateid, int $userid, int $timecreated): void {
         global $DB;
 
         $DB->insert_record('certificate_issues', (object)[
@@ -95,7 +95,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param int $userid target user ID
      * @return void
      */
-    private function assert_can_view_certificate(context_module $context, int $userid) {
+    private function assert_can_view_certificate(context_module $context, int $userid): void {
         $this->assertTrue(has_capability('mod/certificate:view', $context));
         $this->assertTrue(permission::can_view_user_certificate($context, $userid));
         permission::require_view_user_certificate($context, $userid);
@@ -108,7 +108,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param int $userid target user ID
      * @return void
      */
-    private function assert_cannot_view_certificate(context_module $context, int $userid) {
+    private function assert_cannot_view_certificate(context_module $context, int $userid): void {
         $this->assertTrue(has_capability('mod/certificate:view', $context));
         $this->assertFalse(permission::can_view_user_certificate($context, $userid));
 
@@ -129,7 +129,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param string $suffix unique record suffix
      * @return void
      */
-    private function assign_user_to_level(stdClass $user, int $levelid, string $suffix) {
+    private function assign_user_to_level(stdClass $user, int $levelid, string $suffix): void {
         $position = new position(0, (object)[
             'name' => "Certificate position $suffix",
             'idnumber' => "certificate-position-$suffix",
@@ -164,7 +164,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
         stdClass $directreport,
         stdClass $indirectreport,
         stdClass $unrelateduser
-    ) {
+    ): void {
         $suffix = uniqid('', true);
         $hierarchy = new hierarchy(0, (object)[
             'idnumber' => "certificate-hierarchy-$suffix",
@@ -222,7 +222,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param stdClass $user user to make an administrator
      * @return void
      */
-    private function make_site_admin(stdClass $user) {
+    private function make_site_admin(stdClass $user): void {
         global $CFG;
 
         $adminids = array_filter(explode(',', $CFG->siteadmins));
@@ -236,7 +236,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return int role ID
      */
-    private function create_facilitator_role() {
+    private function create_facilitator_role(): int {
         return $this->getDataGenerator()->create_role([
             'mod/certificate:view' => 'allow',
             permission::CAP_VIEW_ANY => 'allow',
@@ -249,7 +249,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      * @param string $archetype role archetype
      * @return int role ID
      */
-    private function create_teacher_archetype_role(string $archetype = 'teacher') {
+    private function create_teacher_archetype_role(string $archetype = 'teacher'): int {
         return $this->getDataGenerator()->create_role([
             'archetype' => $archetype,
             'mod/certificate:view' => 'allow',
@@ -261,7 +261,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_staff_can_view_own_certificate() {
+    public function test_staff_can_view_own_certificate(): void {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $staff = $this->getDataGenerator()->create_user();
@@ -277,7 +277,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_staff_cannot_view_another_certificate() {
+    public function test_staff_cannot_view_another_certificate(): void {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $staff = $this->getDataGenerator()->create_user();
@@ -293,7 +293,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_view_capability_is_required() {
+    public function test_view_capability_is_required(): void {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $user = $this->getDataGenerator()->create_user();
@@ -309,7 +309,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_facilitator_capability_does_not_replace_view_capability() {
+    public function test_facilitator_capability_does_not_replace_view_capability(): void {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $facilitator = $this->getDataGenerator()->create_user();
@@ -330,7 +330,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_manager_can_view_recursive_reports() {
+    public function test_manager_can_view_recursive_reports(): void {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $manager = $this->getDataGenerator()->create_user();
@@ -353,7 +353,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_manager_cannot_view_admin_certificate() {
+    public function test_manager_cannot_view_admin_certificate(): void {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $manager = $this->getDataGenerator()->create_user();
@@ -373,7 +373,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_manager_with_only_admin_reports_cannot_view_other_users() {
+    public function test_manager_with_only_admin_reports_cannot_view_other_users(): void {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $manager = $this->getDataGenerator()->create_user();
@@ -394,7 +394,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_facilitator_can_view_non_admin_certificate() {
+    public function test_facilitator_can_view_non_admin_certificate(): void {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $facilitator = $this->getDataGenerator()->create_user();
@@ -413,7 +413,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_facilitator_cannot_view_admin_certificate() {
+    public function test_facilitator_cannot_view_admin_certificate(): void {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $facilitator = $this->getDataGenerator()->create_user();
@@ -431,7 +431,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_editing_teacher_without_facilitator_capability_cannot_view_another_certificate() {
+    public function test_editing_teacher_without_facilitator_capability_cannot_view_another_certificate(): void {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $editingteacher = $this->getDataGenerator()->create_user();
@@ -450,7 +450,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_nonediting_teacher_with_facilitator_capability_prevent_only_sees_self() {
+    public function test_nonediting_teacher_with_facilitator_capability_prevent_only_sees_self(): void {
         $this->resetAfterTest(true);
         list($course, $context, $certificate, $cm) = $this->create_certificate_context();
         $teacher = $this->getDataGenerator()->create_user();
@@ -480,7 +480,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_admin_can_view_any_certificate() {
+    public function test_admin_can_view_any_certificate(): void {
         $this->resetAfterTest(true);
         list($course, $context) = $this->create_certificate_context();
         $staff = $this->getDataGenerator()->create_user();
@@ -498,7 +498,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_manager_report_is_filtered_and_paginated() {
+    public function test_manager_report_is_filtered_and_paginated(): void {
         $this->resetAfterTest(true);
         list($course, $context, $certificate, $cm) = $this->create_certificate_context();
         $manager = $this->getDataGenerator()->create_user();
@@ -526,7 +526,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_facilitator_report_excludes_admins() {
+    public function test_facilitator_report_excludes_admins(): void {
         $this->resetAfterTest(true);
         list($course, $context, $certificate, $cm) = $this->create_certificate_context();
         $facilitator = $this->getDataGenerator()->create_user();
@@ -551,7 +551,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_staff_report_only_contains_self() {
+    public function test_staff_report_only_contains_self(): void {
         $this->resetAfterTest(true);
         list($course, $context, $certificate, $cm) = $this->create_certificate_context();
         $staff = $this->getDataGenerator()->create_user();
@@ -572,7 +572,7 @@ class mod_certificate_access_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_admin_report_contains_all_users() {
+    public function test_admin_report_contains_all_users(): void {
         $this->resetAfterTest(true);
         list($course, $context, $certificate, $cm) = $this->create_certificate_context();
         $staff = $this->getDataGenerator()->create_user();

@@ -46,7 +46,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      * @param int $requiredtime required course time in minutes
      * @return array{stdClass, stdClass, stdClass} course, certificate, and course module
      */
-    private function create_certificate(string $certificatetype, int $requiredtime = 0) {
+    private function create_certificate(string $certificatetype, int $requiredtime = 0): array {
         $course = $this->getDataGenerator()->create_course();
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_certificate');
         $certificate = $generator->create_instance([
@@ -64,7 +64,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_portfolio_certificate_type_detection() {
+    public function test_portfolio_certificate_type_detection(): void {
         $this->assertTrue(issue::is_portfolio_type('portfolio_gch'));
         $this->assertTrue(issue::is_portfolio_type('portfolio_example'));
         $this->assertFalse(issue::is_portfolio_type('Portfolio'));
@@ -77,7 +77,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_temporary_global_user_does_not_change_session_user() {
+    public function test_temporary_global_user_does_not_change_session_user(): void {
         global $USER;
 
         $this->resetAfterTest(true);
@@ -118,7 +118,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_get_teachers_excludes_certificate_owner() {
+    public function test_get_teachers_excludes_certificate_owner(): void {
         $this->resetAfterTest(true);
         list($course, $certificate, $cm) = $this->create_certificate('portfolio_gch');
         $owner = $this->getDataGenerator()->create_user();
@@ -138,7 +138,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_delegate_can_create_portfolio_issue_for_target() {
+    public function test_delegate_can_create_portfolio_issue_for_target(): void {
         global $DB, $USER;
 
         $this->resetAfterTest(true);
@@ -170,7 +170,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_delegate_cannot_create_portfolio_issue_before_required_time() {
+    public function test_delegate_cannot_create_portfolio_issue_before_required_time(): void {
         global $DB, $USER;
 
         $this->resetAfterTest(true);
@@ -200,7 +200,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_delegate_can_view_existing_portfolio_issue_before_required_time() {
+    public function test_delegate_can_view_existing_portfolio_issue_before_required_time(): void {
         global $DB;
 
         $this->resetAfterTest(true);
@@ -228,7 +228,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_delegate_cannot_create_conventional_issue_for_target() {
+    public function test_delegate_cannot_create_conventional_issue_for_target(): void {
         global $DB;
 
         $this->resetAfterTest(true);
@@ -255,7 +255,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_delegate_can_view_existing_conventional_issue() {
+    public function test_delegate_can_view_existing_conventional_issue(): void {
         global $DB;
 
         $this->resetAfterTest(true);
@@ -283,7 +283,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_user_can_create_own_conventional_issue() {
+    public function test_user_can_create_own_conventional_issue(): void {
         global $DB;
 
         $this->resetAfterTest(true);
@@ -305,7 +305,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_email_student_uses_issue_owner() {
+    public function test_email_student_uses_issue_owner(): void {
         global $DB;
 
         $this->resetAfterTest(true);
@@ -350,7 +350,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_award_notifications_use_issue_owner() {
+    public function test_award_notifications_use_issue_owner(): void {
         global $DB, $USER;
 
         $this->resetAfterTest(true);

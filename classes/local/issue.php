@@ -42,7 +42,7 @@ class issue {
      * @param string $certificatetype certificate type identifier
      * @return bool
      */
-    public static function is_portfolio_type(string $certificatetype) {
+    public static function is_portfolio_type(string $certificatetype): bool {
         return str_starts_with($certificatetype, 'portfolio_');
     }
 
@@ -60,7 +60,12 @@ class issue {
      * @return stdClass certificate issue record
      * @throws moodle_exception when a delegated certificate cannot be viewed or issued
      */
-    public static function get_for_view(stdClass $course, stdClass $user, stdClass $certificate, stdClass $cm) {
+    public static function get_for_view(
+        stdClass $course,
+        stdClass $user,
+        stdClass $certificate,
+        stdClass $cm
+    ): stdClass {
         global $DB, $USER;
 
         $isowncertificate = (int)$user->id === (int)$USER->id;
@@ -100,7 +105,7 @@ class issue {
      * @return array{conditionssql: string, params: array<string, int>, isempty: bool} SQL fragment, params, and
      *     whether the result set is empty
      */
-    public static function get_visible_report_conditions(stdClass $cm, bool $groupmode, string $useridfield) {
+    public static function get_visible_report_conditions(stdClass $cm, bool $groupmode, string $useridfield): array {
         global $DB, $USER;
 
         $context = context_module::instance($cm->id);
@@ -176,7 +181,7 @@ class issue {
      * @param bool $groupmode are we in group mode?
      * @return int
      */
-    public static function count_visible(int $certificateid, stdClass $cm, bool $groupmode = false) {
+    public static function count_visible(int $certificateid, stdClass $cm, bool $groupmode = false): int {
         global $DB;
 
         $reportconditions = static::get_visible_report_conditions($cm, $groupmode, "user.id");
