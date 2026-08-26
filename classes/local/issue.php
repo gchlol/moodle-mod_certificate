@@ -197,6 +197,6 @@ class issue {
                     certificate_issues.certificateid = :certificateid{$reportconditions['conditionssql']}
         ";
 
-        return (int)$DB->count_records_sql($countsql, $params);
+        return $DB->count_records_sql($countsql, $params);
     }
 }

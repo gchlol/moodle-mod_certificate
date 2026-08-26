@@ -79,8 +79,6 @@ class permission {
     public static function can_view_user_certificate(context $context, int $targetuserid) {
         global $USER;
 
-        $targetuserid = (int)$targetuserid;
-
         if (!has_capability('mod/certificate:view', $context)) {
             return false;
         }
