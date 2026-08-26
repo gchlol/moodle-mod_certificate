@@ -118,6 +118,7 @@ class issue {
         $context = context_module::instance($cm->id);
         $conditionssql = '';
         $conditionsparams = [];
+        $emptyresult = ['conditionssql' => '', 'params' => [], 'isempty' => true];
 
         $visibility = permission::get_viewable_users_sql($context, $useridfield);
         $visibilityconditionssql = '';
@@ -129,46 +130,56 @@ class issue {
             $conditionsparams += $visibility['params'];
         }
 
+        $visibleresult = [
+            'conditionssql' => $visibilityconditionssql,
+            'params' => $conditionsparams,
+            'isempty' => false,
+        ];
+
         // Organisation managers, facilitators, and admins use the target-user policy
         // across groups. Group filtering remains an additional restriction for users
         // whose scope is limited to themselves.
-        if ($groupmode && !permission::can_view_other_users($context)) {
-            $canaccessallgroups = has_capability('moodle/site:accessallgroups', $context);
-            $currentgroup = groups_get_activity_group($cm);
+        if (!$groupmode || permission::can_view_other_users($context)) {
+            return $visibleresult;
+        }
 
-            // If we are viewing all participants and the user does not have access to all groups then return nothing.
-            if (!$currentgroup && !$canaccessallgroups) {
-                return ['conditionssql' => '', 'params' => [], 'isempty' => true];
+        $canaccessallgroups = has_capability('moodle/site:accessallgroups', $context);
+        $currentgroup = groups_get_activity_group($cm);
+
+        // If we are viewing all participants and the user does not have access to all groups then return nothing.
+        if (!$currentgroup && !$canaccessallgroups) {
+            return $emptyresult;
+        }
+
+        if (!$currentgroup) {
+            return $visibleresult;
+        }
+
+        if (!$canaccessallgroups) {
+            // Guest users do not belong to any groups.
+            if (isguestuser()) {
+                return $emptyresult;
             }
 
-            if ($currentgroup) {
-                if (!$canaccessallgroups) {
-                    // Guest users do not belong to any groups.
-                    if (isguestuser()) {
-                        return ['conditionssql' => '', 'params' => [], 'isempty' => true];
-                    }
-
-                    // Check that the user belongs to the group we are viewing.
-                    $usersgroups = groups_get_all_groups($cm->course, $USER->id, $cm->groupingid);
-                    if (
-                        empty($usersgroups) ||
-                        !isset($usersgroups[$currentgroup])
-                    ) {
-                        return ['conditionssql' => '', 'params' => [], 'isempty' => true];
-                    }
-                }
-
-                $groupusers = array_keys(groups_get_members($currentgroup, 'u.*'));
-                if (empty($groupusers)) {
-                    return ['conditionssql' => '', 'params' => [], 'isempty' => true];
-                }
-
-                [$groupsql, $groupparams] = $DB->get_in_or_equal($groupusers, SQL_PARAMS_NAMED, 'grp');
-                $conditionssql .= " AND
-                    $useridfield $groupsql";
-                $conditionsparams += $groupparams;
+            // Check that the user belongs to the group we are viewing.
+            $usersgroups = groups_get_all_groups($cm->course, $USER->id, $cm->groupingid);
+            if (
+                empty($usersgroups) ||
+                !isset($usersgroups[$currentgroup])
+            ) {
+                return $emptyresult;
             }
         }
+
+        $groupusers = array_keys(groups_get_members($currentgroup, 'u.*'));
+        if (empty($groupusers)) {
+            return $emptyresult;
+        }
+
+        [$groupsql, $groupparams] = $DB->get_in_or_equal($groupusers, SQL_PARAMS_NAMED, 'grp');
+        $conditionssql .= " AND
+            $useridfield $groupsql";
+        $conditionsparams += $groupparams;
 
         $conditionssql .= $visibilityconditionssql;
 
