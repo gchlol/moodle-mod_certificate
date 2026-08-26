@@ -150,11 +150,10 @@ class issue {
 
                     // Check that the user belongs to the group we are viewing.
                     $usersgroups = groups_get_all_groups($cm->course, $USER->id, $cm->groupingid);
-                    if ($usersgroups) {
-                        if (!isset($usersgroups[$currentgroup])) {
-                            return ['conditionssql' => '', 'params' => [], 'isempty' => true];
-                        }
-                    } else { // They belong to no group, so return an empty array.
+                    if (
+                        empty($usersgroups) ||
+                        !isset($usersgroups[$currentgroup])
+                    ) {
                         return ['conditionssql' => '', 'params' => [], 'isempty' => true];
                     }
                 }
