@@ -64,7 +64,7 @@ class issue {
         global $DB, $USER;
 
         $isowncertificate = (int)$user->id === (int)$USER->id;
-        $isportfolio = self::is_portfolio_type($certificate->certificatetype);
+        $isportfolio = static::is_portfolio_type($certificate->certificatetype);
 
         if (!$isowncertificate) {
             $certissue = $DB->get_record('certificate_issues', ['userid' => $user->id, 'certificateid' => $certificate->id]);
@@ -179,7 +179,7 @@ class issue {
     public static function count_visible(int $certificateid, stdClass $cm, bool $groupmode = false) {
         global $DB;
 
-        $reportconditions = self::get_visible_report_conditions($cm, $groupmode, "user.id");
+        $reportconditions = static::get_visible_report_conditions($cm, $groupmode, "user.id");
         if ($reportconditions['isempty']) {
             return 0;
         }

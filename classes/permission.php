@@ -91,7 +91,7 @@ class permission {
             return false;
         }
 
-        if (self::is_facilitator($context)) {
+        if (static::is_facilitator($context)) {
             return true;
         }
 
@@ -99,7 +99,7 @@ class permission {
             return true;
         }
 
-        return self::is_managed_user((int)$USER->id, $targetuserid);
+        return static::is_managed_user((int)$USER->id, $targetuserid);
     }
 
     /**
@@ -113,7 +113,7 @@ class permission {
     public static function require_view_user_certificate(context $context, int $targetuserid) {
         require_capability('mod/certificate:view', $context);
 
-        if (!self::can_view_user_certificate($context, $targetuserid)) {
+        if (!static::can_view_user_certificate($context, $targetuserid)) {
             throw new moodle_exception('nopermissions', 'error', '', get_string('certificate:view', 'certificate'));
         }
     }
@@ -128,7 +128,7 @@ class permission {
         global $DB, $USER;
 
         $userid = optional_param('userid', $USER->id, PARAM_INT);
-        self::require_view_user_certificate($context, (int)$userid);
+        static::require_view_user_certificate($context, (int)$userid);
         $user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0], '*', MUST_EXIST);
 
         return [$userid, $user];
@@ -147,11 +147,11 @@ class permission {
             return false;
         }
 
-        if (is_siteadmin() || self::is_facilitator($context)) {
+        if (is_siteadmin() || static::is_facilitator($context)) {
             return true;
         }
 
-        return self::has_visible_managed_user((int)$USER->id);
+        return static::has_visible_managed_user((int)$USER->id);
     }
 
     /**
@@ -182,11 +182,11 @@ class permission {
         }
 
         $params = [];
-        if (self::is_facilitator($context)) {
+        if (static::is_facilitator($context)) {
             $where = '';
 
         } else {
-            $sqlparts = self::get_managed_users_sql((int)$USER->id);
+            $sqlparts = static::get_managed_users_sql((int)$USER->id);
             $params = $sqlparts['params'];
             $params['certrequester'] = (int)$USER->id;
             $where = "
@@ -275,7 +275,7 @@ class permission {
             return self::$manageduserchecks[$cachekey];
         }
 
-        $sqlparts = self::get_managed_users_sql($manageruserid);
+        $sqlparts = static::get_managed_users_sql($manageruserid);
         $joins = $sqlparts['joins'];
         $where = $sqlparts['where'];
         $params = $sqlparts['params'];
@@ -311,7 +311,7 @@ class permission {
             return self::$hasvisiblemanagedusers[$manageruserid];
         }
 
-        $sqlparts = self::get_managed_users_sql($manageruserid);
+        $sqlparts = static::get_managed_users_sql($manageruserid);
         $joins = $sqlparts['joins'];
         $where = $sqlparts['where'];
         $params = $sqlparts['params'];

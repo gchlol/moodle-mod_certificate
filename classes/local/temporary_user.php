@@ -102,7 +102,7 @@ class temporary_user {
             return;
         }
 
-        self::restore_user($this->requestinguser);
+        static::restore_user($this->requestinguser);
         $this->applied = false;
     }
 
