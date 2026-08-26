@@ -32,13 +32,13 @@ defined('MOODLE_INTERNAL') || die();
 class temporary_user {
 
     /** @var stdClass user active before the temporary switch */
-    private stdClass $requestinguser;
+    protected stdClass $requestinguser;
 
     /** @var stdClass user to expose during the temporary switch */
-    private stdClass $targetuser;
+    protected stdClass $targetuser;
 
     /** @var bool whether the temporary user has been applied */
-    private bool $applied = false;
+    protected bool $applied = false;
 
     /**
      * Capture the users required for the temporary switch.
