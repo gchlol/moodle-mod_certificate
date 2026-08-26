@@ -321,7 +321,7 @@ class permission {
         $adminids = array_map('intval', array_keys(get_admins()));
         $adminwhere = '';
         if (!empty($adminids)) {
-            list($adminsql, $adminparams) = $DB->get_in_or_equal(
+            [$adminsql, $adminparams] = $DB->get_in_or_equal(
                 $adminids,
                 SQL_PARAMS_NAMED,
                 'certmanagedadmin',
