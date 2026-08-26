@@ -171,7 +171,7 @@ class permission {
 
         if (!has_capability('mod/certificate:view', $context)) {
             return [
-                'where' => '1 = 0',
+                'where' => "1 = 0",
                 'params' => [],
             ];
         }
@@ -196,8 +196,10 @@ class permission {
                     $useridfield = :certrequester OR
                     $useridfield IN (
                         SELECT  DISTINCT u.id
+
                         FROM    {user} u
                                 {$sqlparts['joins']}
+
                         WHERE   {$sqlparts['where']}
                     )
                 )
@@ -214,7 +216,10 @@ class permission {
             );
             $params += $adminparams;
             $adminwhere = "$useridfield $adminsql";
-            $where = $where === '' ? $adminwhere : "$where AND $adminwhere";
+            $where = $where === '' ? $adminwhere : "
+                $adminwhere AND
+                $where
+            ";
         }
 
         return [
@@ -278,15 +283,19 @@ class permission {
         $params = $sqlparts['params'];
         $params['certtargetuserid'] = $targetuserid;
 
-        $sql = "
-            SELECT 1
-              FROM {user} u
-                   $joins
-             WHERE u.id = :certtargetuserid
-               AND ($where)
+        $manageduserssql = "
+            SELECT  1
+
+            FROM    {user} u
+                    $joins
+
+            WHERE   u.id = :certtargetuserid AND
+                    (
+                        $where
+                    )
         ";
 
-        self::$manageduserchecks[$cachekey] = $DB->record_exists_sql($sql, $params);
+        self::$manageduserchecks[$cachekey] = $DB->record_exists_sql($manageduserssql, $params);
 
         return self::$manageduserchecks[$cachekey];
     }
@@ -319,18 +328,22 @@ class permission {
                 false
             );
             $params += $adminparams;
-            $adminwhere = "AND u.id $adminsql";
+            $adminwhere = "u.id $adminsql AND";
         }
 
-        $sql = "
-            SELECT 1
-              FROM {user} u
-                   $joins
-             WHERE ($where)
-                   $adminwhere
+        $visiblemanageduserssql = "
+            SELECT  1
+
+            FROM    {user} u
+                    $joins
+
+            WHERE   $adminwhere
+                    (
+                        $where
+                    )
         ";
 
-        self::$hasvisiblemanagedusers[$manageruserid] = $DB->record_exists_sql($sql, $params);
+        self::$hasvisiblemanagedusers[$manageruserid] = $DB->record_exists_sql($visiblemanageduserssql, $params);
 
         return self::$hasvisiblemanagedusers[$manageruserid];
     }

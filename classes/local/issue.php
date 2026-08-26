@@ -108,8 +108,12 @@ class issue {
         $conditionsparams = [];
 
         $visibility = permission::get_viewable_users_sql($context, $useridfield);
+        $visibilityconditionssql = '';
         if ($visibility['where'] !== '') {
-            $conditionssql .= " AND ({$visibility['where']})";
+            $visibilityconditionssql = " AND
+                    (
+                        {$visibility['where']}
+                    )";
             $conditionsparams += $visibility['params'];
         }
 
@@ -148,11 +152,14 @@ class issue {
                     return ['conditionssql' => '', 'params' => [], 'isempty' => true];
                 }
 
-                [$sql, $params] = $DB->get_in_or_equal($groupusers, SQL_PARAMS_NAMED, 'grp');
-                $conditionssql .= " AND $useridfield $sql";
-                $conditionsparams += $params;
+                [$groupsql, $groupparams] = $DB->get_in_or_equal($groupusers, SQL_PARAMS_NAMED, 'grp');
+                $conditionssql .= " AND
+                    $useridfield $groupsql";
+                $conditionsparams += $groupparams;
             }
         }
+
+        $conditionssql .= $visibilityconditionssql;
 
         return [
             'conditionssql' => $conditionssql,
@@ -172,20 +179,24 @@ class issue {
     public static function count_visible(int $certificateid, stdClass $cm, bool $groupmode = false) {
         global $DB;
 
-        $reportconditions = self::get_visible_report_conditions($cm, $groupmode, 'u.id');
+        $reportconditions = self::get_visible_report_conditions($cm, $groupmode, "user.id");
         if ($reportconditions['isempty']) {
             return 0;
         }
 
         $params = $reportconditions['params'] + ['certificateid' => $certificateid];
         // Count in the database instead of loading every visible issue and user into PHP.
-        $sql = "SELECT COUNT(DISTINCT u.id)
-                  FROM {user} u
-            INNER JOIN {certificate_issues} ci
-                    ON u.id = ci.userid
-                 WHERE u.deleted = 0
-                   AND ci.certificateid = :certificateid{$reportconditions['conditionssql']}";
+        $countsql = "
+            SELECT  COUNT(DISTINCT user.id)
 
-        return (int)$DB->count_records_sql($sql, $params);
+            FROM    {user} user
+                    JOIN {certificate_issues} certificate_issues ON
+                        certificate_issues.userid = user.id
+
+            WHERE   user.deleted = 0 AND
+                    certificate_issues.certificateid = :certificateid{$reportconditions['conditionssql']}
+        ";
+
+        return (int)$DB->count_records_sql($countsql, $params);
     }
 }
