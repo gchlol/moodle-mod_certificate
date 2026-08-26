@@ -71,28 +71,33 @@ class issue {
         $isowncertificate = (int)$user->id === (int)$USER->id;
         $isportfolio = static::is_portfolio_type($certificate->certificatetype);
 
-        if (!$isowncertificate) {
-            $certissue = $DB->get_record('certificate_issues', ['userid' => $user->id, 'certificateid' => $certificate->id]);
+        if ($isowncertificate) {
+            return certificate_get_issue($course, $user, $certificate, $cm);
+        }
 
-            if ($certissue) {
-                return $certissue;
-            }
+        $certissue = $DB->get_record(
+            'certificate_issues',
+            ['userid' => $user->id, 'certificateid' => $certificate->id]
+        );
 
-            if (!$isportfolio) {
-                throw new moodle_exception('nocertificatesissued', 'certificate');
-            }
+        if ($certissue) {
+            return $certissue;
+        }
 
-            $context = context_module::instance($cm->id);
-            // Check the owner before issuing so a delegate cannot bypass the required course time.
-            if (
-                $certificate->requiredtime &&
-                !has_capability('mod/certificate:manage', $context, $user->id) &&
-                certificate_get_course_time($course->id, $user->id) < ($certificate->requiredtime * 60)
-            ) {
-                $a = new stdClass();
-                $a->requiredtime = $certificate->requiredtime;
-                throw new moodle_exception('requiredtimenotmet', 'certificate', '', $a);
-            }
+        if (!$isportfolio) {
+            throw new moodle_exception('nocertificatesissued', 'certificate');
+        }
+
+        $context = context_module::instance($cm->id);
+        // Check the owner before issuing so a delegate cannot bypass the required course time.
+        if (
+            $certificate->requiredtime &&
+            !has_capability('mod/certificate:manage', $context, $user->id) &&
+            certificate_get_course_time($course->id, $user->id) < ($certificate->requiredtime * 60)
+        ) {
+            $a = new stdClass();
+            $a->requiredtime = $certificate->requiredtime;
+            throw new moodle_exception('requiredtimenotmet', 'certificate', '', $a);
         }
 
         return certificate_get_issue($course, $user, $certificate, $cm);
