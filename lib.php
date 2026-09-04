@@ -23,6 +23,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_certificate\local\temporary_user;
+use mod_certificate\permission;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -279,6 +282,7 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
     require_login($course, false, $cm);
 
     require_once($CFG->libdir.'/filelib.php');
+    require_once("$CFG->dirroot/mod/certificate/locallib.php");
 
     $certrecord = (int)array_shift($args);
 
@@ -286,10 +290,12 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
         return false;
     }
 
-    $canmanagecertificate = has_capability('mod/certificate:manage', $context);
-    if ($USER->id != $certrecord->userid and !$canmanagecertificate) {
+    if ($certrecord->certificateid != $certificate->id) {
         return false;
     }
+
+    permission::require_view_user_certificate($context, (int)$certrecord->userid);
+    $canmanagecertificate = has_capability('mod/certificate:manage', $context);
 
     if ($filearea === 'issue') {
         $relativepath = implode('/', $args);
@@ -301,21 +307,31 @@ function certificate_pluginfile($course, $cm, $context, $filearea, $args, $force
         }
         send_stored_file($file, 0, 0, true); // download MUST be forced - security!
     } else if ($filearea === 'onthefly') {
-        require_once($CFG->dirroot.'/mod/certificate/locallib.php');
         require_once("$CFG->libdir/pdflib.php");
 
-        if (!$certificate = $DB->get_record('certificate', array('id' => $certrecord->certificateid))) {
-            return false;
+        $userid = optional_param('userid', $certrecord->userid, PARAM_INT);
+        if ((int)$userid !== (int)$certrecord->userid) {
+            throw new moodle_exception('nopermissions', 'error', '', get_string('certificate:view', 'certificate'));
         }
 
-        if ($certificate->requiredtime && !$canmanagecertificate) {
+        if ($userid == $USER->id && $certificate->requiredtime && !$canmanagecertificate) {
             if (certificate_get_course_time($course->id) < ($certificate->requiredtime * 60)) {
                 return false;
             }
         }
 
-        // Load the specific certificate type. It will fill the $pdf var.
-        require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
+        // Load the specific certificate type as the certificate owner. It will fill the $pdf var.
+        $targetuser = $DB->get_record('user', ['id' => $userid, 'deleted' => 0], '*', MUST_EXIST);
+        $usercontext = new temporary_user($targetuser);
+        try {
+            $usercontext->apply();
+            $requestinguser = $usercontext->get_requesting_user();
+            require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
+
+        } finally {
+            $usercontext->restore();
+        }
+
         $filename = certificate_get_certificate_filename($certificate, $cm, $course) . '.pdf';
         $filecontents = $pdf->Output('', 'S');
         send_file($filecontents, $filename, 0, 0, true, true, 'application/pdf');

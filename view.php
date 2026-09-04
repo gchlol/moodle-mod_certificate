@@ -23,6 +23,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_certificate\local\issue;
+use mod_certificate\local\temporary_user;
+use mod_certificate\permission;
+
 require_once("../../config.php");
 require_once("$CFG->dirroot/mod/certificate/locallib.php");
 require_once("$CFG->dirroot/mod/certificate/deprecatedlib.php");
@@ -46,6 +50,8 @@ require_login($course, false, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/certificate:view', $context);
 
+list($userid, $targetuser) = permission::get_requested_user($context);
+
 $event = \mod_certificate\event\course_module_viewed::create(array(
     'objectid' => $certificate->id,
     'context' => $context,
@@ -58,7 +64,7 @@ $completion=new completion_info($course);
 $completion->set_module_viewed($cm);
 
 // Initialize $PAGE, compute blocks
-$PAGE->set_url('/mod/certificate/view.php', array('id' => $cm->id));
+$PAGE->set_url('/mod/certificate/view.php', ['id' => $cm->id, 'userid' => $userid]);
 $PAGE->set_context($context);
 $PAGE->set_cm($cm);
 $PAGE->set_title(format_string($certificate->name));
@@ -72,12 +78,19 @@ if (($edit != -1) and $PAGE->user_allowed_editing()) {
 if ($PAGE->user_allowed_editing()) {
     $editvalue = $PAGE->user_is_editing() ? 'off' : 'on';
     $strsubmit = $PAGE->user_is_editing() ? get_string('blockseditoff') : get_string('blocksediton');
-    $url = new moodle_url($CFG->wwwroot . '/mod/certificate/view.php', array('id' => $cm->id, 'edit' => $editvalue));
+    $url = new moodle_url(
+        $CFG->wwwroot . '/mod/certificate/view.php',
+        ['id' => $cm->id, 'userid' => $userid, 'edit' => $editvalue]
+    );
     $PAGE->set_button($OUTPUT->single_button($url, $strsubmit));
 }
 
 // Check if the user can view the certificate
-if ($certificate->requiredtime && !has_capability('mod/certificate:manage', $context)) {
+if (
+    $userid == $USER->id &&
+    $certificate->requiredtime &&
+    !has_capability('mod/certificate:manage', $context)
+) {
     if (certificate_get_course_time($course->id) < ($certificate->requiredtime * 60)) {
         $a = new stdClass;
         $a->requiredtime = $certificate->requiredtime;
@@ -86,35 +99,40 @@ if ($certificate->requiredtime && !has_capability('mod/certificate:manage', $con
     }
 }
 
-// Create new certificate record, or return existing record
-$certrecord = certificate_get_issue($course, $USER, $certificate, $cm);
+// Resolve the existing issue, or create one for self-service and on-demand portfolios.
+$certrecord = issue::get_for_view($course, $targetuser, $certificate, $cm);
 
 make_cache_directory('tcpdf');
 
 // Load the specific certificate type.
-$require_path = "$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php";
-$repo_name = get_config('certificate', 'reponame');
-if (!empty($repo_name)) {
-    $require_path = "$CFG->dataroot/repository/$repo_name/CERTIFICATE/type/$certificate->certificatetype/certificate.php";
+$requirepath = "$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php";
+$reponame = get_config('certificate', 'reponame');
+if (!empty($reponame)) {
+    $requirepath = "$CFG->dataroot/repository/$reponame/CERTIFICATE/type/$certificate->certificatetype/certificate.php";
 }
-require($require_path);
+
+$usercontext = new temporary_user($targetuser);
+try {
+    $usercontext->apply();
+    $requestinguser = $usercontext->get_requesting_user();
+    require($requirepath);
+
+} finally {
+    $usercontext->restore();
+}
 
 if (empty($action)) { // Not displaying PDF
     echo $OUTPUT->header();
 
-    $viewurl = new moodle_url('/mod/certificate/view.php', array('id' => $cm->id));
-    groups_print_activity_menu($cm, $viewurl);
-    $currentgroup = groups_get_activity_group($cm);
-    $groupmode = groups_get_activity_groupmode($cm);
-
-    if (has_capability('mod/certificate:manage', $context)) {
-        $numusers = count(certificate_get_issues($certificate->id, 'ci.timecreated ASC', $groupmode, $cm));
+    $canviewotherusers = permission::can_view_other_users($context);
+    if ($canviewotherusers) {
+        $numusers = issue::count_visible($certificate->id, $cm);
         $url = html_writer::tag('a', get_string('viewcertificateviews', 'certificate', $numusers),
             array('href' => $CFG->wwwroot . '/mod/certificate/report.php?id=' . $cm->id));
         echo html_writer::tag('div', $url, array('class' => 'reportlink'));
     }
 
-    if ($attempts = certificate_get_attempts($certificate->id)) {
+    if ($attempts = certificate_get_attempts($certificate->id, $userid)) {
         echo certificate_print_attempts($course, $certificate, $attempts);
     }
     if ($certificate->delivery == 0)    {
@@ -127,7 +145,7 @@ if (empty($action)) { // Not displaying PDF
     echo html_writer::tag('p', $str, array('style' => 'text-align:center'));
     $linkname = get_string('getcertificate', 'certificate');
 
-    $link = new moodle_url('/mod/certificate/view.php?id='.$cm->id.'&action=get');
+    $link = new moodle_url('/mod/certificate/view.php', ['id' => $cm->id, 'action' => 'get', 'userid' => $userid]);
     $button = new single_button($link, $linkname);
     if ($certificate->delivery != 1) {
         $button->add_action(new popup_action('click', $link, 'view' . $cm->id, array('height' => 600, 'width' => 800)));
@@ -148,7 +166,8 @@ if (empty($action)) { // Not displaying PDF
     // PDF contents are now in $file_contents as a string.
     $filecontents = $pdf->Output('', 'S');
 
-    if ($certificate->savecert == 1) {
+    // Viewing another user's certificate must not overwrite their stored file.
+    if ($certificate->savecert == 1 && $userid == $USER->id) {
         certificate_save_pdf($filecontents, $certrecord->id, $filename, $context->id);
     }
 
@@ -159,8 +178,11 @@ if (empty($action)) { // Not displaying PDF
         // Force download.
         send_file($filecontents, $filename, 0, 0, true, true, 'application/pdf');
     } elseif ($certificate->delivery == 2) {
-        certificate_email_student($course, $certificate, $certrecord, $context, $filecontents, $filename);
-        // Open in browser after sending email.
+        if ($userid == $USER->id) {
+            certificate_email_student($course, $certificate, $certrecord, $context, $filecontents, $filename);
+        }
+
+        // Open in browser for the requester.
         send_file($filecontents, $filename, 0, 0, true, false, 'application/pdf');
     }
 }

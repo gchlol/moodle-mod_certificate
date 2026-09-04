@@ -48,6 +48,15 @@ $capabilities = array(
         )
     ),
 
+    'mod/certificate:viewany' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW
+        ]
+    ],
+
     'mod/certificate:manage' => array(
 
         'captype' => 'read',

@@ -45,6 +45,7 @@ $string['certificate:manage'] = 'Manage a certificate instance';
 $string['certificate:printteacher'] = 'Be listed as a teacher on the certificate if the print teacher setting is on';
 $string['certificate:student'] = 'Retrieve a certificate';
 $string['certificate:view'] = 'View a certificate';
+$string['certificate:viewany'] = 'View certificates for all non-administrator users';
 $string['certificatename'] = 'Certificate Name';
 $string['certificatereport'] = 'Certificates Report';
 $string['certificatesfor'] = 'Certificates for';

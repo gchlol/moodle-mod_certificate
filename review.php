@@ -23,6 +23,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_certificate\local\issue;
+use mod_certificate\local\temporary_user;
+use mod_certificate\permission;
+
 require_once('../../config.php');
 require_once('locallib.php');
 require_once("$CFG->libdir/pdflib.php");
@@ -50,21 +54,31 @@ require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/certificate:view', $context);
 
+list($userid, $targetuser) = permission::get_requested_user($context);
+
 // Initialize $PAGE, compute blocks
-$PAGE->set_url('/mod/certificate/review.php', array('id' => $cm->id));
+$PAGE->set_url('/mod/certificate/review.php', ['id' => $cm->id, 'userid' => $userid]);
 $PAGE->set_context($context);
 $PAGE->set_cm($cm);
 $PAGE->set_title(format_string($certificate->name));
 $PAGE->set_heading(format_string($course->fullname));
 
 // Get previous cert record
-if (!$certrecord = $DB->get_record('certificate_issues', array('userid' => $USER->id, 'certificateid' => $certificate->id))) {
+if (!$certrecord = $DB->get_record('certificate_issues', ['userid' => $userid, 'certificateid' => $certificate->id])) {
     notice(get_string('nocertificatesissued', 'certificate'), "$CFG->wwwroot/course/view.php?id=$course->id");
     die;
 }
 
-// Load the specific certificatetype
-require ("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
+// Load the specific certificate type as the certificate owner.
+$usercontext = new temporary_user($targetuser);
+try {
+    $usercontext->apply();
+    $requestinguser = $usercontext->get_requesting_user();
+    require("$CFG->dirroot/mod/certificate/type/$certificate->certificatetype/certificate.php");
+
+} finally {
+    $usercontext->restore();
+}
 
 if ($action) {
     $filename = certificate_get_certificate_filename($certificate, $cm, $course) . '.pdf';
@@ -76,13 +90,9 @@ if ($action) {
 
 echo $OUTPUT->header();
 
-$reviewurl = new moodle_url('/mod/certificate/review.php', array('id' => $cm->id));
-groups_print_activity_menu($cm, $reviewurl);
-$currentgroup = groups_get_activity_group($cm);
-$groupmode = groups_get_activity_groupmode($cm);
-
-if (has_capability('mod/certificate:manage', $context)) {
-    $numusers = count(certificate_get_issues($certificate->id, 'ci.timecreated ASC', $groupmode, $cm));
+$canviewotherusers = permission::can_view_other_users($context);
+if ($canviewotherusers) {
+    $numusers = issue::count_visible($certificate->id, $cm);
     $url = html_writer::tag('a', get_string('viewcertificateviews', 'certificate', $numusers),
         array('href' => $CFG->wwwroot . '/mod/certificate/report.php?id=' . $cm->id));
     echo html_writer::tag('div', $url, array('class' => 'reportlink'));
@@ -90,7 +100,7 @@ if (has_capability('mod/certificate:manage', $context)) {
 
 echo html_writer::tag('p', get_string('viewed', 'certificate'). '<br />' . userdate($certrecord->timecreated), array('style' => 'text-align:center'));
 
-$link = new moodle_url('/mod/certificate/review.php?id='.$cm->id.'&action=get');
+$link = new moodle_url('/mod/certificate/review.php', ['id' => $cm->id, 'action' => 'get', 'userid' => $userid]);
 $linkname = get_string('reviewcertificate', 'certificate');
 $button = new single_button($link, $linkname);
 $button->add_action(new popup_action('click', $link, array('height' => 600, 'width' => 800)));
