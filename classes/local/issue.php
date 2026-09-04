@@ -216,7 +216,8 @@ class issue {
                         certificate_issues.userid = user.id
 
             WHERE   user.deleted = 0 AND
-                    certificate_issues.certificateid = :certificateid{$reportconditions['conditionssql']}
+                    certificate_issues.certificateid = :certificateid
+                    {$reportconditions['conditionssql']}
         ";
 
         return $DB->count_records_sql($countsql, $params);
