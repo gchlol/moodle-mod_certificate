@@ -492,18 +492,13 @@ function certificate_print_attempts($course, $certificate, $attempts) {
 }
 
 /**
- * Get the time the user has spent in the course
+ * Get the time the current user has spent in the course.
  *
  * @param int $courseid
- * @param int|null $userid user whose course time is returned; defaults to the current user
  * @return int the total time spent in seconds
  */
-function certificate_get_course_time($courseid, $userid = null) {
+function certificate_get_course_time($courseid) {
     global $CFG, $DB, $USER;
-
-    if ($userid === null) {
-        $userid = $USER->id;
-    }
 
     $logmanager = get_log_manager();
     $readers = $logmanager->get_readers();
@@ -540,7 +535,7 @@ function certificate_get_course_time($courseid, $userid = null) {
              WHERE userid = :userid
                AND $coursefield = :courseid
           ORDER BY $timefield ASC";
-    $params = ['userid' => $userid, 'courseid' => $courseid];
+    $params = ['userid' => $USER->id, 'courseid' => $courseid];
 
     $totaltime = 0;
     if ($logs = $DB->get_recordset_sql($sql, $params)) {

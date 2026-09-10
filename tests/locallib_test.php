@@ -60,19 +60,6 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
     }
 
     /**
-     * Portfolio certificate types use the documented, case-sensitive portfolio_ prefix.
-     *
-     * @return void
-     */
-    public function test_portfolio_certificate_type_detection(): void {
-        $this->assertTrue(issue::is_portfolio_type('portfolio_gch'));
-        $this->assertTrue(issue::is_portfolio_type('portfolio_example'));
-        $this->assertFalse(issue::is_portfolio_type('Portfolio'));
-        $this->assertFalse(issue::is_portfolio_type('portfolio'));
-        $this->assertFalse(issue::is_portfolio_type('my_portfolio_gch'));
-    }
-
-    /**
      * Rendering as another user must not replace the user stored in the session.
      *
      * @return void
@@ -167,7 +154,7 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
      *
      * @return void
      */
-    public function test_delegate_cannot_create_portfolio_issue_before_required_time(): void {
+    public function test_delegate_cannot_create_portfolio_issue_with_required_time(): void {
         global $DB, $USER;
 
         $this->resetAfterTest(true);
@@ -193,11 +180,11 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
     }
 
     /**
-     * A delegate may still view a portfolio issue created before its required course time changes.
+     * A delegate may view an existing portfolio issue even when required course time is configured.
      *
      * @return void
      */
-    public function test_delegate_can_view_existing_portfolio_issue_before_required_time(): void {
+    public function test_delegate_can_view_existing_portfolio_issue_with_required_time(): void {
         global $DB;
 
         $this->resetAfterTest(true);

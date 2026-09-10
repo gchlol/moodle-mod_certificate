@@ -34,19 +34,6 @@ defined('MOODLE_INTERNAL') || die();
 class issue {
 
     /**
-     * Checks whether a certificate type is a site-specific portfolio implementation.
-     *
-     * Portfolio implementations follow the portfolio_ prefix naming convention.
-     * The legacy Portfolio support directory is deliberately excluded.
-     *
-     * @param string $certificatetype certificate type identifier
-     * @return bool
-     */
-    public static function is_portfolio_type(string $certificatetype): bool {
-        return str_starts_with($certificatetype, 'portfolio_');
-    }
-
-    /**
      * Gets the issue record used to render a certificate for a target user.
      *
      * The caller must authorise access to the target user before calling this method. Users may create their own
@@ -65,7 +52,7 @@ class issue {
         stdClass $certificate,
         stdClass $cm
     ): stdClass {
-        global $DB, $USER;
+        global $CFG, $DB, $USER;
 
         $isowncertificate = (int)$user->id === (int)$USER->id;
         if ($isowncertificate) {
@@ -78,7 +65,7 @@ class issue {
         );
 
         if (empty($certissue->id)) {
-            throw new moodle_exception('nocertificatesissued', 'certificate');
+            throw new moodle_exception('nocertificatesissued', 'certificate', "$CFG->wwwroot/course/view.php?id=$course->id");
         }
 
         return $certissue;
