@@ -63,8 +63,12 @@ $PAGE->set_cm($cm);
 $PAGE->set_title(format_string($certificate->name));
 $PAGE->set_heading(format_string($course->fullname));
 
-// Get previous cert record
-if (!$certrecord = $DB->get_record('certificate_issues', ['userid' => $userid, 'certificateid' => $certificate->id])) {
+// Get previous cert record.
+$certrecord = $DB->get_record('certificate_issues', ['userid' => $userid, 'certificateid' => $certificate->id]);
+if (empty($certrecord->id)) {
+    if ($userid != $USER->id) {
+        throw new moodle_exception('nocertificatesissued', 'certificate');
+    }
     notice(get_string('nocertificatesissued', 'certificate'), "$CFG->wwwroot/course/view.php?id=$course->id");
     die;
 }

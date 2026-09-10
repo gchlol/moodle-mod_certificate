@@ -50,15 +50,14 @@ class issue {
      * Gets the issue record used to render a certificate for a target user.
      *
      * The caller must authorise access to the target user before calling this method. Users may create their own
-     * issue record, and portfolio certificates may be created on demand for an authorised target. Other certificate
-     * types require an existing issue record when viewed by somebody else.
+     * issue record. All certificate types require an existing issue record when viewed by somebody else.
      *
      * @param stdClass $course course containing the certificate activity
      * @param stdClass $user target user
      * @param stdClass $certificate certificate instance
      * @param stdClass $cm course module
      * @return stdClass certificate issue record
-     * @throws moodle_exception when a delegated certificate cannot be viewed or issued
+     * @throws moodle_exception when a delegated certificate has not been issued
      */
     public static function get_for_view(
         stdClass $course,
@@ -69,8 +68,6 @@ class issue {
         global $DB, $USER;
 
         $isowncertificate = (int)$user->id === (int)$USER->id;
-        $isportfolio = static::is_portfolio_type($certificate->certificatetype);
-
         if ($isowncertificate) {
             return certificate_get_issue($course, $user, $certificate, $cm);
         }
@@ -80,27 +77,11 @@ class issue {
             ['userid' => $user->id, 'certificateid' => $certificate->id]
         );
 
-        if ($certissue) {
-            return $certissue;
-        }
-
-        if (!$isportfolio) {
+        if (empty($certissue->id)) {
             throw new moodle_exception('nocertificatesissued', 'certificate');
         }
 
-        $context = context_module::instance($cm->id);
-        // Check the owner before issuing so a delegate cannot bypass the required course time.
-        if (
-            $certificate->requiredtime &&
-            !has_capability('mod/certificate:manage', $context, $user->id) &&
-            certificate_get_course_time($course->id, $user->id) < ($certificate->requiredtime * 60)
-        ) {
-            $a = new stdClass();
-            $a->requiredtime = $certificate->requiredtime;
-            throw new moodle_exception('requiredtimenotmet', 'certificate', '', $a);
-        }
-
-        return certificate_get_issue($course, $user, $certificate, $cm);
+        return $certissue;
     }
 
     /**

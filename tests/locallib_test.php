@@ -134,11 +134,11 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
     }
 
     /**
-     * An authorised delegate may create a target user's portfolio issue on demand.
+     * An authorised delegate cannot create a target user's portfolio issue by viewing it.
      *
      * @return void
      */
-    public function test_delegate_can_create_portfolio_issue_for_target(): void {
+    public function test_delegate_cannot_create_portfolio_issue_for_target(): void {
         global $DB, $USER;
 
         $this->resetAfterTest(true);
@@ -147,26 +147,23 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
         $this->setAdminUser();
         $requestinguserid = (int)$USER->id;
 
-        $issue = issue::get_for_view($course, $target, $certificate, $cm);
+        try {
+            issue::get_for_view($course, $target, $certificate, $cm);
+            $this->fail('Expected a missing delegated portfolio certificate issue to be rejected.');
 
-        $this->assertSame((int)$target->id, (int)$issue->userid);
+        } catch (moodle_exception $exception) {
+            $this->assertSame('nocertificatesissued', $exception->errorcode);
+        }
+
         $this->assertSame($requestinguserid, (int)$USER->id);
-        $this->assertSame(1, $DB->count_records('certificate_issues', [
-            'certificateid' => $certificate->id,
-            'userid' => $target->id,
-        ]));
-
-        $secondissue = issue::get_for_view($course, $target, $certificate, $cm);
-
-        $this->assertSame((int)$issue->id, (int)$secondissue->id);
-        $this->assertSame(1, $DB->count_records('certificate_issues', [
+        $this->assertFalse($DB->record_exists('certificate_issues', [
             'certificateid' => $certificate->id,
             'userid' => $target->id,
         ]));
     }
 
     /**
-     * A delegate cannot create a portfolio issue before its owner meets the required course time.
+     * An unissued delegated portfolio is rejected even when required course time is configured.
      *
      * @return void
      */
@@ -182,10 +179,10 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
 
         try {
             issue::get_for_view($course, $target, $certificate, $cm);
-            $this->fail('Expected the target user\'s required course time to be enforced.');
+            $this->fail('Expected a missing delegated portfolio certificate issue to be rejected.');
 
         } catch (moodle_exception $exception) {
-            $this->assertSame('requiredtimenotmet', $exception->errorcode);
+            $this->assertSame('nocertificatesissued', $exception->errorcode);
         }
 
         $this->assertSame($requestinguserid, (int)$USER->id);
@@ -279,15 +276,17 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
     }
 
     /**
-     * A user may still create their own conventional certificate issue.
+     * A user may still create their own certificate issue for any certificate type.
      *
+     * @dataProvider own_certificate_type_provider
+     * @param string $certificatetype certificate type identifier
      * @return void
      */
-    public function test_user_can_create_own_conventional_issue(): void {
+    public function test_user_can_create_own_issue(string $certificatetype): void {
         global $DB;
 
         $this->resetAfterTest(true);
-        list($course, $certificate, $cm) = $this->create_certificate('A4_non_embedded');
+        list($course, $certificate, $cm) = $this->create_certificate($certificatetype);
         $target = $this->getDataGenerator()->create_user();
         $this->setUser($target);
 
@@ -298,6 +297,18 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
             'certificateid' => $certificate->id,
             'userid' => $target->id,
         ]));
+    }
+
+    /**
+     * Certificate types that users may issue for themselves.
+     *
+     * @return array
+     */
+    public static function own_certificate_type_provider(): array {
+        return [
+            'conventional' => ['A4_non_embedded'],
+            'portfolio' => ['portfolio_gch'],
+        ];
     }
 
     /**

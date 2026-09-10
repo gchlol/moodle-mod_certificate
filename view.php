@@ -99,7 +99,7 @@ if (
     }
 }
 
-// Resolve the existing issue, or create one for self-service and on-demand portfolios.
+// Resolve the existing issue, or create one when viewing the user's own certificate.
 $certrecord = issue::get_for_view($course, $targetuser, $certificate, $cm);
 
 make_cache_directory('tcpdf');
