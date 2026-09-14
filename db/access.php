@@ -57,6 +57,16 @@ $capabilities = array(
         ]
     ],
 
+    // GCHLOL: GS-725.
+    'mod/certificate:issuecertificate' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW
+        ]
+    ],
+
     'mod/certificate:manage' => array(
 
         'captype' => 'read',

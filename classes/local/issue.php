@@ -51,7 +51,8 @@ class issue {
      *
      * The caller must authorise access to the target user before calling this method. Users may create their own
      * issue record, and portfolio certificates may be created on demand for an authorised target. Other certificate
-     * types require an existing issue record when viewed by somebody else.
+     * types require an existing issue record when viewed by somebody else, unless the viewer holds the issue
+     * capability.
      *
      * @param stdClass $course course containing the certificate activity
      * @param stdClass $user target user
@@ -84,11 +85,13 @@ class issue {
             return $certissue;
         }
 
-        if (!$isportfolio) {
+        $context = context_module::instance($cm->id);
+
+        // Portfolio certificates are built on demand; every other type needs issue capability to be awarded.
+        if (!$isportfolio && !permission::can_issue_certificate($context)) {
             throw new moodle_exception('nocertificatesissued', 'certificate');
         }
 
-        $context = context_module::instance($cm->id);
         // Check the owner before issuing so a delegate cannot bypass the required course time.
         if (
             $certificate->requiredtime &&
