@@ -107,6 +107,8 @@ You can review it here:
 
     <a href="{$a->url}">Certificate Report</a>.';
 $string['entercode'] = 'Enter certificate code to verify:';
+// GCHLOL: GS-725.
+$string['eventcertificateissuedviaurl'] = 'Certificate issued via URL';
 $string['fontsans'] = 'Sans-serif font family';
 $string['fontsans_desc'] = 'Sans-serif font family for certificates with embedded fonts';
 $string['fontserif'] = 'Serif font family';

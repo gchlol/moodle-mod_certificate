@@ -17,6 +17,7 @@
 namespace mod_certificate\local;
 
 use context_module;
+use mod_certificate\event\certificate_issued_via_url;
 use mod_certificate\permission;
 use moodle_exception;
 use stdClass;
@@ -103,7 +104,16 @@ class issue {
             throw new moodle_exception('requiredtimenotmet', 'certificate', '', $a);
         }
 
-        return certificate_get_issue($course, $user, $certificate, $cm);
+        $certissue = certificate_get_issue($course, $user, $certificate, $cm);
+
+        // Log the on-behalf award of an issue that did not exist before this call.
+        certificate_issued_via_url::create([
+            'objectid' => $certissue->id,
+            'relateduserid' => $user->id,
+            'context' => $context,
+        ])->trigger();
+
+        return $certissue;
     }
 
     /**
