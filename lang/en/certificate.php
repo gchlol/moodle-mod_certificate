@@ -41,7 +41,6 @@ $string['borderstyle'] = 'Border Image';
 $string['borderstyle_help'] = 'The Border Image option allows you to choose a border image from the certificate/pix/borders folder.  Select the border image that you want around the certificate edges or select no border.';
 $string['certificate'] = 'Verification for certificate code:';
 $string['certificate:addinstance'] = 'Add a certificate instance';
-// GCHLOL: GS-725.
 $string['certificate:issuecertificate'] = 'Issue a certificate on behalf of another user';
 $string['certificate:manage'] = 'Manage a certificate instance';
 $string['certificate:printteacher'] = 'Be listed as a teacher on the certificate if the print teacher setting is on';
@@ -107,7 +106,6 @@ You can review it here:
 
     <a href="{$a->url}">Certificate Report</a>.';
 $string['entercode'] = 'Enter certificate code to verify:';
-// GCHLOL: GS-725.
 $string['eventcertificateissuedviaurl'] = 'Certificate issued via URL';
 $string['fontsans'] = 'Sans-serif font family';
 $string['fontsans_desc'] = 'Sans-serif font family for certificates with embedded fonts';

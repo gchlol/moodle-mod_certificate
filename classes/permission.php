@@ -158,9 +158,9 @@ class permission {
     }
 
     /**
-     * Check whether the current user can issue a certificate for somebody else.
+     * Check if current user can issue a certificate for a user.
      *
-     * Issuing awards a credential, so it is gated separately from viewing; non-editing teachers hold it by default.
+     * Issuing a certificate is gated separately from viewing; non-editing teachers hold it by default.
      *
      * @param context $context certificate activity context
      * @return bool whether the current user holds the issue capability
