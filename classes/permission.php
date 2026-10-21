@@ -37,6 +37,9 @@ class permission {
 
     public const CAP_VIEW_ANY = 'mod/certificate:viewany';
 
+    /** @var string Capability required to issue a certificate for a user. */
+    public const CAP_ISSUE_CERTIFICATE = 'mod/certificate:issuecertificate';
+
     /**
      * Managed-user SQL, cached by manager user ID for the current request.
      *
@@ -152,6 +155,18 @@ class permission {
         }
 
         return static::has_visible_managed_user((int)$USER->id);
+    }
+
+    /**
+     * Check if current user can issue a certificate for a user.
+     *
+     * Issuing a certificate is gated separately from viewing; non-editing teachers hold it by default.
+     *
+     * @param context $context certificate activity context
+     * @return bool whether the current user holds the issue capability
+     */
+    public static function can_issue_certificate(context $context): bool {
+        return has_capability(static::CAP_ISSUE_CERTIFICATE, $context);
     }
 
     /**
