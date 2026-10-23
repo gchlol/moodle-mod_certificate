@@ -41,8 +41,8 @@ class portfolio_data {
     /** @var string History show custom field short name */
     protected const FIELD_SHOW_HISTORY = 'showport_history';
 
-    /** @var string Short name prefix of course types hidden from the portfolio */
-    protected const FIELD_HIDDEN_PREFIX = 'port_hidden';
+    /** @var string Description line that hides the section */
+    protected const HIDDEN_WORD = 'hidden';
 
     /** @var string Word to indicate a required section in the custom field description */
     protected const REQUIRED_WORD = 'required';
@@ -260,25 +260,25 @@ class portfolio_data {
     }
 
     /**
-     * Get the list of custom fields identified by the `port_` prefix as portfolio headers, excluding hidden course types.
+     * Get the list of custom fields identified by the `port_` prefix as portfolio headers, excluding types marked hidden.
      *
      * @return field[] A list of custom field instances.
      */
     protected static function get_header_custom_fields(): array {
         global $DB;
 
-        $headerselect = $DB->sql_like('shortname', ':shortname');
-        $nothiddenselect = $DB->sql_like('shortname', ':hiddenshortname', notlike: true);
-        $hiddenpattern = $DB->sql_like_escape(static::FIELD_HIDDEN_PREFIX);
-
-        return field::get_records_select(
-            "$headerselect AND $nothiddenselect",
-            [
-                'shortname' => 'port\_%',
-                'hiddenshortname' => "$hiddenpattern%",
-            ],
+        $headerfields = field::get_records_select(
+            $DB->sql_like('shortname', ':shortname'),
+            [ 'shortname' => 'port\_%' ],
             'sortorder'
         );
+
+        // Skip types marked hidden in description.
+        return array_filter($headerfields, static function(field $headerfield): bool {
+            $descriptionlines = array_map('trim', explode("\n", html_to_text($headerfield->get('description') ?? '', 0, false)));
+
+            return !in_array(static::HIDDEN_WORD, $descriptionlines, true);
+        });
     }
 
     /**
