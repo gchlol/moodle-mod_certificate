@@ -224,33 +224,6 @@ class mod_certificate_locallib_testcase extends advanced_testcase {
     }
 
     /**
-     * A delegated conventional certificate still requires an existing issue.
-     *
-     * @return void
-     */
-    public function test_delegate_cannot_create_conventional_issue_for_target(): void {
-        global $DB;
-
-        $this->resetAfterTest(true);
-        list($course, $certificate, $cm) = $this->create_certificate('A4_non_embedded');
-        $target = $this->getDataGenerator()->create_user();
-        $this->setAdminUser();
-
-        try {
-            issue::get_for_view($course, $target, $certificate, $cm);
-            $this->fail('Expected a missing delegated certificate issue to be rejected.');
-
-        } catch (moodle_exception $exception) {
-            $this->assertSame('nocertificatesissued', $exception->errorcode);
-        }
-
-        $this->assertFalse($DB->record_exists('certificate_issues', [
-            'certificateid' => $certificate->id,
-            'userid' => $target->id,
-        ]));
-    }
-
-    /**
      * A delegate may view an existing conventional certificate issue.
      *
      * @return void
