@@ -57,7 +57,6 @@ $capabilities = array(
         ]
     ],
 
-    // GCHLOL: GS-725.
     'mod/certificate:issuecertificate' => [
 
         'captype' => 'write',
